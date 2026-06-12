@@ -1,7 +1,6 @@
 #include "ShaderSystem.h"
-#include "Platform.h"
-#include "MemorySystem.h"
 #include "FileSystem.h"
+#include "MemorySystem.h"
 #include "BufferSystem.h"
 #include <cctype>
 #include <ranges>

@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="VulkanEngineCore/VulkanEngineCore.vcxproj" />
+  <Project Path="VulkanEngineCore/VulkanEngineCore.vcxproj" Id="526bff96-6c33-482d-9bec-29a6d553f16a" />
 </Solution>

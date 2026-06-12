@@ -70,6 +70,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Host.win-x64\8.0.26\runtimes\win-x64\native;C:\VulkanSDK\1.4.328.1\Include;$(SolutionDir)External\SPIRV-Reflect;$(SolutionDir)External\json\include;$(SolutionDir)External\VulkanMemoryAllocator\include;$(SolutionDir)\External\glfw\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\VulkanSDK\1.4.328.1\Lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -108,7 +112,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -141,18 +145,22 @@
   <ItemGroup>
     <ClInclude Include="BufferSystem.h" />
     <ClInclude Include="DLL.h" />
-    <ClInclude Include="DLLSystem.h" />
     <ClInclude Include="FileSystem.h" />
+    <ClInclude Include="MemorySystem.h" />
     <ClInclude Include="Platform.h" />
+    <ClInclude Include="ShaderStructs.h" />
     <ClInclude Include="ShaderSystem.h" />
+    <ClInclude Include="TypeDef.h" />
     <ClInclude Include="VkGuid.h" />
+    <ClInclude Include="VulkanError.h" />
+    <ClInclude Include="VulkanSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BufferSystem.cpp" />
-    <ClCompile Include="CSharpScriptSystem.cpp" />
-    <ClCompile Include="DLLSystem.cpp" />
     <ClCompile Include="FileSystem.cpp" />
+    <ClCompile Include="MemorySystem.cpp" />
     <ClCompile Include="ShaderSystem.cpp" />
+    <ClCompile Include="VulkanSystem.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
