@@ -152,7 +152,12 @@
     <ClInclude Include="ShaderSystem.h" />
     <ClInclude Include="TypeDef.h" />
     <ClInclude Include="VkGuid.h" />
+    <ClInclude Include="VulkanCommandBuffer.h" />
+    <ClInclude Include="VulkanCoreSystem.h" />
+    <ClInclude Include="VulkanDebugger.h" />
+    <ClInclude Include="VulkanDevice.h" />
     <ClInclude Include="VulkanError.h" />
+    <ClInclude Include="VulkanSwapchain.h" />
     <ClInclude Include="VulkanSystem.h" />
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +165,11 @@
     <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="MemorySystem.cpp" />
     <ClCompile Include="ShaderSystem.cpp" />
+    <ClCompile Include="VulkanCommandBuffer.cpp" />
+    <ClCompile Include="VulkanCoreSystem.cpp" />
+    <ClCompile Include="VulkanDebugger.cpp" />
+    <ClCompile Include="VulkanDevice.cpp" />
+    <ClCompile Include="VulkanSwapchain.cpp" />
     <ClCompile Include="VulkanSystem.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

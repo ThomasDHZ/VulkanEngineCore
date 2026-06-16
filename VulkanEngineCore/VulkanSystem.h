@@ -28,26 +28,26 @@ private:
 	uint32								   FindMaxApiVersion(VkPhysicalDevice physicalDevice);
 	static VkBool32 VKAPI_CALL			   DebugCallBack(VkDebugUtilsMessageSeverityFlagBitsEXT MessageSeverity, VkDebugUtilsMessageTypeFlagsEXT MessageType, const VkDebugUtilsMessengerCallbackDataEXT* CallBackData, void* pUserData);
 
-	VkExtent2D							   SetUpSwapChainExtent(void* windowHandle, VkSurfaceCapabilitiesKHR& surfaceCapabilities);
-	VkDevice							   SetUpDevice(VkPhysicalDevice physicalDevice, uint32 graphicsFamily, uint32 presentFamily);
-	VkPhysicalDevice					   SetUpPhysicalDevice(VkInstance instance, VkSurfaceKHR surface, uint32& graphicsFamily, uint32& presentFamily);
-	void								   SetUpSwapChainImages();
-	void								   SetUpSwapChainImageViews(VkSurfaceFormatKHR swapChainImageFormat);
-	VkCommandPool						   SetUpCommandPool(VkDevice device, uint32 graphicsFamily);
-	void								   SetUpSemaphores();
-	void								   SetUpCommandBuffers();
+	//VkExtent2D							   SetUpSwapChainExtent(void* windowHandle, VkSurfaceCapabilitiesKHR& surfaceCapabilities);
+	//VkDevice							   SetUpDevice(VkPhysicalDevice physicalDevice, uint32 graphicsFamily, uint32 presentFamily);
+	//VkPhysicalDevice					   SetUpPhysicalDevice(VkInstance instance, VkSurfaceKHR surface, uint32& graphicsFamily, uint32& presentFamily);
+	//void								   SetUpSwapChainImages();
+	//void								   SetUpSwapChainImageViews(VkSurfaceFormatKHR swapChainImageFormat);
+	//VkCommandPool						   SetUpCommandPool(VkDevice device, uint32 graphicsFamily);
+	//void								   SetUpSemaphores();
+	//void								   SetUpCommandBuffers();
 	VmaAllocator						   SetUpVmaAllocation();
 
-	void								   GetDeviceQueue(VkDevice device, uint32 graphicsFamily, uint32 presentFamily, VkQueue& graphicsQueue, VkQueue& presentQueue);
-	void								   GetQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32& graphicsFamily, uint32& presentFamily);
-	void								   GetRayTracingCapability(VkPhysicalDevice gpuDevice, Vector<String>& featureList, Vector<const char*>& deviceExtensionList);
-	Vector<const char*>					   GetRequiredInstanceExtensions();
-	Vector<const char*>					   GetRequiredDeviceExtensions(VkPhysicalDevice physicalDevice);
-	Vector<const char*>					   GetValidationLayerProperties();
-	Vector<VkSurfaceFormatKHR>			   GetSurfaceFormats(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
-	VkSampleCountFlagBits				   GetMaxSampleCount(VkPhysicalDevice gpuDevice);
-	VkSurfaceFormatKHR					   FindSwapSurfaceFormat(Vector<VkSurfaceFormatKHR>& availableFormats);
-	VkPresentModeKHR					   FindSwapPresentMode(Vector<VkPresentModeKHR>& availablePresentModes);
+	//void								   GetDeviceQueue(VkDevice device, uint32 graphicsFamily, uint32 presentFamily, VkQueue& graphicsQueue, VkQueue& presentQueue);
+	//void								   GetQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32& graphicsFamily, uint32& presentFamily);
+	//void								   GetRayTracingCapability(VkPhysicalDevice gpuDevice, Vector<String>& featureList, Vector<const char*>& deviceExtensionList);
+	//Vector<const char*>					   GetRequiredInstanceExtensions();
+	//Vector<const char*>					   GetRequiredDeviceExtensions(VkPhysicalDevice physicalDevice);
+	//Vector<const char*>					   GetValidationLayerProperties();
+	//Vector<VkSurfaceFormatKHR>			   GetSurfaceFormats(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+	//VkSampleCountFlagBits				   GetMaxSampleCount(VkPhysicalDevice gpuDevice);
+	//VkSurfaceFormatKHR					   FindSwapSurfaceFormat(Vector<VkSurfaceFormatKHR>& availableFormats);
+	//VkPresentModeKHR					   FindSwapPresentMode(Vector<VkPresentModeKHR>& availablePresentModes);
 
 
 	void								   DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugUtilsMessengerEXT, const VkAllocationCallbacks* pAllocator);
@@ -105,27 +105,27 @@ public:
 #endif
 
 	DLL_EXPORT VkInstance				   CreateVulkanInstance();
-	DLL_EXPORT VkSurfaceKHR				   CreateVulkanSurface(void* windowHandle, VkInstance instance);
+	//DLL_EXPORT VkSurfaceKHR				   CreateVulkanSurface(void* windowHandle, VkInstance instance);
 
 	DLL_EXPORT void						   RendererSetUp(void* windowHandle, VkInstance& instance, VkSurfaceKHR& surface, ivec2& windowResolution, ivec2& renderResolution);
-	DLL_EXPORT void						   SetUpSwapChain();
-	DLL_EXPORT void						   SetUpSwapChain(void* windowHandle);
-	DLL_EXPORT void						   RebuildSwapChain(void* windowHandle);
+	//DLL_EXPORT void						   SetUpSwapChain();
+	//DLL_EXPORT void						   SetUpSwapChain(void* windowHandle);
+	//DLL_EXPORT void						   RebuildSwapChain(void* windowHandle);
 	DLL_EXPORT void						   StartFrame();
 	DLL_EXPORT void						   EndFrame(VkCommandBuffer& commandBufferSubmit);
 
-	DLL_EXPORT VkCommandBuffer			   BeginSingleUseCommand();
-	DLL_EXPORT void						   EndSingleUseCommand(VkCommandBuffer commandBuffer);
+	//DLL_EXPORT VkCommandBuffer			   BeginSingleUseCommand();
+	//DLL_EXPORT void						   EndSingleUseCommand(VkCommandBuffer commandBuffer);
 	DLL_EXPORT uint32					   GetMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-	DLL_EXPORT Vector<VkPresentModeKHR>    GetSurfacePresentModes(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
-	DLL_EXPORT VkSurfaceCapabilitiesKHR    GetSurfaceCapabilities(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
-	DLL_EXPORT VkPhysicalDeviceProperties  GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice);
-	DLL_EXPORT VkPhysicalDeviceFeatures    GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice);
-	DLL_EXPORT VkPhysicalDeviceFeatures2   GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice);
-	DLL_EXPORT Vector<VkPhysicalDevice>    GetPhysicalDeviceList(VkInstance& instance);
-	DLL_EXPORT Vector<VkSurfaceFormatKHR>  GetPhysicalDeviceFormats(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
-	DLL_EXPORT Vector<VkPresentModeKHR>    GetPhysicalDevicePresentModes(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+	//DLL_EXPORT Vector<VkPresentModeKHR>    GetSurfacePresentModes(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+	//DLL_EXPORT VkSurfaceCapabilitiesKHR    GetSurfaceCapabilities(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+	//DLL_EXPORT VkPhysicalDeviceProperties  GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice);
+	//DLL_EXPORT VkPhysicalDeviceFeatures    GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice);
+	//DLL_EXPORT VkPhysicalDeviceFeatures2   GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice);
+	//DLL_EXPORT Vector<VkPhysicalDevice>    GetPhysicalDeviceList(VkInstance& instance);
+	//DLL_EXPORT Vector<VkSurfaceFormatKHR>  GetPhysicalDeviceFormats(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+	//DLL_EXPORT Vector<VkPresentModeKHR>    GetPhysicalDevicePresentModes(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 
 	DLL_EXPORT void						   DestroyRenderer();
 	DLL_EXPORT void						   DestroySwapChainImageView(VkDevice device, Vector<VkImageView>& pSwapChainImageViewList);
