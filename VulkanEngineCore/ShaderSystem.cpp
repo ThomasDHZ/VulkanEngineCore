@@ -18,7 +18,7 @@ VkPipelineShaderStageCreateInfo ShaderSystem::LoadShader(const char* filename, V
     };
 
     VkShaderModule shaderModule = VK_NULL_HANDLE;
-    VULKAN_THROW_IF_FAIL(vkCreateShaderModule(vulkanSystem.Device, &shaderModuleCreateInfo, NULL, &shaderModule));
+    VULKAN_THROW_IF_FAIL(vkCreateShaderModule(vulkan.LogicalDevice(), &shaderModuleCreateInfo, NULL, &shaderModule));
 
     return VkPipelineShaderStageCreateInfo
     {

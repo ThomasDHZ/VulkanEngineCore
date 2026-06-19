@@ -2,7 +2,7 @@
 #define BUFFER_SYSTEM_IMPLEMENTATION
 #include "BufferSystem.h"
 #include "MemorySystem.h"
-#include "VulkanSystem.h"
+#include "VulkanCoreSystem.h"
 #include <vk_mem_alloc.h>
 #include <iostream>
 
@@ -23,7 +23,6 @@ VulkanBuffer& VulkanBufferSystem::FindVulkanBuffer(int id)
 
 const Vector<VulkanBuffer>& VulkanBufferSystem::VulkanBufferList()
 {
-    // This was returning a reference to a local - fixed
     static Vector<VulkanBuffer> vulkanBufferList;
     vulkanBufferList.clear();
     for (const auto& pair : VulkanBufferMap)
@@ -42,6 +41,33 @@ void VulkanBufferSystem::DestroyAllBuffers()
     VulkanBufferMap.clear();
 }
 
+void VulkanBufferSystem::SetUpVmaAllocation()
+{
+    VmaVulkanFunctions vulkanFunctions = {
+        .vkGetInstanceProcAddr = vkGetInstanceProcAddr,
+        .vkGetDeviceProcAddr = vkGetDeviceProcAddr
+    };
+
+    VmaAllocatorCreateInfo allocatorCreateInfo = {
+        .physicalDevice = vulkan.PhysicalDevice(),
+        .device = vulkan.LogicalDevice(),
+        .preferredLargeHeapBlockSize = 64ull << 20,   // 64 MB
+        .pVulkanFunctions = &vulkanFunctions,
+        .instance = vulkan.InstanceHandle(),
+        .vulkanApiVersion = vulkan.ApiVersion(),
+    };
+
+    VmaAllocator allocator = VK_NULL_HANDLE;
+    VkResult result = vmaCreateAllocator(&allocatorCreateInfo, &allocator);
+
+    if (result != VK_SUCCESS)
+    {
+        std::cerr << "Failed to create VMA allocator: " << result << std::endl;
+    }
+
+    vmaAllocator = allocator;
+}
+
 uint32 VulkanBufferSystem::CreateStaticVulkanBuffer(const void* srcData, VkDeviceSize size,
     VkBufferUsageFlags shaderUsageFlags, VkDeviceSize offset)
 {
@@ -53,16 +79,16 @@ uint32 VulkanBufferSystem::CreateStaticVulkanBuffer(const void* srcData, VkDevic
     if (size == 0) return 0;
 
     uint32 bufferId = ++NextBufferId;
-
-    // Main destination buffer (device local)
-    VkBufferCreateInfo bufferInfo = {
+    VkBufferCreateInfo bufferInfo = 
+    {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .size = size,
         .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | shaderUsageFlags,
         .sharingMode = VK_SHARING_MODE_EXCLUSIVE
     };
 
-    VmaAllocationCreateInfo allocInfo = {
+    VmaAllocationCreateInfo allocInfo = 
+    {
         .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE
     };
 
@@ -88,8 +114,8 @@ uint32 VulkanBufferSystem::CreateStaticVulkanBuffer(const void* srcData, VkDevic
         return bufferId;
     }
 
-    // Staging buffer (host visible)
-    VkBufferCreateInfo stagingInfo = {
+    VkBufferCreateInfo stagingInfo = 
+    {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .size = size,
         .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -131,14 +157,8 @@ uint32 VulkanBufferSystem::CreateStaticVulkanBuffer(const void* srcData, VkDevic
 
     memcpy(static_cast<char*>(mappedData) + offset, srcData, size - offset);
     vmaFlushAllocation(vmaAllocator, stagingAllocation, offset, size - offset);
-
-    if (needUnmap)
-        vmaUnmapMemory(vmaAllocator, stagingAllocation);
-
-    // Copy from staging → final buffer
+    if (needUnmap) vmaUnmapMemory(vmaAllocator, stagingAllocation);
     CopyBuffer(&stagingBuffer, &dstBuffer, size - offset, shaderUsageFlags, offset);
-
-    // Cleanup staging buffer
     vmaDestroyBuffer(vmaAllocator, stagingBuffer, stagingAllocation);
 
     VulkanBufferMap[bufferId] = {
@@ -235,10 +255,9 @@ void VulkanBufferSystem::UpdateDynamicBuffer(uint32 bufferId, const void* data, 
     vmaFlushAllocation(vmaAllocator, buffer.Allocation, offset, size);
 }
 
-void VulkanBufferSystem::CopyBuffer(VkBuffer* srcBuffer, VkBuffer* dstBuffer, VkDeviceSize size,
-    VkBufferUsageFlags usageFlags, VkDeviceSize offset)
+void VulkanBufferSystem::CopyBuffer(VkBuffer* srcBuffer, VkBuffer* dstBuffer, VkDeviceSize size, VkBufferUsageFlags usageFlags, VkDeviceSize offset)
 {
-    VkCommandBuffer cmd = vulkanSystem.BeginSingleUseCommand();
+    VkCommandBuffer cmd = vulkan.CommandBuffer().BeginSingleUseCommand();
 
     VkBufferCopy copyRegion = {
         .srcOffset = offset,
@@ -247,9 +266,8 @@ void VulkanBufferSystem::CopyBuffer(VkBuffer* srcBuffer, VkBuffer* dstBuffer, Vk
     };
 
     vkCmdCopyBuffer(cmd, *srcBuffer, *dstBuffer, 1, &copyRegion);
-
-    // Simple barrier - good enough for most cases
-    VkBufferMemoryBarrier barrier = {
+    VkBufferMemoryBarrier barrier = 
+    {
         .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
         .srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
         .dstAccessMask = VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT | VK_ACCESS_INDEX_READ_BIT |
@@ -260,12 +278,8 @@ void VulkanBufferSystem::CopyBuffer(VkBuffer* srcBuffer, VkBuffer* dstBuffer, Vk
         .offset = offset,
         .size = size
     };
-
-    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
-        VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
-        0, 0, nullptr, 1, &barrier, 0, nullptr);
-
-    vulkanSystem.EndSingleUseCommand(cmd);
+    vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
+    vulkan.CommandBuffer().EndSingleUseCommand(cmd);
 }
 
 void VulkanBufferSystem::DestroyBuffer(VulkanBuffer& vulkanBuffer)
@@ -278,7 +292,7 @@ void VulkanBufferSystem::DestroyBuffer(VulkanBuffer& vulkanBuffer)
         }
         else
         {
-            vkDestroyBuffer(vulkanSystem.Device, vulkanBuffer.Buffer, nullptr);
+            vkDestroyBuffer(vulkan.LogicalDevice(), vulkanBuffer.Buffer, nullptr);
         }
         vulkanBuffer.Buffer = VK_NULL_HANDLE;
         vulkanBuffer.Allocation = VK_NULL_HANDLE;
@@ -286,7 +300,7 @@ void VulkanBufferSystem::DestroyBuffer(VulkanBuffer& vulkanBuffer)
 
     if (vulkanBuffer.StagingBuffer != VK_NULL_HANDLE)
     {
-        vkDestroyBuffer(vulkanSystem.Device, vulkanBuffer.StagingBuffer, nullptr);
+        vkDestroyBuffer(vulkan.LogicalDevice(), vulkanBuffer.StagingBuffer, nullptr);
         vulkanBuffer.StagingBuffer = VK_NULL_HANDLE;
     }
 

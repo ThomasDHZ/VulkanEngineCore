@@ -1,43 +1,42 @@
 #pragma once
 #include "Platform.h"
-#include "TypeDef.h"
 
 class VulkanDevice
 {
+    friend class VulkanSwapchain;
     private:
-        void                                   SetUpLogicalDevice(VkSurfaceKHR surface);
-        VkPhysicalDevice                       SetUpPhysicalDevice(VkInstance instance, VkSurfaceKHR surface, uint32& graphicsFamily, uint32& presentFamily);
+        VkPhysicalDevice                       m_physicalDevice = VK_NULL_HANDLE;
+        VkDevice                               m_logicalDevice  = VK_NULL_HANDLE;
+        VkQueue                                m_graphicsQueue  = VK_NULL_HANDLE;
+        VkQueue                                m_presentQueue   = VK_NULL_HANDLE;
+        uint32                                 m_graphicsFamily = UINT32_MAX;
+        uint32                                 m_presentFamily  = UINT32_MAX;
+
+        void                                   SetUpPhysicalDevice();
+        void                                   SetUpLogicalDevice();
 
         VkSampleCountFlagBits				   GetMaxSampleCount(VkPhysicalDevice gpuDevice);
-        Vector<const char*>					   GetRequiredInstanceExtensions();
         Vector<const char*>					   GetRequiredDeviceExtensions(VkPhysicalDevice physicalDevice);
-        Vector<const char*>                    GetValidationLayerProperties();
-        void                                   GetQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32& graphicsFamily, uint32& presentFamily);
         void								   GetDeviceQueue(VkDevice device, uint32 graphicsFamily, uint32 presentFamily, VkQueue& graphicsQueue, VkQueue& presentQueue);
         bool								   GetRayTracingCapability(VkPhysicalDevice gpuDevice, Vector<String>& featureList, Vector<const char*>& deviceExtensionList);
 
     public:
         VulkanDevice();
         ~VulkanDevice();
-
-        VkPhysicalDevice                       PhysicalDevice = VK_NULL_HANDLE;
-        VkDevice                               LogicalDevice  = VK_NULL_HANDLE;
-        VkQueue                                GraphicsQueue  = VK_NULL_HANDLE;
-        VkQueue                                PresentQueue   = VK_NULL_HANDLE;
-
-        uint32                                 GraphicsFamily = UINT32_MAX;
-        uint32                                 PresentFamily  = UINT32_MAX;
-
-        VkPhysicalDeviceFeatures               Features{};
-        VkPhysicalDeviceFeatures2              Features2{};
-        VkPhysicalDeviceVulkan12Features       Features12{};
-
-        DLL_EXPORT bool                        Initialize(VkInstance instance, VkSurfaceKHR surface);
+        void                                   Initialize();
+        DLL_EXPORT Vector<VkPhysicalDevice>    GetPhysicalDeviceList(VkInstance instance);
         DLL_EXPORT VkPhysicalDeviceProperties  GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice);
         DLL_EXPORT VkPhysicalDeviceFeatures    GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice);
         DLL_EXPORT VkPhysicalDeviceFeatures2   GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice);
-        DLL_EXPORT Vector<VkPhysicalDevice>    GetPhysicalDeviceList(VkInstance& instance);
-        DLL_EXPORT Vector<VkSurfaceFormatKHR>  GetPhysicalDeviceFormats(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
-        DLL_EXPORT Vector<VkPresentModeKHR>    GetPhysicalDevicePresentModes(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+        DLL_EXPORT Vector<VkSurfaceFormatKHR>  GetPhysicalDeviceFormats(VkPhysicalDevice physicalDevice);
+        DLL_EXPORT Vector<VkPresentModeKHR>    GetPhysicalDevicePresentModes(VkPhysicalDevice physicalDevice);
+        void                                   GetQueueFamilies(VkPhysicalDevice physicalDevice);
         DLL_EXPORT void                        Shutdown();
+
+        [[nodiscard]] VkPhysicalDevice  PhysicalDevice() const { return m_physicalDevice; }
+        [[nodiscard]] VkDevice          LogicalDevice()  const { return m_logicalDevice;  }
+        [[nodiscard]] VkQueue           GraphicsQueue()  const { return m_graphicsQueue;  }
+        [[nodiscard]] VkQueue           PresentQueue()   const { return m_presentQueue;   }
+        [[nodiscard]] uint32            GraphicsFamily() const { return m_graphicsFamily; }
+        [[nodiscard]] uint32            PresentFamily()  const { return m_presentFamily;  }
 };

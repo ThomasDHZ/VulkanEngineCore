@@ -1,4 +1,14 @@
 #include "VulkanDebugger.h"
+LogVulkanMessageCallback g_logVulkanMessageCallback = nullptr;
+
+
+VulkanDebugger::VulkanDebugger()
+{
+}
+
+VulkanDebugger::~VulkanDebugger()
+{
+}
 
 VkBool32 VKAPI_CALL VulkanDebugger::DebugCallBack(VkDebugUtilsMessageSeverityFlagBitsEXT MessageSeverity, VkDebugUtilsMessageTypeFlagsEXT  MessageType, const VkDebugUtilsMessengerCallbackDataEXT* CallBackData, void* UserData)
 {
@@ -50,6 +60,19 @@ VkBool32 VKAPI_CALL VulkanDebugger::DebugCallBack(VkDebugUtilsMessageSeverityFla
     // Linux / macOS: ANSI escape codes (works in every terminal)
     fprintf(stderr, "%s%s: \033[0m%s\n", colorCode, severityStr, CallBackData->pMessage);
 #endif
-    VulkanSystem_LogVulkanMessage(CallBackData->pMessage, static_cast<int>(MessageSeverity));
+    LogVulkanMessage(CallBackData->pMessage, static_cast<int>(MessageSeverity));
     return VK_FALSE;
+}
+
+void VulkanDebugger::CreateLogMessageCallback(LogVulkanMessageCallback callback)
+{
+    g_logVulkanMessageCallback = callback;
+}
+
+void VulkanDebugger::LogVulkanMessage(const char* message, int severity)
+{
+    if (g_logVulkanMessageCallback)
+    {
+        g_logVulkanMessageCallback(message, severity);
+    }
 }

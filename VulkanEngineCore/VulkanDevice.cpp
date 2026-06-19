@@ -1,6 +1,6 @@
 #include "VulkanDevice.h"
 #include "VulkanCoreSystem.h"
-#include "VkSwapChain"
+#include "VulkanSwapchain.h"
 
 VulkanDevice::VulkanDevice()
 {
@@ -10,35 +10,37 @@ VulkanDevice::~VulkanDevice()
 {
 }
 
-bool VulkanDevice::Initialize(VkInstance instance, VkSurfaceKHR surface)
+void VulkanDevice::Initialize()
 {
+    SetUpPhysicalDevice();
+    SetUpLogicalDevice();
 }
 
-void VulkanDevice::SetUpLogicalDevice(VkSurfaceKHR surface)
+void VulkanDevice::SetUpLogicalDevice()
 {
     float queuePriority = 1.0f;
     Vector<VkDeviceQueueCreateInfo> queueCreateInfoList;
-    if (GraphicsFamily != UINT32_MAX)
+    if (m_graphicsFamily != UINT32_MAX)
     {
         queueCreateInfoList.emplace_back(VkDeviceQueueCreateInfo{
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .queueFamilyIndex = GraphicsFamily,
+            .queueFamilyIndex = m_graphicsFamily,
             .queueCount = 1,
             .pQueuePriorities = &queuePriority
             });
     }
-    if (PresentFamily != UINT32_MAX &&
-        PresentFamily != GraphicsFamily)
+    if (m_presentFamily != UINT32_MAX &&
+        m_presentFamily != m_graphicsFamily)
     {
         queueCreateInfoList.emplace_back(VkDeviceQueueCreateInfo{
             .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .queueFamilyIndex = PresentFamily,
+            .queueFamilyIndex = m_presentFamily,
             .queueCount = 1,
             .pQueuePriorities = &queuePriority
             });
     }
 
-    Vector<const char*> DeviceExtensionList = GetRequiredDeviceExtensions(PhysicalDevice);
+    Vector<const char*> DeviceExtensionList = GetRequiredDeviceExtensions(m_physicalDevice);
     VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures =
     {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES,
@@ -62,7 +64,6 @@ void VulkanDevice::SetUpLogicalDevice(VkSurfaceKHR surface)
         .pNext = &indexingFeatures,
         .colorWriteEnable = VK_TRUE
     };
-
 
     VkPhysicalDeviceFeatures2 physicalDeviceFeatures2 = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
@@ -137,39 +138,37 @@ void VulkanDevice::SetUpLogicalDevice(VkSurfaceKHR surface)
     };
 
 #ifndef NDEBUG
-    Vector<const char*> validationLayers = GetValidationLayerProperties();
+    Vector<const char*> validationLayers = vulkan.Instance().GetValidationLayerProperties();
     deviceCreateInfo.enabledLayerCount = static_cast<uint32>(validationLayers.size());
     deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
 #endif
 
-    VULKAN_THROW_IF_FAIL(vkCreateDevice(PhysicalDevice, &deviceCreateInfo, nullptr, &LogicalDevice));
+    VULKAN_THROW_IF_FAIL(vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_logicalDevice));
 }
 
-VkPhysicalDevice VulkanDevice::SetUpPhysicalDevice(VkInstance instance, VkSurfaceKHR surface, uint32& graphicsFamily, uint32& presentFamily)
+void VulkanDevice::SetUpPhysicalDevice()
 {
-    Vector<VkPhysicalDevice> physicalDeviceList = GetPhysicalDeviceList(instance);
+    Vector<VkPhysicalDevice> physicalDeviceList = GetPhysicalDeviceList(vulkan.InstanceHandle());
     for (auto& physicalDevice : physicalDeviceList)
     {
-        VkPhysicalDeviceProperties physicalDeviceProperties = GetPhysicalDeviceProperties(physicalDevice);
-        VkPhysicalDeviceFeatures physicalDeviceFeatures = GetPhysicalDeviceFeatures(physicalDevice);
-        GetQueueFamilies(physicalDevice, surface, graphicsFamily, presentFamily);
-        Vector<VkSurfaceFormatKHR> surfaceFormatList = GetSurfaceFormats(physicalDevice, surface);
-        Vector<VkPresentModeKHR> presentModeList = GetSurfacePresentModes(physicalDevice, surface);
+        VkPhysicalDeviceProperties physicalDeviceProperties = GetPhysicalDeviceProperties(m_physicalDevice);
+        VkPhysicalDeviceFeatures physicalDeviceFeatures = GetPhysicalDeviceFeatures(m_physicalDevice);
+        GetQueueFamilies(physicalDevice);
+        Vector<VkSurfaceFormatKHR> surfaceFormatList = vulkan.Swapchain().GetSurfaceFormats(m_physicalDevice);
+        Vector<VkPresentModeKHR> presentModeList = vulkan.Swapchain().GetSurfacePresentModes(m_physicalDevice);
 
-        if (graphicsFamily != UINT32_MAX &&
-            presentFamily != UINT32_MAX &&
+        if (m_graphicsFamily != UINT32_MAX &&
+            m_presentFamily != UINT32_MAX &&
             surfaceFormatList.size() > 0 &&
             presentModeList.size() > 0 &&
             physicalDeviceFeatures.samplerAnisotropy)
         {
-            return PhysicalDevice;
+            m_physicalDevice = physicalDevice;
         }
     }
-
-    return VK_NULL_HANDLE;
 }
 
-void VulkanDevice::GetQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32& graphicsFamily, uint32& presentFamily)
+void VulkanDevice::GetQueueFamilies(VkPhysicalDevice physicalDevice)
 {
     uint32 queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
@@ -179,12 +178,12 @@ void VulkanDevice::GetQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKH
     for (uint32 x = 0; x < queueFamilyCount; x++)
     {
         if (families[x].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            graphicsFamily = x;
+            m_graphicsFamily = x;
 
             VkBool32 presentSupport = VK_FALSE;
-            VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, x, surface, &presentSupport));
-            if (presentSupport) presentFamily = x;
-            if (graphicsFamily != UINT32_MAX) break;
+            VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfaceSupportKHR(m_physicalDevice, x, vulkan.Surface(), &presentSupport));
+            if (presentSupport) m_presentFamily = x;
+            if (m_graphicsFamily != UINT32_MAX) break;
         }
     }
 }
@@ -213,7 +212,7 @@ void VulkanDevice::GetDeviceQueue(VkDevice device, uint32 graphicsFamily, uint32
 
 VkSampleCountFlagBits VulkanDevice::GetMaxSampleCount(VkPhysicalDevice gpuDevice)
 {
-    VkPhysicalDeviceLimits physicalDeviceProperties = GetPhysicalDeviceProperties(PhysicalDevice).limits;
+    VkPhysicalDeviceLimits physicalDeviceProperties = GetPhysicalDeviceProperties(m_physicalDevice).limits;
     VkSampleCountFlags counts = physicalDeviceProperties.framebufferColorSampleCounts & physicalDeviceProperties.framebufferDepthSampleCounts;
     if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
     if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
@@ -222,49 +221,6 @@ VkSampleCountFlagBits VulkanDevice::GetMaxSampleCount(VkPhysicalDevice gpuDevice
     if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
     if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
     return VK_SAMPLE_COUNT_1_BIT;
-}
-
-Vector<const char*> VulkanDevice::GetRequiredInstanceExtensions()
-{
-    uint32 count = 0;
-    vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
-    Vector<VkExtensionProperties> availableExtensionList(count);
-    vkEnumerateInstanceExtensionProperties(nullptr, &count, availableExtensionList.data());
-
-    Vector<const char*> extensions;
-    auto AddExtensionIfSupported = [&](const char* ext)
-        {
-            for (const auto& extension : availableExtensionList)
-                if (strcmp(extension.extensionName, ext) == 0)
-                {
-                    extensions.push_back(ext);
-                    std::cout << "Enabling instance extension: " << ext << '\n';
-                    return;
-                }
-            std::cout << "Extension not supported: " << ext << '\n';
-        };
-
-    AddExtensionIfSupported(VK_KHR_SURFACE_EXTENSION_NAME);
-    AddExtensionIfSupported(VK_EXT_COLOR_WRITE_ENABLE_EXTENSION_NAME);
-#if defined(_WIN32)
-    AddExtensionIfSupported(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-#elif defined(__linux__) && !defined(__ANDROID__)
-    AddExtensionIfSupported("VK_KHR_xcb_surface");
-    AddExtensionIfSupported("VK_KHR_wayland_surface");
-#elif defined(__ANDROID__)
-    AddExtensionIfSupported(VK_KHR_ANDROID_SURFACE_EXTENSION_NAME);
-#endif
-
-#if !defined(NDEBUG) && !defined(__ANDROID__)
-    AddExtensionIfSupported(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-#endif
-
-    if (extensions.empty() ||
-        (extensions.size() == 1 && extensions[0] == VK_KHR_SURFACE_EXTENSION_NAME))
-    {
-        throw std::runtime_error("No platform surface extension available — cannot create window.");
-    }
-    return extensions;
 }
 
 Vector<const char*> VulkanDevice::GetRequiredDeviceExtensions(VkPhysicalDevice physicalDevice)
@@ -320,7 +276,7 @@ VkPhysicalDeviceFeatures2 VulkanDevice::GetPhysicalDeviceFeatures2(VkPhysicalDev
     return features;
 }
 
-Vector<VkPhysicalDevice> VulkanDevice::GetPhysicalDeviceList(VkInstance& instance)
+Vector<VkPhysicalDevice> VulkanDevice::GetPhysicalDeviceList(VkInstance instance)
 {
     uint32 deviceCount = 0;
     Vector<VkPhysicalDevice> physicalDeviceList = Vector<VkPhysicalDevice>();
@@ -330,50 +286,22 @@ Vector<VkPhysicalDevice> VulkanDevice::GetPhysicalDeviceList(VkInstance& instanc
     return physicalDeviceList;
 }
 
-Vector<VkSurfaceFormatKHR> VulkanDevice::GetPhysicalDeviceFormats(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+Vector<VkSurfaceFormatKHR> VulkanDevice::GetPhysicalDeviceFormats(VkPhysicalDevice physicalDevice)
 {
     uint32 surfaceFormatCount = 0;
-    VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, nullptr));
+    VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, vulkan.Surface(), &surfaceFormatCount, nullptr));
     Vector<VkSurfaceFormatKHR> compatibleSwapChainFormatList = Vector<VkSurfaceFormatKHR>(surfaceFormatCount);
-    VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, compatibleSwapChainFormatList.data()));
+    VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, vulkan.Surface(), &surfaceFormatCount, compatibleSwapChainFormatList.data()));
     return compatibleSwapChainFormatList;
 }
 
-Vector<VkPresentModeKHR> VulkanDevice::GetPhysicalDevicePresentModes(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+Vector<VkPresentModeKHR> VulkanDevice::GetPhysicalDevicePresentModes(VkPhysicalDevice physicalDevice)
 {
     uint32 presentModeCount = 0;
-    VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr));
+    VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, vulkan.Surface(), &presentModeCount, nullptr));
     Vector<VkPresentModeKHR> compatiblePresentModesList = Vector<VkPresentModeKHR>(presentModeCount);
-    VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, compatiblePresentModesList.data()));
+    VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, vulkan.Surface(), &presentModeCount, compatiblePresentModesList.data()));
     return compatiblePresentModesList;
-}
-
-Vector<const char*> VulkanDevice::GetValidationLayerProperties()
-{
-    uint32 layerCount = UINT32_MAX;
-    Vector<const char*> validationLayers;
-    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-    std::vector<VkLayerProperties> availableLayers(layerCount);
-    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-
-    Vector<const char*> extensions;
-    auto AddExtensionIfSupported = [&](const char* ext)
-        {
-            for (const auto& layer : availableLayers)
-            {
-                if (strcmp(layer.layerName, ext) == 0)
-                {
-                    extensions.push_back(ext);
-                    std::cout << "Enabling instance extension: " << ext << '\n';
-                    return;
-                }
-            }
-            std::cout << "Extension not supported: " << ext << '\n';
-            //   __android_log_print(ANDROID_LOG_WARN, "Vulkan", "Validation layers not available - running without validation");
-        };
-    AddExtensionIfSupported("VK_LAYER_KHRONOS_validation");
-
-    return extensions;
 }
 
 bool VulkanDevice::GetRayTracingCapability(VkPhysicalDevice gpuDevice, Vector<String>& featureList, Vector<const char*>& deviceExtensionList)
