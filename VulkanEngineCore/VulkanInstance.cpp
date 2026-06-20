@@ -1,5 +1,5 @@
 #include "VulkanInstance.h"
-#include "VulkanCoreSystem.h"
+#include "VulkanSystem.h"
 
 VulkanInstance::VulkanInstance()
 {

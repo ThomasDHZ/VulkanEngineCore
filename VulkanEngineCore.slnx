@@ -4,4 +4,5 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="VulkanEngineCore/VulkanEngineCore.vcxproj" Id="526bff96-6c33-482d-9bec-29a6d553f16a" />
+  <Project Path="VulkanEngineCoreInterlopDLL/VulkanEngineCoreInterlopDLL.vcxproj" Id="cc0fad43-a37e-4138-82ad-cef9a3db650c" />
 </Solution>

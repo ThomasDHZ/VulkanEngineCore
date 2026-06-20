@@ -1,6 +1,6 @@
 #include "VulkanSwapchain.h"
 #include "VulkanDevice.h"
-#include "VulkanCoreSystem.h"
+#include "VulkanSystem.h"
 #include <GLFW/glfw3.h>
 
 void VulkanSwapchain::Initialize()

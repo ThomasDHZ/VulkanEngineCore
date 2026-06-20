@@ -2,7 +2,7 @@
 #define BUFFER_SYSTEM_IMPLEMENTATION
 #include "BufferSystem.h"
 #include "MemorySystem.h"
-#include "VulkanCoreSystem.h"
+#include "VulkanSystem.h"
 #include <vk_mem_alloc.h>
 #include <iostream>
 

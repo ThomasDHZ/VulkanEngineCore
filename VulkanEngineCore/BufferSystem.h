@@ -1,6 +1,5 @@
 #pragma once
 #include "Platform.h"
-#include "VulkanCoreSystem.h"
 #include "VulkanSystem.h"
 #include <vk_mem_alloc.h>
 

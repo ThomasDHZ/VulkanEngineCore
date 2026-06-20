@@ -10,7 +10,6 @@
 #define STBI_NO_STDIO
 #endif
 #include "MemorySystem.h"
-#include "VulkanSystem.h"
 #include "BufferSystem.h"
 
 FileSystem& fileSystem = FileSystem::Get();

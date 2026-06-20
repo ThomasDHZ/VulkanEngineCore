@@ -1,5 +1,5 @@
 #include "VulkanDevice.h"
-#include "VulkanCoreSystem.h"
+#include "VulkanSystem.h"
 #include "VulkanSwapchain.h"
 
 VulkanDevice::VulkanDevice()

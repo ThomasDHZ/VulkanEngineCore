@@ -51,9 +51,6 @@
     <ClInclude Include="VulkanCommandBuffer.h">
       <Filter>Header Files\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanCoreSystem.h">
-      <Filter>Header Files\Vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="VulkanDebugger.h">
       <Filter>Header Files\Vulkan</Filter>
     </ClInclude>
@@ -89,9 +86,6 @@
     <ClCompile Include="VulkanCommandBuffer.cpp">
       <Filter>Source Files\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanCoreSystem.cpp">
-      <Filter>Source Files\Vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="VulkanDebugger.cpp">
       <Filter>Source Files\Vulkan</Filter>
     </ClCompile>
@@ -102,9 +96,6 @@
       <Filter>Source Files\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="VulkanSwapchain.cpp">
-      <Filter>Source Files\Vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="VulkanSystem.cpp">
       <Filter>Source Files\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
