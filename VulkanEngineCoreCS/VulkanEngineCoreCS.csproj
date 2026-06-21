@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VulkanCS\VulkanCS.csproj" />
+    <ProjectReference Include="..\VulkanEngineCoreInterlopDLL\VulkanEngineCoreInterlopDLL.vcxproj" />
+    <ProjectReference Include="..\VulkanEngineCore\VulkanEngineCore.vcxproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Vulkan\" />
+  </ItemGroup>
+
+</Project>

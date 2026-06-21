@@ -1,8 +1,13 @@
 <Solution>
   <Configurations>
+    <Platform Name="Any CPU" />
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Project Path="VulkanCS/VulkanCS.csproj" Id="df5e56f5-cb97-4a5d-a065-3f2d2f5c6ddc" />
   <Project Path="VulkanEngineCore/VulkanEngineCore.vcxproj" Id="526bff96-6c33-482d-9bec-29a6d553f16a" />
-  <Project Path="VulkanEngineCoreInterlopDLL/VulkanEngineCoreInterlopDLL.vcxproj" Id="cc0fad43-a37e-4138-82ad-cef9a3db650c" />
+  <Project Path="VulkanEngineCoreCS/VulkanEngineCoreCS.csproj" Id="71b2960f-5846-4c9f-ba66-95b7af8cd6e9" />
+  <Project Path="VulkanEngineCoreInterlopDLL/VulkanEngineCoreInterlopDLL.vcxproj" Id="cc0fad43-a37e-4138-82ad-cef9a3db650c">
+    <BuildDependency Project="VulkanEngineCore/VulkanEngineCore.vcxproj" />
+  </Project>
 </Solution>
