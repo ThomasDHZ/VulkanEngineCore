@@ -16,9 +16,9 @@ namespace VulkanEngineCoreCS
             DLLSystem.CallDLLFunc(() => VulkanSystem_CreateLogMessageCallback(callback));
         }
 
-        public static void RendererSetUp(void* windowHandle, ivec2 windowSize, ivec2 renderSize)
+        public static void RendererSetUp(void* renderAreaHandle, ivec2 windowSize, ivec2 renderResolutionSize)
         {
-            DLLSystem.CallDLLFunc(() => VulkanSystem_RendererSetUp(windowHandle, windowSize, renderSize));
+            DLLSystem.CallDLLFunc(() => VulkanSystem_RendererSetUp(renderAreaHandle, windowSize, renderResolutionSize));
         }
 
         public static void hutdown()
@@ -28,7 +28,7 @@ namespace VulkanEngineCoreCS
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void LogVulkanMessageDelegate(string message, int severity);
         [DllImport("VulkanEngineCoreInterlopDLL.dll", CallingConvention = CallingConvention.Cdecl)] public static extern void VulkanSystem_CreateLogMessageCallback(LogVulkanMessageDelegate callback);
-        [DllImport("VulkanEngineCoreInterlopDLL.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_RendererSetUp(void* windowHandle, ivec2 windowSize, ivec2 renderSize);
+        [DllImport("VulkanEngineCoreInterlopDLL.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_RendererSetUp(void* renderAreaHandle, ivec2 windowSize, ivec2 renderResolutionSize);
         [DllImport("VulkanEngineCoreInterlopDLL.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_Shutdown();
     }
 }

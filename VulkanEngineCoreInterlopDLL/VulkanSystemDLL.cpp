@@ -1,5 +1,10 @@
 #include "VulkanSystemDLL.h"
 
+void VulkanSystem_CreateLogMessageCallback(LogVulkanMessageCallback callback)
+{
+    vulkan.Debug().CreateLogMessageCallback(callback);
+}
+
 void VulkanSystem_RendererSetUp(void* windowHandle, ivec2 windowSize, ivec2 renderSize)
 {
     vulkan.RendererSetUp(windowHandle, windowSize, renderSize);

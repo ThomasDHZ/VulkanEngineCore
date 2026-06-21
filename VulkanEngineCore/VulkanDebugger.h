@@ -19,7 +19,7 @@ public:
 	~VulkanDebugger();
 	static VkBool32 VKAPI_CALL DebugCallBack(VkDebugUtilsMessageSeverityFlagBitsEXT MessageSeverity, VkDebugUtilsMessageTypeFlagsEXT MessageType, const VkDebugUtilsMessengerCallbackDataEXT* CallBackData, void* pUserData);
 	static void LogVulkanMessage(const char* message, int severity);
-	static void CreateLogMessageCallback(LogVulkanMessageCallback callback);
+	DLL_EXPORT static void CreateLogMessageCallback(LogVulkanMessageCallback callback);
 
 	VkDebugUtilsMessengerEXT DebugMessengerHandle()			 { return m_DebugMessenger; }
 };

@@ -5,6 +5,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+	DLL_EXPORT void							 VulkanSystem_CreateLogMessageCallback(LogVulkanMessageCallback callback);
 	DLL_EXPORT void							 VulkanSystem_RendererSetUp(void* windowHandle, ivec2 windowSize, ivec2 renderSize);
 	DLL_EXPORT uint32						 VulkanSystem_GetMemoryType(VkPhysicalDevice physicalDevice, uint32 typeFilter, VkMemoryPropertyFlags properties);
 	DLL_EXPORT void							 VulkanSystem_Shutdown();
