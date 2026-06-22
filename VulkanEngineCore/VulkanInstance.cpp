@@ -11,12 +11,6 @@ VulkanInstance::~VulkanInstance()
 
 void VulkanInstance::Initialize()
 {
-    if (m_instance == VK_NULL_HANDLE &&
-        m_surface == VK_NULL_HANDLE)
-    {
-        throw std::runtime_error("Unable to start Vulkan Instance.");
-    }
-
     SetUpVulkanInstance();
     SetUpVulkanSurface();
 }
@@ -105,8 +99,8 @@ void VulkanInstance::SetUpVulkanInstance()
     PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_instance, "vkCreateDebugUtilsMessengerEXT");
     if (func)
     {
-        auto debug = vulkan.Debug().DebugMessengerHandle();
-        func(instance, &debugInfo, nullptr, &debug);
+        //auto debug = vulkan.Debug().DebugMessengerHandle();
+        //func(instance, &debugInfo, nullptr, &debug);
     }
 #endif
 }

@@ -4,15 +4,15 @@
 
 VulkanSystem& vulkan = VulkanSystem::Get();
 
-void VulkanSystem::RendererSetUp(void* windowHandle, ivec2 windowSize, ivec2 renderSize)
+void VulkanSystem::RendererSetUp(void* windowHandle, ivec2 windowResolution, ivec2 defaultRenderPassResolution)
 {
     m_windowHandle = windowHandle;
+    m_windowResolution = windowResolution;
     m_instance.Initialize();
     m_device.Initialize();
-    m_swapChain.Initialize();
+    m_swapChain.Initialize(defaultRenderPassResolution);
     m_commandBuffer.Initialize();
     //bufferSystem.vmaAllocator = SetUpVmaAllocation();
-    //vulkanSystem.MaxSampleCount = GetMaxSampleCount(vulkanSystem.PhysicalDevice);
 
 
 #if defined(__ANDROID__)

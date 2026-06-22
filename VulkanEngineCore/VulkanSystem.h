@@ -20,6 +20,7 @@ class VulkanSystem
 		VulkanSystem& operator=(VulkanSystem&&) = delete;
 
 		void*										m_windowHandle = nullptr;
+		ivec2										m_windowResolution;
 		VulkanInstance								m_instance;
 		VulkanDebugger								m_debug;
 		VulkanDevice								m_device;
@@ -38,13 +39,12 @@ class VulkanSystem
 		DLL_EXPORT VulkanCommandBuffer				CommandBuffer()			{ return m_commandBuffer; }
 
 		DLL_EXPORT [[nodiscard]] const void*		WindowHandle()			const { return m_windowHandle; }
+		DLL_EXPORT [[nodiscard]] ivec2				WindowResolution()		const { return m_windowResolution; }
 		DLL_EXPORT [[nodiscard]] uint32				ApiVersion()			const { return m_instance.ApiVersion(); }
 		DLL_EXPORT [[nodiscard]] VkInstance			InstanceHandle()		const { return m_instance.InstanceHandle(); }
 		DLL_EXPORT [[nodiscard]] VkSurfaceKHR		Surface()				const { return m_instance.Surface(); }
 		DLL_EXPORT [[nodiscard]] VkPhysicalDevice	PhysicalDevice()		const { return m_device.PhysicalDevice(); }
 		DLL_EXPORT [[nodiscard]] VkDevice			LogicalDevice()			const { return m_device.LogicalDevice(); }
-
-		DLL_EXPORT [[nodiscard]] ivec2				WindowResolution()		const { return m_swapChain.WindowResolution(); }
 		DLL_EXPORT [[nodiscard]] uint32				SwapChainImageCount()	const { return m_swapChain.ImageIndex(); }
 		DLL_EXPORT [[nodiscard]] VkExtent2D			SwapChainResolution()	const { return m_swapChain.SwapChainResolution(); }
 		DLL_EXPORT [[nodiscard]] ivec2				RenderPassResolution()	const { return m_swapChain.RenderPassResolution(); }

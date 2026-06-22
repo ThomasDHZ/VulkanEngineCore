@@ -14,6 +14,8 @@ void VulkanDevice::Initialize()
 {
     SetUpPhysicalDevice();
     SetUpLogicalDevice();
+    SetUpDeviceQueue();
+    m_MaxSampleCount = GetMaxSampleCount(m_physicalDevice);
 }
 
 void VulkanDevice::SetUpLogicalDevice()
@@ -151,11 +153,11 @@ void VulkanDevice::SetUpPhysicalDevice()
     Vector<VkPhysicalDevice> physicalDeviceList = GetPhysicalDeviceList(vulkan.InstanceHandle());
     for (auto& physicalDevice : physicalDeviceList)
     {
-        VkPhysicalDeviceProperties physicalDeviceProperties = GetPhysicalDeviceProperties(m_physicalDevice);
-        VkPhysicalDeviceFeatures physicalDeviceFeatures = GetPhysicalDeviceFeatures(m_physicalDevice);
+        VkPhysicalDeviceProperties physicalDeviceProperties = GetPhysicalDeviceProperties(physicalDevice);
+        VkPhysicalDeviceFeatures physicalDeviceFeatures = GetPhysicalDeviceFeatures(physicalDevice);
         GetQueueFamilies(physicalDevice);
-        Vector<VkSurfaceFormatKHR> surfaceFormatList = vulkan.Swapchain().GetSurfaceFormats(m_physicalDevice);
-        Vector<VkPresentModeKHR> presentModeList = vulkan.Swapchain().GetSurfacePresentModes(m_physicalDevice);
+        Vector<VkSurfaceFormatKHR> surfaceFormatList = vulkan.Swapchain().GetSurfaceFormats(physicalDevice);
+        Vector<VkPresentModeKHR> presentModeList = vulkan.Swapchain().GetSurfacePresentModes(physicalDevice);
 
         if (m_graphicsFamily != UINT32_MAX &&
             m_presentFamily != UINT32_MAX &&
@@ -164,6 +166,7 @@ void VulkanDevice::SetUpPhysicalDevice()
             physicalDeviceFeatures.samplerAnisotropy)
         {
             m_physicalDevice = physicalDevice;
+            return;
         }
     }
 }
@@ -181,33 +184,33 @@ void VulkanDevice::GetQueueFamilies(VkPhysicalDevice physicalDevice)
             m_graphicsFamily = x;
 
             VkBool32 presentSupport = VK_FALSE;
-            VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfaceSupportKHR(m_physicalDevice, x, vulkan.Surface(), &presentSupport));
+            VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, x, vulkan.Surface(), &presentSupport));
             if (presentSupport) m_presentFamily = x;
             if (m_graphicsFamily != UINT32_MAX) break;
         }
     }
 }
 
-void VulkanDevice::GetDeviceQueue(VkDevice device, uint32 graphicsFamily, uint32 presentFamily, VkQueue& graphicsQueue, VkQueue& presentQueue)
+void VulkanDevice::SetUpDeviceQueue()
 {
-    if (graphicsFamily == UINT32_MAX || presentFamily == UINT32_MAX) 
+    if (m_graphicsFamily == UINT32_MAX || m_presentFamily == UINT32_MAX)
     {
         fprintf(stderr, "ERROR: Invalid queue family index!\n");
         VULKAN_THROW_IF_FAIL(VK_ERROR_INITIALIZATION_FAILED);
     }
 
-    vkGetDeviceQueue(device, graphicsFamily, 0, &graphicsQueue);
-    vkGetDeviceQueue(device, presentFamily, 0, &presentQueue);
+    vkGetDeviceQueue(m_logicalDevice, m_graphicsFamily, 0, &m_graphicsQueue);
+    if (m_graphicsQueue == VK_NULL_HANDLE) {
+        fprintf(stderr, "FATAL: graphicsQueue is NULL! Family: %u (index 0 invalid?)\n", m_graphicsFamily);
+        VULKAN_THROW_IF_FAIL(VK_ERROR_INITIALIZATION_FAILED);
+    }
 
-    if (graphicsQueue == VK_NULL_HANDLE) {
-        fprintf(stderr, "FATAL: graphicsQueue is NULL! Family: %u (index 0 invalid?)\n", graphicsFamily);
+    vkGetDeviceQueue(m_logicalDevice, m_presentFamily, 0, &m_presentQueue);
+    if (m_presentQueue == VK_NULL_HANDLE) {
+        fprintf(stderr, "FATAL: presentQueue is NULL! Family: %u (index 0 invalid?)\n", m_presentFamily);
         VULKAN_THROW_IF_FAIL(VK_ERROR_INITIALIZATION_FAILED);
     }
-    if (presentQueue == VK_NULL_HANDLE) {
-        fprintf(stderr, "FATAL: presentQueue is NULL! Family: %u (index 0 invalid?)\n", presentFamily);
-        VULKAN_THROW_IF_FAIL(VK_ERROR_INITIALIZATION_FAILED);
-    }
-    printf("SUCCESS: GraphicsQueue = %p (family %u), PresentQueue = %p (family %u)\n", (void*)graphicsQueue, graphicsFamily, (void*)presentQueue, presentFamily);
+    printf("SUCCESS: GraphicsQueue = %p (family %u), PresentQueue = %p (family %u)\n", (void*)m_graphicsQueue, m_graphicsFamily, (void*)m_presentQueue, m_presentFamily);
 }
 
 VkSampleCountFlagBits VulkanDevice::GetMaxSampleCount(VkPhysicalDevice gpuDevice)
