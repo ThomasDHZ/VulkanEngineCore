@@ -26,9 +26,13 @@ class VulkanSystem
 		VulkanDevice									  m_device;
 		VulkanSwapchain									  m_swapChain;
 		VulkanCommandBuffer								  m_commandBuffer;
+		bool											  m_usingCustomSurface = false;
+
+		void											  RendererSetUp(void* windowHandle, ivec2 renderResolution);
 
 	public:
-		DLL_EXPORT void									  RendererSetUp(void* windowHandle, ivec2 windowSize, ivec2 renderResolution);
+		DLL_EXPORT void									  VulkanSetUp(ivec2 windowResolution, ivec2 renderResolution);
+		DLL_EXPORT void									  VulkanSetUp(void* windowHandle, ivec2 windowResolution, ivec2 renderResolution);
 		DLL_EXPORT uint32								  GetMemoryType(VkPhysicalDevice physicalDevice, uint32 typeFilter, VkMemoryPropertyFlags properties);
 		DLL_EXPORT void									  Shutdown();
 
@@ -38,6 +42,7 @@ class VulkanSystem
 		DLL_EXPORT VulkanSwapchain						  Swapchain()					  { return m_swapChain; }
 		DLL_EXPORT VulkanCommandBuffer					  CommandBuffer()				  { return m_commandBuffer; }
 
+		DLL_EXPORT [[nodiscard]] bool					  CustomSurface()			const { return m_usingCustomSurface; }
 		DLL_EXPORT [[nodiscard]] const void*			  WindowHandle()			const { return m_windowHandle; }
 		DLL_EXPORT [[nodiscard]] ivec2					  WindowResolution()		const { return m_windowResolution; }
 		DLL_EXPORT [[nodiscard]] uint32					  ApiVersion()				const { return m_instance.ApiVersion(); }

@@ -1,6 +1,7 @@
 #include "VulkanInstance.h"
 #include "VulkanSystem.h"
 #include <GLFW/glfw3.h>
+#include "VulkanWindow.h"
 
 VulkanInstance::VulkanInstance()
 {
@@ -114,22 +115,19 @@ void VulkanInstance::SetUpVulkanSurface()
     }
 
 #if defined(_WIN32)
-    //VkWin32SurfaceCreateInfoKHR surfaceCreateInfo =
-    //{
-    //    .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
-    //    .hinstance = GetModuleHandle(nullptr),
-    //    .hwnd = (HWND)vulkan.WindowHandle()
-    //};
-
-    //VkResult result = vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface);
-    VkResult result = glfwCreateWindowSurface(m_instance, (GLFWwindow*)vulkan.WindowHandle(), NULL, &m_surface);
-    if (result != VK_SUCCESS)
+    if (vulkan.CustomSurface())
     {
-        fprintf(stderr, "vkCreateWin32SurfaceKHR failed: %d (%s)\n",
-            result,
-            (result == VK_ERROR_EXTENSION_NOT_PRESENT) ? "VK_ERROR_EXTENSION_NOT_PRESENT" :
-            (result == VK_ERROR_INITIALIZATION_FAILED) ? "VK_ERROR_INITIALIZATION_FAILED" :
-            "unknown");
+        VkWin32SurfaceCreateInfoKHR surfaceCreateInfo =
+        {
+            .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+            .hinstance = GetModuleHandle(nullptr),
+            .hwnd = (HWND)vulkan.WindowHandle()
+        };
+        VkResult result = vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface);
+    }
+    else
+    {
+        vulkanWindow.CreateSurface(m_instance, m_surface);
     }
 
 #elif defined(__linux__) && !defined(__ANDROID__)

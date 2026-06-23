@@ -1,11 +1,7 @@
 #include "VulkanWindow.h"
 #include <iostream>
 
-VulkanWindow& VulkanWindow::Get()
-{
-    static VulkanWindow instance;
-    return instance;
-}
+VulkanWindow& vulkanWindow = VulkanWindow::Get();
 
 bool VulkanWindow::Create(const char* title, uint32 width, uint32 height)
 {
@@ -30,6 +26,16 @@ bool VulkanWindow::Create(const char* title, uint32 width, uint32 height)
     glfwSetErrorCallback(ErrorCallback);
 
     return true;
+}
+
+void VulkanWindow::CreateSurface(VkInstance& instance, VkSurfaceKHR& surface)
+{
+    GLFWwindow* handle = (GLFWwindow*)m_window;
+    VkResult result = glfwCreateWindowSurface(instance, handle, nullptr, &surface);
+    if (result != VK_SUCCESS) {
+        fprintf(stderr, "Failed to create Vulkan surface! Error code: %d\n", result);
+        return;
+    }
 }
 
 void VulkanWindow::PollEvents()
