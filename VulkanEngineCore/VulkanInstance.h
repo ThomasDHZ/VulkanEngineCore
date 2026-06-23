@@ -8,7 +8,6 @@ private:
     VkInstance			                   m_instance = VK_NULL_HANDLE;
     VkSurfaceKHR		                   m_surface = VK_NULL_HANDLE;
 
-    void				                   SetUpVulkanInstance();
     void					               SetUpVulkanSurface();
 
     uint32                                 GetMaxApiVersion(VkPhysicalDevice physicalDevice);
@@ -18,6 +17,7 @@ public:
     VulkanInstance();
     ~VulkanInstance();
 
+    void				                   SetUpVulkanInstance();
     void                                   Initialize();
     Vector<const char*>                    GetValidationLayerProperties();
 
