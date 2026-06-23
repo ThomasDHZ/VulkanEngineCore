@@ -1,5 +1,6 @@
 #include "VulkanInstance.h"
 #include "VulkanSystem.h"
+#include <GLFW/glfw3.h>
 
 VulkanInstance::VulkanInstance()
 {
@@ -113,14 +114,15 @@ void VulkanInstance::SetUpVulkanSurface()
     }
 
 #if defined(_WIN32)
-    VkWin32SurfaceCreateInfoKHR surfaceCreateInfo =
-    {
-        .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
-        .hinstance = GetModuleHandle(nullptr),
-        .hwnd = (HWND)vulkan.WindowHandle()
-    };
+    //VkWin32SurfaceCreateInfoKHR surfaceCreateInfo =
+    //{
+    //    .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+    //    .hinstance = GetModuleHandle(nullptr),
+    //    .hwnd = (HWND)vulkan.WindowHandle()
+    //};
 
-    VkResult result = vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface);
+    //VkResult result = vkCreateWin32SurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface);
+    VkResult result = glfwCreateWindowSurface(m_instance, (GLFWwindow*)vulkan.WindowHandle(), NULL, &m_surface);
     if (result != VK_SUCCESS)
     {
         fprintf(stderr, "vkCreateWin32SurfaceKHR failed: %d (%s)\n",
@@ -133,18 +135,23 @@ void VulkanInstance::SetUpVulkanSurface()
 #elif defined(__linux__) && !defined(__ANDROID__)
     GLFWwindow* window = (GLFWwindow*)windowHandle;
     glfwCreateWindowSurface(instance, window, nullptr, &surface);
-#elif defined(__ANDROID__)
-    VkAndroidSurfaceCreateInfoKHR surfaceInfo =
-    {
-            .sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR,
-            .pNext = nullptr,
-            .window = (ANativeWindow*)windowHandle
-    };
 
-    if (vkCreateAndroidSurfaceKHR(instance, &surfaceInfo, nullptr, &surface) != VK_SUCCESS)
+#elif defined(__ANDROID__)
+    ANativeWindow* nativeWindow = (ANativeWindow*)windowHandle;
+
+    VkAndroidSurfaceCreateInfoKHR surfaceInfo = { VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR };
+    surfaceInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
+    surfaceInfo.pNext = nullptr;
+    surfaceInfo.flags = 0;
+    surfaceInfo.window = nativeWindow;
+
+    VkResult result = vkCreateAndroidSurfaceKHR(instance, &surfaceInfo, nullptr, &surface);
+    if (result != VK_SUCCESS || surface == VK_NULL_HANDLE)
     {
-        __android_log_print(ANDROID_LOG_ERROR, "Vulkan", "Failed to create Android surface!");
+        __android_log_print(ANDROID_LOG_ERROR, "VulkanEngine", "FATAL: vkCreateAndroidSurfaceKHR failed! Result: %d", result);
+        return;
     }
+    __android_log_print(ANDROID_LOG_INFO, "VulkanEngine", "Android surface created successfully: %p", surface);
 #endif
 }
 

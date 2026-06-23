@@ -4,13 +4,13 @@
 
 VulkanSystem& vulkan = VulkanSystem::Get();
 
-void VulkanSystem::RendererSetUp(void* windowHandle, ivec2 windowResolution, ivec2 defaultRenderPassResolution)
+void VulkanSystem::RendererSetUp(void* windowHandle, ivec2 windowResolution, ivec2 renderResolution)
 {
     m_windowHandle = windowHandle;
     m_windowResolution = windowResolution;
     m_instance.Initialize();
     m_device.Initialize();
-    m_swapChain.Initialize(defaultRenderPassResolution);
+    m_swapChain.Initialize(renderResolution);
     m_commandBuffer.Initialize();
     //bufferSystem.vmaAllocator = SetUpVmaAllocation();
 

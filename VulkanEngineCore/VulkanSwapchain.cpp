@@ -11,11 +11,11 @@ VulkanSwapchain::~VulkanSwapchain()
 {
 }
 
-void VulkanSwapchain::Initialize(ivec2 defaultRenderPassResolution)
+void VulkanSwapchain::Initialize(ivec2 renderResolution)
 {
     m_ImageIndex = 0;
     m_CommandIndex = 0;
-    m_DefaultRenderPassResolution = defaultRenderPassResolution;
+    m_renderResolution = renderResolution;
     StartUpSwapChain();
     StartUpSwapChainImages();
     StartUpSwapChainImageViews();
@@ -155,7 +155,14 @@ void VulkanSwapchain::EndFrame(VkCommandBuffer& commandBufferSubmit)
 
 void VulkanSwapchain::RebuildSwapChain(void* windowHandle)
 {
-
+    if (m_RebuildSwapChainFlag)
+    {
+        vkDeviceWaitIdle(vulkan.LogicalDevice());
+        DestroySwapChainImageViews();
+        DestroySwapChain();
+        StartUpSwapChain();
+        m_RebuildSwapChainFlag = false;
+    }
 }
 
 void VulkanSwapchain::StartUpSwapChainImages()
@@ -330,4 +337,23 @@ VkSurfaceCapabilitiesKHR VulkanSwapchain::GetSurfaceCapabilities(VkPhysicalDevic
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
     VULKAN_THROW_IF_FAIL(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, vulkan.Surface(), &surfaceCapabilities));
     return surfaceCapabilities;
+}
+
+void VulkanSwapchain::DestroySwapChainImageViews()
+{
+    for (auto& swapChainImageView : m_SwapChainImageViews)
+    {
+        if (swapChainImageView != VK_NULL_HANDLE)
+        {
+            vkDestroyImageView(vulkan.LogicalDevice(), swapChainImageView, nullptr);
+            swapChainImageView = VK_NULL_HANDLE;
+        }
+    }
+    m_SwapChainImageViews.clear();
+}
+
+void VulkanSwapchain::DestroySwapChain()
+{
+    vkDestroySwapchainKHR(vulkan.LogicalDevice(), m_Swapchain, nullptr);
+    m_Swapchain = VK_NULL_HANDLE;
 }

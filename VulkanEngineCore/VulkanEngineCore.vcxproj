@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Host.win-x64\8.0.26\runtimes\win-x64\native;C:\VulkanSDK\1.4.328.1\Include;$(SolutionDir)..\VulkanEngineCore\VulkanEngineCoreDLL;$(SolutionDir)External\SPIRV-Reflect;$(SolutionDir)External\json\include;$(SolutionDir)External\VulkanMemoryAllocator\include;$(SolutionDir)\External\glfw\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Host.win-x64\8.0.26\runtimes\win-x64\native;C:\VulkanSDK\1.4.328.1\Include;$(SolutionDir)..\VulkanEngineCore\VulkanEngineCore;$(SolutionDir)External\SPIRV-Reflect;$(SolutionDir)External\json\include;$(SolutionDir)External\VulkanMemoryAllocator\include;$(SolutionDir)\External\glfw\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\VulkanEngineCore\x64\Debug;$(SolutionDir)External\glfw\src\Release;C:\VulkanSDK\1.4.328.1\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -144,14 +144,10 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BufferSystem.h" />
     <ClInclude Include="ConfigSystem.h" />
     <ClInclude Include="DLL.h" />
-    <ClInclude Include="FileSystem.h" />
-    <ClInclude Include="MemorySystem.h" />
     <ClInclude Include="Platform.h" />
-    <ClInclude Include="ShaderStructs.h" />
-    <ClInclude Include="ShaderSystem.h" />
+    <ClInclude Include="RenderSystem2.h" />
     <ClInclude Include="TypeDef.h" />
     <ClInclude Include="VkGuid.h" />
     <ClInclude Include="VulkanCommandBuffer.h" />
@@ -163,11 +159,9 @@
     <ClInclude Include="VulkanSystem.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BufferSystem.cpp" />
     <ClCompile Include="ConfigSystem.cpp" />
-    <ClCompile Include="FileSystem.cpp" />
-    <ClCompile Include="MemorySystem.cpp" />
-    <ClCompile Include="ShaderSystem.cpp" />
+    <ClCompile Include="Platform.cpp" />
+    <ClCompile Include="RenderSystem2.cpp" />
     <ClCompile Include="VulkanCommandBuffer.cpp" />
     <ClCompile Include="VulkanDebugger.cpp" />
     <ClCompile Include="VulkanDevice.cpp" />
