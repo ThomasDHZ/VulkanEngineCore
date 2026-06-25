@@ -1,5 +1,5 @@
 #pragma once
-#include "Platform.h"
+#include <Platform.h>
 
 #ifdef __cplusplus
 extern "C" {

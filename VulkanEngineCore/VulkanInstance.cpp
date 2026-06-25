@@ -234,3 +234,7 @@ Vector<const char*> VulkanInstance::GetValidationLayerProperties()
 
     return extensions;
 }
+
+uint32            VulkanInstance::ApiVersion()     const { return m_apiVersion; }
+VkInstance        VulkanInstance::InstanceHandle() const { return m_instance; }
+VkSurfaceKHR      VulkanInstance::Surface()        const { return m_surface; }

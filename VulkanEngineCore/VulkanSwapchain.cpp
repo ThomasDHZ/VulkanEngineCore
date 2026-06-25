@@ -76,81 +76,69 @@ void VulkanSwapchain::StartUpSwapChain()
 
 void VulkanSwapchain::StartFrame()
 {
-    VkCommandBufferBeginInfo commandBufferBeginInfo
-    {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
-    };
-    m_CommandIndex = (m_CommandIndex + 1) % m_SwapChainImageCount;
+    // Wait for the previous frame using this command index to finish
+    VULKAN_THROW_IF_FAIL(vkWaitForFences(vulkan.LogicalDevice(), 1,
+        &m_InFlightFences[m_CommandIndex], VK_TRUE, UINT64_MAX));
+    VULKAN_THROW_IF_FAIL(vkResetFences(vulkan.LogicalDevice(), 1,
+        &m_InFlightFences[m_CommandIndex]));
 
-    VULKAN_THROW_IF_FAIL(vkWaitForFences(vulkan.Device().LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex], VK_TRUE, UINT64_MAX));
-    VULKAN_THROW_IF_FAIL(vkResetFences(vulkan.Device().LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex]));
-    VULKAN_THROW_IF_FAIL(vkResetCommandBuffer(vulkan.CommandBuffer().CommandBufferList()[m_CommandIndex], 0));
-    VULKAN_THROW_IF_FAIL(vkBeginCommandBuffer(vulkan.CommandBuffer().CommandBufferList()[m_CommandIndex], &commandBufferBeginInfo));
-    VkResult result = vkAcquireNextImageKHR(vulkan.Device().LogicalDevice(), m_Swapchain, UINT64_MAX, m_AcquireImageSemaphores[m_CommandIndex], VK_NULL_HANDLE, &m_ImageIndex);
-    if (result == VK_ERROR_OUT_OF_DATE_KHR)
+    // Acquire next swapchain image
+    VkResult result = vkAcquireNextImageKHR(vulkan.LogicalDevice(), m_Swapchain, UINT64_MAX,
+        m_AcquireImageSemaphores[m_CommandIndex], VK_NULL_HANDLE, &m_ImageIndex);
+
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
-        vulkan.Swapchain().TriggerSwapChainFlag();
+        m_RebuildSwapChainFlag = true;
+        return;
     }
-    else if (result != VK_SUCCESS)
-    {
-        VULKAN_THROW_IF_FAIL(result);
-    }
+
+    // Begin command buffer
+    VkCommandBuffer cmd = vulkan.CommandBuffer().GetCurrentCommandBuffer();
+    vkResetCommandBuffer(cmd, 0);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    VULKAN_THROW_IF_FAIL(vkBeginCommandBuffer(cmd, &beginInfo));
 }
 
 void VulkanSwapchain::EndFrame(VkCommandBuffer& commandBufferSubmit)
 {
-    VkPipelineStageFlags waitStages[] =
-    {
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-    };
+    VkCommandBuffer cmd = vulkan.CommandBuffer().GetCurrentCommandBuffer();
+    VULKAN_THROW_IF_FAIL(vkEndCommandBuffer(cmd));
 
-    VkSubmitInfo submitInfo =
-    {
-        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .waitSemaphoreCount = 1,
-        .pWaitSemaphores = &m_AcquireImageSemaphores[m_CommandIndex],
-        .pWaitDstStageMask = waitStages,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &commandBufferSubmit,
-        .signalSemaphoreCount = 1,
-        .pSignalSemaphores = &m_PresentImageSemaphores[m_CommandIndex]
-    };
+    VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-    VULKAN_THROW_IF_FAIL(vkEndCommandBuffer(vulkan.CommandBuffer().CommandBufferList()[m_CommandIndex]));
-    VkResult submitResult = vkQueueSubmit(vulkan.Device().m_graphicsQueue, 1, &submitInfo, m_InFlightFences[m_CommandIndex]);
-    if (submitResult == VK_ERROR_OUT_OF_DATE_KHR ||
-        submitResult == VK_SUBOPTIMAL_KHR)
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = &m_AcquireImageSemaphores[m_CommandIndex];
+    submitInfo.pWaitDstStageMask = &waitStage;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &cmd;
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = &m_PresentImageSemaphores[m_CommandIndex];
+
+    VULKAN_THROW_IF_FAIL(vkQueueSubmit(vulkan.Device().GraphicsQueue(), 1, &submitInfo,
+        m_InFlightFences[m_CommandIndex]));
+
+    // Present
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = &m_PresentImageSemaphores[m_CommandIndex];
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = &m_Swapchain;
+    presentInfo.pImageIndices = &m_ImageIndex;
+
+    VkResult result = vkQueuePresentKHR(vulkan.Device().PresentQueue(), &presentInfo);
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
-        vulkan.Swapchain().TriggerSwapChainFlag();
-        return;
-    }
-    else if (submitResult != VK_SUCCESS)
-    {
-        VULKAN_THROW_IF_FAIL(submitResult);
+        m_RebuildSwapChainFlag = true;
     }
 
-    VkPresentInfoKHR presentInfo =
-    {
-        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-        .waitSemaphoreCount = 1,
-        .pWaitSemaphores = &m_PresentImageSemaphores[m_CommandIndex],
-        .swapchainCount = 1,
-        .pSwapchains = &m_Swapchain,
-        .pImageIndices = &m_ImageIndex
-    };
-
-    VkResult result = vkQueuePresentKHR(vulkan.Device().m_presentQueue, &presentInfo);
-    if (result == VK_ERROR_OUT_OF_DATE_KHR ||
-        result == VK_SUBOPTIMAL_KHR)
-    {
-        vulkan.Swapchain().TriggerSwapChainFlag();
-        return;
-    }
-    else if (result != VK_SUCCESS)
-    {
-        VULKAN_THROW_IF_FAIL(result);
-    }
+    // Advance to next frame's command index
+    m_CommandIndex = (m_CommandIndex + 1) % m_SwapChainImageCount;
 }
 
 void VulkanSwapchain::RebuildSwapChain(void* windowHandle)
@@ -357,3 +345,12 @@ void VulkanSwapchain::DestroySwapChain()
     vkDestroySwapchainKHR(vulkan.LogicalDevice(), m_Swapchain, nullptr);
     m_Swapchain = VK_NULL_HANDLE;
 }
+
+void						VulkanSwapchain::TriggerSwapChainFlag()       { m_RebuildSwapChainFlag = true; }
+uint32				        VulkanSwapchain::ImageIndex()		    const { return m_ImageIndex; }
+uint32				        VulkanSwapchain::CommandIndex()		    const { return m_CommandIndex; }
+uint32				        VulkanSwapchain::SwapChainImageCount()  const { return m_SwapChainImageCount; }
+VkExtent2D			        VulkanSwapchain::SwapChainResolution()  const { return m_SwapChainResolution; }
+ivec2					    VulkanSwapchain::RenderPassResolution() const { return m_renderResolution; }
+const Vector<VkImage>	    VulkanSwapchain::SwapChainImages()      const { return m_SwapChainImages; }
+const Vector<VkImageView>	VulkanSwapchain::SwapChainImageViews()  const { return m_SwapChainImageViews; }

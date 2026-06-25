@@ -344,3 +344,11 @@ bool VulkanDevice::GetRayTracingCapability(VkPhysicalDevice gpuDevice, Vector<St
 void VulkanDevice::Shutdown()
 {
 }
+
+VkPhysicalDevice          VulkanDevice::PhysicalDevice() const { return m_physicalDevice; }
+VkDevice                  VulkanDevice::LogicalDevice()  const { return m_logicalDevice; }
+VkQueue                   VulkanDevice::GraphicsQueue()  const { return m_graphicsQueue; }
+VkQueue                   VulkanDevice::PresentQueue()   const { return m_presentQueue; }
+uint32                    VulkanDevice::GraphicsFamily() const { return m_graphicsFamily; }
+uint32                    VulkanDevice::PresentFamily()  const { return m_presentFamily; }
+VkSampleCountFlagBits     VulkanDevice::MaxSampleCount() const { return m_MaxSampleCount; }

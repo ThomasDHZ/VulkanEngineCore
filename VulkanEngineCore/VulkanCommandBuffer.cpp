@@ -1,17 +1,9 @@
 #include "VulkanCommandBuffer.h"
 #include "VulkanSystem.h"
-#include "VulkanSwapchain.h" 
-#include "VulkanDevice.h"
+#include "VulkanSwapchain.h"
 
-VulkanCommandBuffer::VulkanCommandBuffer()
-{
-
-}
-
-VulkanCommandBuffer::~VulkanCommandBuffer()
-{
-
-}
+VulkanCommandBuffer::VulkanCommandBuffer() = default;
+VulkanCommandBuffer::~VulkanCommandBuffer() = default;
 
 void VulkanCommandBuffer::Initialize()
 {
@@ -19,66 +11,70 @@ void VulkanCommandBuffer::Initialize()
     SetUpCommandBuffers();
 }
 
-void VulkanCommandBuffer::SetUpCommandBuffers()
+void VulkanCommandBuffer::SetUpCommandPool()
 {
-    m_CommandBufferList = Vector<VkCommandBuffer>(vulkan.Swapchain().SwapChainImageCount(), VK_NULL_HANDLE);
-    for (size_t x = 0; x < vulkan.Swapchain().SwapChainImageCount(); x++)
-    {
-        VkCommandBufferAllocateInfo commandBufferAllocateInfo =
-        {
-            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            .commandPool = m_CommandPool,
-            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-            .commandBufferCount = static_cast<uint32>(vulkan.Swapchain().SwapChainImageCount())
-        };
-        vkAllocateCommandBuffers(vulkan.Device().LogicalDevice(), &commandBufferAllocateInfo, &m_CommandBufferList[x]);
-    }
-}
-
-VkCommandPool VulkanCommandBuffer::SetUpCommandPool()
-{
-    VkCommandPoolCreateInfo CommandPoolCreateInfo =
-    {
+    VkCommandPoolCreateInfo poolInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
         .queueFamilyIndex = vulkan.Device().GraphicsFamily()
     };
-    VULKAN_THROW_IF_FAIL(vkCreateCommandPool(vulkan.LogicalDevice(), &CommandPoolCreateInfo, NULL, &m_CommandPool));
+
+    VULKAN_THROW_IF_FAIL(vkCreateCommandPool(vulkan.LogicalDevice(), &poolInfo, nullptr, &m_CommandPool));
+}
+
+void VulkanCommandBuffer::SetUpCommandBuffers()
+{
+    uint32 imageCount = vulkan.Swapchain().SwapChainImageCount();
+    m_CommandBufferList.resize(imageCount, VK_NULL_HANDLE);
+
+    VkCommandBufferAllocateInfo allocInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .commandPool = m_CommandPool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = imageCount
+    };
+
+    VULKAN_THROW_IF_FAIL(vkAllocateCommandBuffers(vulkan.LogicalDevice(), &allocInfo, m_CommandBufferList.data()));
+}
+
+VkCommandBuffer VulkanCommandBuffer::GetCurrentCommandBuffer() const
+{
+    return m_CommandBufferList[vulkan.Swapchain().CommandIndex()];
 }
 
 VkCommandBuffer VulkanCommandBuffer::BeginSingleUseCommand()
 {
-    VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-    VkCommandBufferAllocateInfo allocInfo =
-    {
+    VkCommandBuffer cmd = VK_NULL_HANDLE;
+    VkCommandBufferAllocateInfo allocInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .commandPool = m_CommandPool,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = 1
     };
-    VULKAN_THROW_IF_FAIL(vkAllocateCommandBuffers(vulkan.LogicalDevice(), &allocInfo, &commandBuffer));
+    vkAllocateCommandBuffers(vulkan.LogicalDevice(), &allocInfo, &cmd);
 
-    VkCommandBufferBeginInfo beginInfo =
-    {
+    VkCommandBufferBeginInfo beginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
     };
-    VULKAN_THROW_IF_FAIL(vkBeginCommandBuffer(commandBuffer, &beginInfo));
-    return commandBuffer;
+    vkBeginCommandBuffer(cmd, &beginInfo);
+    return cmd;
 }
 
 void VulkanCommandBuffer::EndSingleUseCommand(VkCommandBuffer commandBuffer)
 {
-    VULKAN_THROW_IF_FAIL(vkEndCommandBuffer(commandBuffer));
+    vkEndCommandBuffer(commandBuffer);
 
-    VkSubmitInfo submitInfo = VkSubmitInfo
-    {
+    VkSubmitInfo submitInfo = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .commandBufferCount = 1,
         .pCommandBuffers = &commandBuffer
     };
 
-    VULKAN_THROW_IF_FAIL(vkQueueSubmit(vulkan.Device().GraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE));
-    VULKAN_THROW_IF_FAIL(vkQueueWaitIdle(vulkan.Device().GraphicsQueue()));
-    vkFreeCommandBuffers(vulkan.Device().LogicalDevice(), m_CommandPool, 1, &commandBuffer);
+    vkQueueSubmit(vulkan.Device().GraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(vulkan.Device().GraphicsQueue());
+    vkFreeCommandBuffers(vulkan.LogicalDevice(), m_CommandPool, 1, &commandBuffer);
 }
+
+VkCommandPool                  VulkanCommandBuffer::CommandPool() const { return m_CommandPool; }
+const Vector<VkCommandBuffer>& VulkanCommandBuffer::CommandBufferList() const { return m_CommandBufferList; }

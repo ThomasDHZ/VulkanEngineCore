@@ -1,5 +1,5 @@
 #pragma once
-#include "Platform.h"
+#include <Platform.h>
 #include "Typedef.h"
 #include <GLFW/glfw3.h>
 

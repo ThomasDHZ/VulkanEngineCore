@@ -1,7 +1,7 @@
 #pragma once
-#include "Platform.h"
+#include <Platform.h>
 
-class VulkanDevice
+class DLL_EXPORT VulkanDevice
 {
     friend class VulkanSwapchain;
     private:
@@ -26,19 +26,19 @@ class VulkanDevice
         VulkanDevice();
         ~VulkanDevice();
         void                                   Initialize();
-        DLL_EXPORT Vector<VkPhysicalDevice>    GetPhysicalDeviceList(VkInstance instance);
-        DLL_EXPORT VkPhysicalDeviceProperties  GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice);
-        DLL_EXPORT VkPhysicalDeviceFeatures    GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice);
-        DLL_EXPORT VkPhysicalDeviceFeatures2   GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice);
-        DLL_EXPORT Vector<VkSurfaceFormatKHR>  GetPhysicalDeviceFormats(VkPhysicalDevice physicalDevice);
-        DLL_EXPORT Vector<VkPresentModeKHR>    GetPhysicalDevicePresentModes(VkPhysicalDevice physicalDevice);
-        DLL_EXPORT void                        Shutdown();
+        Vector<VkPhysicalDevice>                GetPhysicalDeviceList(VkInstance instance);
+        VkPhysicalDeviceProperties              GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice);
+        VkPhysicalDeviceFeatures                GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice);
+        VkPhysicalDeviceFeatures2               GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice);
+        Vector<VkSurfaceFormatKHR>              GetPhysicalDeviceFormats(VkPhysicalDevice physicalDevice);
+        Vector<VkPresentModeKHR>                GetPhysicalDevicePresentModes(VkPhysicalDevice physicalDevice);
+        void                                    Shutdown();
 
-        [[nodiscard]] VkPhysicalDevice          PhysicalDevice() const { return m_physicalDevice; }
-        [[nodiscard]] VkDevice                  LogicalDevice()  const { return m_logicalDevice;  }
-        [[nodiscard]] VkQueue                   GraphicsQueue()  const { return m_graphicsQueue;  }
-        [[nodiscard]] VkQueue                   PresentQueue()   const { return m_presentQueue;   }
-        [[nodiscard]] uint32                    GraphicsFamily() const { return m_graphicsFamily; }
-        [[nodiscard]] uint32                    PresentFamily()  const { return m_presentFamily;  }
-        [[nodiscard]] VkSampleCountFlagBits     MaxSampleCount() const { return m_MaxSampleCount; }
+        [[nodiscard]] VkPhysicalDevice          PhysicalDevice() const;
+        [[nodiscard]] VkDevice                  LogicalDevice()  const;
+        [[nodiscard]] VkQueue                   GraphicsQueue()  const;
+        [[nodiscard]] VkQueue                   PresentQueue()   const;
+        [[nodiscard]] uint32                    GraphicsFamily() const;
+        [[nodiscard]] uint32                    PresentFamily()  const;
+        [[nodiscard]] VkSampleCountFlagBits     MaxSampleCount() const;
 };

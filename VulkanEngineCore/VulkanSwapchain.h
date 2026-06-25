@@ -1,5 +1,5 @@
 #pragma once
-#include "Platform.h"
+#include <Platform.h>
 
 class DLL_EXPORT VulkanSwapchain
 {
@@ -32,21 +32,21 @@ class DLL_EXPORT VulkanSwapchain
 		VulkanSwapchain();
 		~VulkanSwapchain();
 
-		 void						    Initialize(ivec2 renderResolution);
-		 void						    RebuildSwapChain(void* windowHandle);
-		 void						    StartFrame();
-		 void						    EndFrame(VkCommandBuffer& commandBufferSubmit);
+		 void									Initialize(ivec2 renderResolution);
+		 void									RebuildSwapChain(void* windowHandle);
+		 void									StartFrame();
+		 void									EndFrame(VkCommandBuffer& commandBufferSubmit);
 
 		Vector<VkSurfaceFormatKHR>			    GetSurfaceFormats(VkPhysicalDevice physicalDevice);
 		Vector<VkPresentModeKHR>			    GetSurfacePresentModes(VkPhysicalDevice physicalDevice);
 		VkSurfaceCapabilitiesKHR			    GetSurfaceCapabilities(VkPhysicalDevice physicalDevice);
-		void								    TriggerSwapChainFlag() { m_RebuildSwapChainFlag = true; }
+		void								    TriggerSwapChainFlag();
 
-		[[nodiscard]] uint32				    ImageIndex()		   const { return m_ImageIndex;					}
-		[[nodiscard]] uint32				    CommandIndex()		   const { return m_CommandIndex;				}
-		[[nodiscard]] uint32				    SwapChainImageCount()  const { return m_SwapChainImageCount;		}
-		[[nodiscard]] VkExtent2D			    SwapChainResolution()  const { return m_SwapChainResolution;		}
-		[[nodiscard]] ivec2					    RenderPassResolution() const { return m_renderResolution;			}
-		const [[nodiscard]] Vector<VkImage>	    SwapChainImages()      const { return m_SwapChainImages;			}
-		const [[nodiscard]] Vector<VkImageView>	SwapChainImageViews()  const { return m_SwapChainImageViews;		}
+		[[nodiscard]] uint32				    ImageIndex()		   const;
+		[[nodiscard]] uint32				    CommandIndex()		   const;
+		[[nodiscard]] uint32				    SwapChainImageCount()  const;
+		[[nodiscard]] VkExtent2D			    SwapChainResolution()  const;
+		[[nodiscard]] ivec2					    RenderPassResolution() const;
+		const [[nodiscard]] Vector<VkImage>	    SwapChainImages()      const;
+		const [[nodiscard]] Vector<VkImageView>	SwapChainImageViews()  const;
 };
