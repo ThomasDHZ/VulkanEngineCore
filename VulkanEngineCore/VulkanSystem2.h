@@ -6,18 +6,18 @@
 #include "VulkanSwapchain.h"
 #include "VulkanCommandBuffer.h"
 
-class VulkanSystem
+class DLL_EXPORT VulkanSystem2
 {
 public:
-	static VulkanSystem& Get();
+	static VulkanSystem2& Get();
 
 private:
-	VulkanSystem() = default;
-	~VulkanSystem() = default;
-	VulkanSystem(const VulkanSystem&) = delete;
-	VulkanSystem& operator=(const VulkanSystem&) = delete;
-	VulkanSystem(VulkanSystem&&) = delete;
-	VulkanSystem& operator=(VulkanSystem&&) = delete;
+	VulkanSystem2() = default;
+	~VulkanSystem2() = default;
+	VulkanSystem2(const VulkanSystem2&) = delete;
+	VulkanSystem2& operator=(const VulkanSystem2&) = delete;
+	VulkanSystem2(VulkanSystem2&&) = delete;
+	VulkanSystem2& operator=(VulkanSystem2&&) = delete;
 
 	void*								  m_windowHandle = nullptr;
 	ivec2								  m_windowResolution;
@@ -60,9 +60,9 @@ public:
 	[[nodiscard]] Vector<VkCommandBuffer> CommandBufferList()		const;
 
 };
-extern DLL_EXPORT VulkanSystem& vulkan;
-inline VulkanSystem& VulkanSystem::Get()
+extern DLL_EXPORT VulkanSystem2& vulkan;
+inline VulkanSystem2& VulkanSystem2::Get()
 {
-	static VulkanSystem instance;
+	static VulkanSystem2 instance;
 	return instance;
 }

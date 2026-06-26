@@ -3,7 +3,7 @@
 #include "Typedef.h"
 #include <GLFW/glfw3.h>
 
-class VulkanWindow
+class DLL_EXPORT VulkanWindow
 {
 public:
     static VulkanWindow& Get();
@@ -25,9 +25,9 @@ private:
     VulkanWindow(const VulkanWindow&) = delete;
     VulkanWindow& operator=(const VulkanWindow&) = delete;
 
-    bool m_framebufferResized = false;
-    uint32 m_width = 0;
-    uint32 m_height = 0;
+     bool m_framebufferResized = false;
+     uint32 m_width = 0;
+     uint32 m_height = 0;
 
     static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
     static void ErrorCallback(int error, const char* description);

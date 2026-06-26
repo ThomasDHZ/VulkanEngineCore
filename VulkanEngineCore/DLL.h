@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #if defined(_WIN32)
-#ifdef VulkanEngineDLL_EXPORTS
+#ifdef VulkanEngineCore_EXPORTS
 #define DLL_EXPORT __declspec(dllexport)
 #else
 #define DLL_EXPORT __declspec(dllimport)
