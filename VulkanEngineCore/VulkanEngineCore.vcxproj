@@ -145,6 +145,8 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\External\VulkanMemoryAllocator\include\vk_mem_alloc.h" />
+    <ClInclude Include="BufferSystem.h" />
     <ClInclude Include="ConfigSystem.h" />
     <ClInclude Include="DLL.h" />
     <ClInclude Include="GameController.h" />
@@ -156,16 +158,18 @@
     <ClInclude Include="RenderSystem2.h" />
     <ClInclude Include="TypeDef.h" />
     <ClInclude Include="VkGuid.h" />
+    <ClInclude Include="VulkanBuffer.h" />
     <ClInclude Include="VulkanCommandBuffer.h" />
     <ClInclude Include="VulkanDebugger.h" />
     <ClInclude Include="VulkanDevice.h" />
     <ClInclude Include="VulkanError.h" />
     <ClInclude Include="VulkanInstance.h" />
     <ClInclude Include="VulkanSwapchain.h" />
-    <ClInclude Include="VulkanSystem2.h" />
+    <ClInclude Include="VulkanSystem.h" />
     <ClInclude Include="VulkanWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BufferSystem.cpp" />
     <ClCompile Include="ConfigSystem.cpp" />
     <ClCompile Include="GameController.cpp" />
     <ClCompile Include="InputSystem.cpp" />
@@ -173,12 +177,13 @@
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="RenderSystem2.cpp" />
+    <ClCompile Include="VulkanBuffer.cpp" />
     <ClCompile Include="VulkanCommandBuffer.cpp" />
     <ClCompile Include="VulkanDebugger.cpp" />
     <ClCompile Include="VulkanDevice.cpp" />
     <ClCompile Include="VulkanInstance.cpp" />
     <ClCompile Include="VulkanSwapchain.cpp" />
-    <ClCompile Include="VulkanSystem2.cpp" />
+    <ClCompile Include="VulkanSystem.cpp" />
     <ClCompile Include="VulkanWindow.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
