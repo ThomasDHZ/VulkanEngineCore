@@ -19,7 +19,7 @@ private:
     Vector<uint32>                                    m_freeList;
     Vector<uint32>                                    m_generations;
     VmaAllocator                                      m_vmaAllocator;
-    UnorderedMap<BufferHandle, VulkanBuffer>          m_vulkanBufferMap;
+    UnorderedMap<uint32, VulkanBuffer>                m_vulkanBufferMap;
 
     BufferHandle                                      AllocateBufferId();
     void                                              FreeBufferId(int id);
@@ -99,14 +99,14 @@ public:
     void                                                    SetUpVmaAllocation();
     uint32                                                  CreateStaticVulkanBuffer(const void* srcData, VkDeviceSize size, VkBufferUsageFlags shaderUsageFlags, VkDeviceSize offset = 0);
     uint32                                                  CreateDynamicBuffer(const void* srcData, VkDeviceSize size, VkBufferUsageFlags usageFlags);
-    void                                                    UpdateDynamicBuffer(BufferHandle bufferId, const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
+    void                                                    UpdateDynamicBuffer(uint32 bufferId, const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
     void                                                    CopyBuffer(VkBuffer* srcBuffer, VkBuffer* dstBuffer, VkDeviceSize size, VkBufferUsageFlags shaderUsageFlags, VkDeviceSize offset = 0);
     void                                                    DestroyBuffer(VulkanBuffer& vulkanBuffer);
-    VulkanBuffer&                                           FindVulkanBuffer(BufferHandle id);
+    VulkanBuffer&                                           FindVulkanBuffer(uint32 id);
     const Vector<VulkanBuffer>&                             VulkanBufferList();
 
     [[nodiscard]] VmaAllocator			                    VmaAllocatorHandle()	    const;
-    [[nodiscard]] UnorderedMap<BufferHandle, VulkanBuffer>  VulkanBufferMap()         const;
+    [[nodiscard]] UnorderedMap<uint32, VulkanBuffer>  VulkanBufferMap()         const;
 };
 extern DLL_EXPORT BufferSystem& bufferSystem;
 inline BufferSystem& BufferSystem::Get()

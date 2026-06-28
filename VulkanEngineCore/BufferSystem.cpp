@@ -36,12 +36,12 @@ void BufferSystem::FreeBufferId(int id)
     }
 }
 
-VulkanBuffer& BufferSystem::FindVulkanBuffer(BufferHandle id)
+VulkanBuffer& BufferSystem::FindVulkanBuffer(uint32 id)
 {
     auto it = m_vulkanBufferMap.find(id);
     if (it == m_vulkanBufferMap.end())
     {
-        std::cerr << "Error: Buffer ID " << id.bufferId << " not found!" << std::endl;
+        std::cerr << "Error: Buffer ID " << id << " not found!" << std::endl;
         static VulkanBuffer empty{};
         return empty;
     }
@@ -115,7 +115,7 @@ uint32 BufferSystem::CreateStaticVulkanBuffer(const void* srcData, VkDeviceSize 
 
     if (srcData == nullptr)
     {
-        m_vulkanBufferMap[bufferId] = VulkanBuffer::CreateStaticBuffer(bufferId, dstBuffer, dstAllocation, size, shaderUsageFlags);
+        m_vulkanBufferMap[bufferId.bufferId] = VulkanBuffer::CreateStaticBuffer(bufferId, dstBuffer, dstAllocation, size, shaderUsageFlags);
         return bufferId.bufferId;
     }
 
@@ -167,7 +167,7 @@ uint32 BufferSystem::CreateStaticVulkanBuffer(const void* srcData, VkDeviceSize 
     CopyBuffer(&stagingBuffer, &dstBuffer, size - offset, shaderUsageFlags, offset);
     vmaDestroyBuffer(m_vmaAllocator, stagingBuffer, stagingAllocation);
 
-    m_vulkanBufferMap[bufferId] = VulkanBuffer::CreateStaticBuffer(bufferId, dstBuffer, dstAllocation, size, shaderUsageFlags);
+    m_vulkanBufferMap[bufferId.bufferId] = VulkanBuffer::CreateStaticBuffer(bufferId, dstBuffer, dstAllocation, size, shaderUsageFlags);
     return bufferId.bufferId;
 }
 
@@ -226,11 +226,11 @@ uint32 BufferSystem::CreateDynamicBuffer(const void* srcData, VkDeviceSize size,
         vmaFlushAllocation(m_vmaAllocator, allocation, 0, size);
     }
 
-    m_vulkanBufferMap[bufferId] = VulkanBuffer::CreateDynamicBuffer(bufferId, buffer, allocation, size, mappedData, usageFlags);
+    m_vulkanBufferMap[bufferId.bufferId] = VulkanBuffer::CreateDynamicBuffer(bufferId, buffer, allocation, size, mappedData, usageFlags);
     return bufferId.bufferId;
 }
 
-void BufferSystem::UpdateDynamicBuffer(BufferHandle bufferId, const void* data, VkDeviceSize size, VkDeviceSize offset)
+void BufferSystem::UpdateDynamicBuffer(uint32 bufferId, const void* data, VkDeviceSize size, VkDeviceSize offset)
 {
     auto it = m_vulkanBufferMap.find(bufferId);
     if (it == m_vulkanBufferMap.end() || !it->second.m_isPersistentlyMapped || !it->second.m_mappedData)
@@ -290,4 +290,4 @@ void BufferSystem::DestroyBuffer(VulkanBuffer& vulkanBuffer)
 }
 
 VmaAllocator					          BufferSystem::VmaAllocatorHandle()  const { return m_vmaAllocator; }
-UnorderedMap<BufferHandle, VulkanBuffer>  BufferSystem::VulkanBufferMap()     const { return m_vulkanBufferMap; }
+UnorderedMap<uint32, VulkanBuffer>        BufferSystem::VulkanBufferMap()     const { return m_vulkanBufferMap; }
