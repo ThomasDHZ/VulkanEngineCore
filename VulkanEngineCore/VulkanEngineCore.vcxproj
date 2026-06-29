@@ -156,6 +156,7 @@
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="RenderSystem2.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="TypeDef.h" />
     <ClInclude Include="VkGuid.h" />
     <ClInclude Include="VulkanBuffer.h" />
@@ -177,6 +178,7 @@
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="RenderSystem2.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VulkanBuffer.cpp" />
     <ClCompile Include="VulkanCommandBuffer.cpp" />
     <ClCompile Include="VulkanDebugger.cpp" />
