@@ -18,21 +18,25 @@ enum class TextureTypeEnum : uint32
     kTextureType_DepthTexture,
     kTextureType_StencilTexture,
     kTextureType_DataTexture,
-    kTextureType_CubeMap
+    kTextureType_CubeMap,
+    kTextureType_StorageTexture
 };
 
 struct VulkanTextureLoader
 {
-    Vector<byte>          TextureData;
+    void*                 TextureData;
+    uint32                TextureByteSize = UINT32_MAX;
+    ivec3                 TextureDimentions = ivec3(UINT32_MAX);
+    VkSamplerCreateInfo   SamplerCreateInfo;
+
     uint32                MipMapCount = UINT32_MAX;
-    ivec3                 TextureSize = ivec3(UINT32_MAX);
-    VkFormat              TextureByteFormat = VK_FORMAT_UNDEFINED;
     VkImageAspectFlags    ImageType = VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM;
     ColorChannelEnum      ColorChannels = ColorChannelEnum::ChannelRGBA;
     VkImageLayout         TextureImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     VkSampleCountFlagBits SampleCount = VK_SAMPLE_COUNT_1_BIT;
-    VkSamplerCreateInfo   SamplerCreateInfo;
+    VkFormat              TextureByteFormat = VK_FORMAT_UNDEFINED;
     TextureTypeEnum       TextureType;
+    bool                  IsRenderPassAttachmentTexture;
 };
 
 class VulkanTexture
@@ -53,6 +57,8 @@ private:
 
     void CreateTextureImage(VulkanTextureLoader& textureLoader);
     void CreateTextureView(VulkanTextureLoader& textureLoader);
+    void CreateTextureSampler(VulkanTextureLoader& textureLoader);
+    void UploadTextureDataAndTransition(VulkanTextureLoader& textureLoader);
     void GenerateMipmaps();
 
     bool IsDepthFormat(VkFormat format);
@@ -64,4 +70,12 @@ public:
     VulkanTexture();
     VulkanTexture(VulkanTextureLoader& textureLoader);
     ~VulkanTexture();
+
+    void DestroyTexture();
+
+    [[nodiscard]] VkImage             TextureImage()        const noexcept;
+    [[nodiscard]] Vector<VkImageView> TextureViews()        const noexcept;
+    [[nodiscard]] VkSampler           TextureSampler()      const noexcept;
+    [[nodiscard]] ivec3               TextureSize()         const noexcept;
+    [[nodiscard]] VkImageLayout       TextureImageLayout()  const noexcept;
 };
