@@ -156,6 +156,10 @@
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="RenderSystem2.h" />
+    <ClInclude Include="ShaderEnums.h" />
+    <ClInclude Include="ShaderStructs.h" />
+    <ClInclude Include="VulkanPipeline.h" />
+    <ClInclude Include="VulkanShader.h" />
     <ClInclude Include="VulkanTexture.h" />
     <ClInclude Include="TypeDef.h" />
     <ClInclude Include="VkGuid.h" />
@@ -178,6 +182,9 @@
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="RenderSystem2.cpp" />
+    <ClCompile Include="ShaderEnums.cpp" />
+    <ClCompile Include="VulkanPipeline.cpp" />
+    <ClCompile Include="VulkanShader.cpp" />
     <ClCompile Include="VulkanTexture.cpp" />
     <ClCompile Include="VulkanBuffer.cpp" />
     <ClCompile Include="VulkanCommandBuffer.cpp" />
