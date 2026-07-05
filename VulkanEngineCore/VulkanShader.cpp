@@ -4,16 +4,17 @@ VulkanShader::VulkanShader()
 {
 }
 
-VulkanShader::VulkanShader(Vector<byte> shaderData, VkShaderStageFlagBits shaderStages)
+VulkanShader::VulkanShader(const Vector<byte>& shaderCode)
 {
-    VkShaderModuleCreateInfo shaderModuleCreateInfo =
-    {
-        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-        .codeSize = shaderData.size(),
-        .pCode = (const uint32*)shaderData.data()
-    };
-    m_shaderStages = shaderStages;
-    VULKAN_THROW_IF_FAIL(vkCreateShaderModule(vulkan.LogicalDevice(), &shaderModuleCreateInfo, nullptr, &m_shaderModule));
+    SpvReflectShaderModule spvReflectModule;
+    SPV_VULKAN_RESULT(spvReflectCreateShaderModule(shaderCode.size(), shaderCode.data(), &spvReflectModule));
+    m_shaderStages = static_cast<VkShaderStageFlagBits>(spvReflectModule.shader_stage);
+
+    LoadShader(shaderCode);
+    if (spvReflectModule.shader_stage == SPV_REFLECT_SHADER_STAGE_VERTEX_BIT) LoadShaderVertexInputVariables(spvReflectModule);
+    LoadShaderSpecialConstants(spvReflectModule);
+    LoadShaderConstantBufferData(spvReflectModule);
+    LoadShaderDescriptorBindings(spvReflectModule);
 }
 
 VulkanShader::~VulkanShader()
@@ -31,19 +32,18 @@ VkPipelineShaderStageCreateInfo VulkanShader::GetShader()
     };
 }
 
-void VulkanShader::LoadShaderVertexInputVariables(const SpvReflectShaderModule& module, Vector<VkVertexInputBindingDescription>& vertexInputBindingList, Vector<VkVertexInputAttributeDescription>& vertexInputAttributeList)
+void VulkanShader::LoadShaderVertexInputVariables(const SpvReflectShaderModule& spvReflectModule)
 {
-    uint32 offset = 0;
-
-    Vector<SpvReflectInterfaceVariable> inputs = GetShaderVertexInputVariables(module);
-    inputs.erase(std::remove_if(inputs.begin(), inputs.end(), [](SpvReflectInterfaceVariable* input) { return input->built_in != -1; }), inputs.end());
+    Vector<SpvReflectInterfaceVariable> inputs = GetShaderVertexInputVariables(spvReflectModule);
+    inputs.erase(std::remove_if(inputs.begin(), inputs.end(), [](SpvReflectInterfaceVariable input) { return input.built_in != -1; }), inputs.end());
     inputs.shrink_to_fit();
 
-    std::sort(inputs.begin(), inputs.end(), [](SpvReflectInterfaceVariable* a, SpvReflectInterfaceVariable* b)
+    std::sort(inputs.begin(), inputs.end(), [](SpvReflectInterfaceVariable a, SpvReflectInterfaceVariable b)
         {
-            return a->location < b->location;
+            return a.location < b.location;
         });
 
+    uint32 offset = 0;
     VkVertexInputRate inputRate = LoadVertexInputRate();
     for (int x = 0; x < inputs.size(); x++)
     {
@@ -52,7 +52,7 @@ void VulkanShader::LoadShaderVertexInputVariables(const SpvReflectShaderModule& 
         {
             case SpvOpTypeInt:
             {
-                vertexInputAttributeList.emplace_back(VkVertexInputAttributeDescription
+                m_inputVertexAttributeList.emplace_back(VkVertexInputAttributeDescription
                     {
                         .location = inputs[x].location,
                         .binding = binding,
@@ -64,7 +64,7 @@ void VulkanShader::LoadShaderVertexInputVariables(const SpvReflectShaderModule& 
             }
             case SpvOpTypeFloat:
             {
-                vertexInputAttributeList.emplace_back(VkVertexInputAttributeDescription
+                m_inputVertexAttributeList.emplace_back(VkVertexInputAttributeDescription
                     {
                         .location = inputs[x].location,
                         .binding = binding,
@@ -76,7 +76,7 @@ void VulkanShader::LoadShaderVertexInputVariables(const SpvReflectShaderModule& 
             }
             case SpvOpTypeVector:
             {
-                vertexInputAttributeList.emplace_back(VkVertexInputAttributeDescription
+                m_inputVertexAttributeList.emplace_back(VkVertexInputAttributeDescription
                     {
                         .location = inputs[x].location,
                         .binding = binding,
@@ -90,7 +90,7 @@ void VulkanShader::LoadShaderVertexInputVariables(const SpvReflectShaderModule& 
             {
                 for (int y = 0; y < inputs[x].type_description->traits.numeric.vector.component_count; y++)
                 {
-                    vertexInputAttributeList.emplace_back(VkVertexInputAttributeDescription
+                    m_inputVertexAttributeList.emplace_back(VkVertexInputAttributeDescription
                         {
                             .location = inputs[x].location,
                             .binding = binding,
@@ -103,9 +103,9 @@ void VulkanShader::LoadShaderVertexInputVariables(const SpvReflectShaderModule& 
                 break;
             }
         }
-        vertexInputBindingList.emplace_back(VkVertexInputBindingDescription
+        m_vertexInputBindingList.emplace_back(VkVertexInputBindingDescription
             {
-               .binding = vertexInputAttributeList[x].binding,
+               .binding = m_inputVertexAttributeList[x].binding,
                .stride = offset,
                .inputRate = static_cast<VkVertexInputRate>(inputRate)
             });
@@ -113,18 +113,18 @@ void VulkanShader::LoadShaderVertexInputVariables(const SpvReflectShaderModule& 
     }
 }
 
-Vector<SpvReflectInterfaceVariable*> VulkanShader::LoadShaderVertexOutputVariables(const SpvReflectShaderModule& module)
+Vector<SpvReflectInterfaceVariable*> VulkanShader::LoadShaderVertexOutputVariables(const SpvReflectShaderModule& spvReflectModule)
 {
     uint32 outputCount = 0;
-    SPV_VULKAN_RESULT(spvReflectEnumerateOutputVariables(&module, &outputCount, nullptr));
+    SPV_VULKAN_RESULT(spvReflectEnumerateOutputVariables(&spvReflectModule, &outputCount, nullptr));
     Vector<SpvReflectInterfaceVariable*> outputs(outputCount);
-    SPV_VULKAN_RESULT(spvReflectEnumerateOutputVariables(&module, &outputCount, outputs.data()));
+    SPV_VULKAN_RESULT(spvReflectEnumerateOutputVariables(&spvReflectModule, &outputCount, outputs.data()));
     return outputs;
 }
 
-void VulkanShader::LoadShaderConstantBufferData(const SpvReflectShaderModule& module, Vector<ShaderPushConstant>& shaderPushConstantList)
+void VulkanShader::LoadShaderConstantBufferData(const SpvReflectShaderModule& spvReflectModule)
 {
-    Vector<SpvReflectBlockVariable> pushConstants = GetShaderPushConstants(module);
+    Vector<SpvReflectBlockVariable> pushConstants = GetShaderPushConstants(spvReflectModule);
     if (pushConstants.empty()) return;
 
     size_t bufferSize = 0;
@@ -139,16 +139,15 @@ void VulkanShader::LoadShaderConstantBufferData(const SpvReflectShaderModule& mo
     {
        .PushConstantName = pushConstantName,
        .PushConstantSize = bufferSize,
-       .ShaderStageFlags = static_cast<VkShaderStageFlags>(module.shader_stage),
+       .ShaderStageFlags = static_cast<VkShaderStageFlags>(spvReflectModule.shader_stage),
        .PushConstantVariableList = shaderStructVariableList,
        .PushConstantBuffer = Vector<byte>(bufferSize, 0x00)
     };
 }
 
-
-void VulkanShader::LoadShaderDescriptorBindings(const SpvReflectShaderModule& module)
+void VulkanShader::LoadShaderDescriptorBindings(const SpvReflectShaderModule& spvReflectModule)
 {
-    Vector<SpvReflectDescriptorBinding> descriptorSetBindings = GetShaderDescriptorBindings(module);
+    Vector<SpvReflectDescriptorBinding> descriptorSetBindings = GetShaderDescriptorBindings(spvReflectModule);
     for (auto& descriptorBinding : descriptorSetBindings)
     {
         String name(descriptorBinding.name);
@@ -157,7 +156,7 @@ void VulkanShader::LoadShaderDescriptorBindings(const SpvReflectShaderModule& mo
                 .Name = name,
                 .DescriptorSet = descriptorBinding.set,
                 .Binding = descriptorBinding.binding,
-                .ShaderStageFlags = static_cast<VkShaderStageFlags>(module.shader_stage),
+                .ShaderStageFlags = static_cast<VkShaderStageFlags>(spvReflectModule.shader_stage),
                 .DescriptorBindingType = descriptorBinding.descriptor_type,
                 .DescripterType = static_cast<VkDescriptorType>(descriptorBinding.descriptor_type)
             });
@@ -168,9 +167,9 @@ void VulkanShader::LoadShaderDescriptorBindings(const SpvReflectShaderModule& mo
         });
 }
 
-void VulkanShader::LoadShaderSpecialConstants(const SpvReflectShaderModule& module)
+void VulkanShader::LoadShaderSpecialConstants(const SpvReflectShaderModule& spvReflectModule)
 {
-    m_specializationConstantList = GetShaderSpecialConstants(module);
+    m_specializationConstantList = GetShaderSpecialConstants(spvReflectModule);
 }
 
 ShaderStruct VulkanShader::LoadShaderPipelineStruct(const SpvReflectTypeDescription& shaderInfo)
@@ -302,6 +301,17 @@ Vector<ShaderVariable> VulkanShader::LoadShaderStructVariables(const SpvReflectT
     return shaderVariables;
 }
 
+void VulkanShader::LoadShader(const Vector<byte>& shaderCode)
+{
+    VkShaderModuleCreateInfo shaderModuleCreateInfo =
+    {
+        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+        .codeSize = shaderCode.size(),
+        .pCode = (const uint32*)shaderCode.data()
+    };
+    VULKAN_THROW_IF_FAIL(vkCreateShaderModule(vulkan.LogicalDevice(), &shaderModuleCreateInfo, nullptr, &m_shaderModule));
+}
+
 VkVertexInputRate VulkanShader::LoadVertexInputRate()
 {
     Vector<SpvReflectSpecializationConstant> specialConstantResult = SearchShaderSpecialConstants("VertexAttributeLocation");
@@ -312,12 +322,12 @@ VkVertexInputRate VulkanShader::LoadVertexInputRate()
     return VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
 }
 
-Vector<SpvReflectInterfaceVariable> VulkanShader::GetShaderVertexInputVariables(const SpvReflectShaderModule& shaderModule)
+Vector<SpvReflectInterfaceVariable> VulkanShader::GetShaderVertexInputVariables(const SpvReflectShaderModule& spvReflectModule)
 {
     uint32 inputCount = 0;
-    SPV_VULKAN_RESULT(spvReflectEnumerateInputVariables(&shaderModule, &inputCount, nullptr));
+    SPV_VULKAN_RESULT(spvReflectEnumerateInputVariables(&spvReflectModule, &inputCount, nullptr));
     Vector<SpvReflectInterfaceVariable*> inputs(inputCount);
-    SPV_VULKAN_RESULT(spvReflectEnumerateInputVariables(&shaderModule, &inputCount, inputs.data()));
+    SPV_VULKAN_RESULT(spvReflectEnumerateInputVariables(&spvReflectModule, &inputCount, inputs.data()));
 
     Vector<SpvReflectInterfaceVariable> vertexInputVariableList;
     for (auto inputVertexVariable : inputs)
@@ -327,12 +337,12 @@ Vector<SpvReflectInterfaceVariable> VulkanShader::GetShaderVertexInputVariables(
     return vertexInputVariableList;
 }
 
-Vector<SpvReflectInterfaceVariable> VulkanShader::GetShaderVertexOutputVariables(const SpvReflectShaderModule& shaderModule)
+Vector<SpvReflectInterfaceVariable> VulkanShader::GetShaderVertexOutputVariables(const SpvReflectShaderModule& spvReflectModule)
 {
     uint32 outputCount = 0;
-    SPV_VULKAN_RESULT(spvReflectEnumerateOutputVariables(&shaderModule, &outputCount, nullptr));
+    SPV_VULKAN_RESULT(spvReflectEnumerateOutputVariables(&spvReflectModule, &outputCount, nullptr));
     Vector<SpvReflectInterfaceVariable*> outputs(outputCount);
-    SPV_VULKAN_RESULT(spvReflectEnumerateOutputVariables(&shaderModule, &outputCount, outputs.data()));
+    SPV_VULKAN_RESULT(spvReflectEnumerateOutputVariables(&spvReflectModule, &outputCount, outputs.data()));
 
     Vector<SpvReflectInterfaceVariable> vertexOutputVariableList;
     for (auto outputVertexVariable : outputs)
@@ -342,12 +352,12 @@ Vector<SpvReflectInterfaceVariable> VulkanShader::GetShaderVertexOutputVariables
     return vertexOutputVariableList;
 }
 
-Vector<SpvReflectSpecializationConstant> VulkanShader::GetShaderSpecialConstants(const SpvReflectShaderModule& shaderModule)
+Vector<SpvReflectSpecializationConstant> VulkanShader::GetShaderSpecialConstants(const SpvReflectShaderModule& spvReflectModule)
 {
     uint32 specializationConstantCount = 0;
-    SPV_VULKAN_RESULT(spvReflectEnumerateSpecializationConstants(&shaderModule, &specializationConstantCount, nullptr));
+    SPV_VULKAN_RESULT(spvReflectEnumerateSpecializationConstants(&spvReflectModule, &specializationConstantCount, nullptr));
     Vector<SpvReflectSpecializationConstant*> specializationConstants(specializationConstantCount);
-    SPV_VULKAN_RESULT(spvReflectEnumerateSpecializationConstants(&shaderModule, &specializationConstantCount, specializationConstants.data()));
+    SPV_VULKAN_RESULT(spvReflectEnumerateSpecializationConstants(&spvReflectModule, &specializationConstantCount, specializationConstants.data()));
 
     Vector<SpvReflectSpecializationConstant> specializationConstantList;
     for (auto specializationConstant : specializationConstants)
@@ -357,12 +367,12 @@ Vector<SpvReflectSpecializationConstant> VulkanShader::GetShaderSpecialConstants
     return specializationConstantList;
 }
 
-Vector<SpvReflectBlockVariable> VulkanShader::GetShaderPushConstants(const SpvReflectShaderModule& shaderModule)
+Vector<SpvReflectBlockVariable> VulkanShader::GetShaderPushConstants(const SpvReflectShaderModule& spvReflectModule)
 {
     uint32 pushConstCount = 0;
-    SPV_VULKAN_RESULT(spvReflectEnumeratePushConstantBlocks(&shaderModule, &pushConstCount, nullptr));
+    SPV_VULKAN_RESULT(spvReflectEnumeratePushConstantBlocks(&spvReflectModule, &pushConstCount, nullptr));
     Vector<SpvReflectBlockVariable*> pushConstants(pushConstCount);
-    SPV_VULKAN_RESULT(spvReflectEnumeratePushConstantBlocks(&shaderModule, &pushConstCount, pushConstants.data()));
+    SPV_VULKAN_RESULT(spvReflectEnumeratePushConstantBlocks(&spvReflectModule, &pushConstCount, pushConstants.data()));
 
     Vector<SpvReflectBlockVariable> pushConstantVariableList;
     for (auto pushConstantVariable : pushConstants)
@@ -372,12 +382,12 @@ Vector<SpvReflectBlockVariable> VulkanShader::GetShaderPushConstants(const SpvRe
     return pushConstantVariableList;
 }
 
-Vector<SpvReflectDescriptorBinding> VulkanShader::GetShaderDescriptorBindings(const SpvReflectShaderModule& shaderModule)
+Vector<SpvReflectDescriptorBinding> VulkanShader::GetShaderDescriptorBindings(const SpvReflectShaderModule& spvReflectModule)
 {
     uint32 descriptorBindingsCount = 0;
-    SPV_VULKAN_RESULT(spvReflectEnumerateDescriptorBindings(&shaderModule, &descriptorBindingsCount, nullptr));
+    SPV_VULKAN_RESULT(spvReflectEnumerateDescriptorBindings(&spvReflectModule, &descriptorBindingsCount, nullptr));
     Vector<SpvReflectDescriptorBinding*> descriptorSetBindings(descriptorBindingsCount);
-    SPV_VULKAN_RESULT(spvReflectEnumerateDescriptorBindings(&shaderModule, &descriptorBindingsCount, descriptorSetBindings.data()));
+    SPV_VULKAN_RESULT(spvReflectEnumerateDescriptorBindings(&spvReflectModule, &descriptorBindingsCount, descriptorSetBindings.data()));
 
     Vector<SpvReflectDescriptorBinding> descriptorBindingList;
     for (auto descriptorBinding : descriptorSetBindings)

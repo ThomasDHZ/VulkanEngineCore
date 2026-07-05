@@ -145,6 +145,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\External\SPIRV-Reflect\spirv_reflect.h" />
     <ClInclude Include="..\External\VulkanMemoryAllocator\include\vk_mem_alloc.h" />
     <ClInclude Include="BufferSystem.h" />
     <ClInclude Include="ConfigSystem.h" />
@@ -174,6 +175,7 @@
     <ClInclude Include="VulkanWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\External\SPIRV-Reflect\spirv_reflect.cpp" />
     <ClCompile Include="BufferSystem.cpp" />
     <ClCompile Include="ConfigSystem.cpp" />
     <ClCompile Include="GameController.cpp" />

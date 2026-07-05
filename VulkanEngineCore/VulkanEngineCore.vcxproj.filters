@@ -37,6 +37,9 @@
     <Filter Include="Source Files\Systems">
       <UniqueIdentifier>{5579c384-9b69-4575-b581-76e39752dfde}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\External">
+      <UniqueIdentifier>{9938fb84-53cf-49f0-80ee-e46034513d91}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DLL.h">
@@ -120,6 +123,9 @@
     <ClInclude Include="ShaderEnums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\External\SPIRV-Reflect\spirv_reflect.h">
+      <Filter>Header Files\External</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanCommandBuffer.cpp">
@@ -181,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="ShaderEnums.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\SPIRV-Reflect\spirv_reflect.cpp">
+      <Filter>Source Files\External</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

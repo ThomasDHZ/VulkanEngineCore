@@ -3,21 +3,23 @@
 #include "VulkanSystem.h"
 #include "ShaderStructs.h"
 
-class VulkanShader
+class DLL_EXPORT VulkanShader
 {
 private:
-	VkShaderModule                               m_shaderModule;
+	VkShaderModule                               m_shaderModule = VK_NULL_HANDLE;
     VkShaderStageFlagBits                        m_shaderStages;
     ShaderPushConstant                           m_pushConstant;
     Vector<VkVertexInputAttributeDescription>    m_inputVertexAttributeList;
     Vector<VkVertexInputAttributeDescription>    m_outputVertexAttributeList;
+    Vector<VkVertexInputBindingDescription>      m_vertexInputBindingList;
     Vector<ShaderDescriptorBinding>              m_descriptorBindingList;
     Vector<SpvReflectSpecializationConstant>     m_specializationConstantList;
 
+    void                                         LoadShader(const Vector<byte>& shaderCode);
     VkVertexInputRate                            LoadVertexInputRate();
-    void                                         LoadShaderVertexInputVariables(const SpvReflectShaderModule& module, Vector<VkVertexInputBindingDescription>& vertexInputBindingList, Vector<VkVertexInputAttributeDescription>& vertexInputAttributeList);
+    void                                         LoadShaderVertexInputVariables(const SpvReflectShaderModule& module);
     Vector<SpvReflectInterfaceVariable*>         LoadShaderVertexOutputVariables(const SpvReflectShaderModule& module);
-    void                                         LoadShaderConstantBufferData(const SpvReflectShaderModule& module, Vector<ShaderPushConstant>& shaderPushConstantList);
+    void                                         LoadShaderConstantBufferData(const SpvReflectShaderModule& module);
     void                                         LoadShaderDescriptorBindings(const SpvReflectShaderModule& module);
     void                                         LoadShaderSpecialConstants(const SpvReflectShaderModule& module);
     ShaderStruct                                 LoadShaderPipelineStruct(const SpvReflectTypeDescription& shaderInfo);
@@ -25,7 +27,7 @@ private:
 
 public:
 	VulkanShader();
-	VulkanShader(Vector<byte> shaderData, VkShaderStageFlagBits shaderStages);
+	VulkanShader(const Vector<byte>& shadeCode);
 	~VulkanShader();
 
 	VkPipelineShaderStageCreateInfo              GetShader();
