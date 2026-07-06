@@ -48,13 +48,3 @@ struct ShaderDescriptorBinding
     Vector<VkDescriptorImageInfo>   DescriptorImageInfo;
     Vector<VkDescriptorBufferInfo>  DescriptorBufferInfo;
 };
-
-struct ShaderPipelineData
-{
-    Vector<String>                              ShaderList;
-    Vector<ShaderDescriptorBinding>             DescriptorBindingsList;
-    Vector<ShaderStruct>                        ShaderStructList;
-    Vector<VkVertexInputBindingDescription>     VertexInputBindingList;
-    Vector<VkVertexInputAttributeDescription>   VertexInputAttributeList;
-    Vector<ShaderPushConstant>                  PushConstantList;
-};

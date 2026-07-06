@@ -15,6 +15,7 @@ VulkanShader::VulkanShader(const Vector<byte>& shaderCode)
     LoadShaderSpecialConstants(spvReflectModule);
     LoadShaderConstantBufferData(spvReflectModule);
     LoadShaderDescriptorBindings(spvReflectModule);
+    spvReflectDestroyShaderModule(&spvReflectModule);
 }
 
 VulkanShader::~VulkanShader()
@@ -172,7 +173,7 @@ void VulkanShader::LoadShaderSpecialConstants(const SpvReflectShaderModule& spvR
     m_specializationConstantList = GetShaderSpecialConstants(spvReflectModule);
 }
 
-ShaderStruct VulkanShader::LoadShaderPipelineStruct(const SpvReflectTypeDescription& shaderInfo)
+ShaderStruct VulkanShader::LoadShaderPipelineStructs(const SpvReflectTypeDescription& shaderInfo)
 {
     size_t bufferSize = 0;
     Vector<ShaderVariable> structVariableList = LoadShaderStructVariables(shaderInfo, bufferSize);
@@ -410,3 +411,12 @@ Vector<SpvReflectSpecializationConstant> VulkanShader::SearchShaderSpecialConsta
     }
     return results;
 }
+
+VkShaderModule VulkanShader::ShaderModule()                                         const { return m_shaderModule; }
+VkShaderStageFlagBits VulkanShader::ShaderStages()                                  const { return m_shaderStages; }
+ShaderPushConstant VulkanShader::PushConstant()                                     const { return m_pushConstant; }
+Vector<VkVertexInputAttributeDescription> VulkanShader::InputVertexAttributeList()  const { return m_inputVertexAttributeList; }
+Vector<VkVertexInputAttributeDescription> VulkanShader::OutputVertexAttributeList() const { return m_outputVertexAttributeList; }
+Vector<VkVertexInputBindingDescription> VulkanShader::VertexInputBindingList()      const { return m_vertexInputBindingList; }
+Vector<ShaderDescriptorBinding> VulkanShader::DescriptorBindingList()               const { return m_descriptorBindingList; }
+Vector<SpvReflectSpecializationConstant> VulkanShader::SpecializationConstantList() const { return m_specializationConstantList; }
