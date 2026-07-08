@@ -12,22 +12,61 @@ VulkanPipeline::~VulkanPipeline()
 
 void VulkanPipeline::BuildPipelines(RenderPipelineLoader& pipelineLoader)
 {
-    if (pipelineLoader.GlobalBindlessPool)
+    ShaderToPipelineBindings(pipelineLoader.VulkanShaderList);
+    if (pipelineLoader.UseGlobalBindlessSet)
+    {
+        CreateMemoryPoolDescriptorSets(pipelineLoader);
+    }
+    else
     {
         CreatePipelineDescriptorSetLayout(pipelineLoader);
         AllocatePipelineDescriptorSets(pipelineLoader);
         UpdatePipelineDescriptorSets(pipelineLoader);
     }
-    else
-    {
-        CreateMemoryPoolDescriptorSets(pipelineLoader);
-    }
     CreatePipelineLayout(pipelineLoader);
     CreatePipeline(pipelineLoader);
 }
 
+void VulkanPipeline::ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShaderList)
+{
+    std::unordered_set<uint32> uniqueSets;
+    for (auto& shader : pipelineShaderList)
+    {
+        if (shader.PushConstant().PushConstantName.empty()) continue;
+
+        auto it = std::ranges::find_if(m_pushConstantList, [&](const auto& existing) { return existing.PushConstantName == shader.PushConstant().PushConstantName; });
+        if (it != m_pushConstantList.end()) it->ShaderStageFlags |= shader.PushConstant().ShaderStageFlags;
+        else m_pushConstantList.push_back(shader.PushConstant());
+        
+        if (shader.ShaderStages() == VK_SHADER_STAGE_VERTEX_BIT)
+        {
+            m_vertexInputBindingList = shader.VertexInputBindingList();
+            m_vertexInputAttributeList = shader.InputVertexAttributeList();
+        }
+        if (shader.ShaderStages() == VK_SHADER_STAGE_VERTEX_BIT ||
+            shader.ShaderStages() == VK_SHADER_STAGE_FRAGMENT_BIT)
+        {
+            for (const auto& descriptorSet : shader.DescriptorBindingList())
+            {
+                if (descriptorSet.DescriptorSet != UINT32_MAX) uniqueSets.insert(descriptorSet.DescriptorSet);
+
+                auto it = std::ranges::find(m_descriptorBindingList, String(descriptorSet.Name), &ShaderDescriptorBinding::Name);
+                if (it == m_descriptorBindingList.end()) m_descriptorBindingList.emplace_back(descriptorSet);
+                else it->ShaderStageFlags |= static_cast<VkShaderStageFlags>(descriptorSet.ShaderStageFlags);
+            }
+            std::sort(m_descriptorBindingList.begin(), m_descriptorBindingList.end(), [](const ShaderDescriptorBinding& a, const ShaderDescriptorBinding& b)
+                {
+                    return a.Binding < b.Binding;
+                });
+        }
+    }
+}
+
 void VulkanPipeline::CreateMemoryPoolDescriptorSets(RenderPipelineLoader& renderPipelineLoader)
 {
+    Vector<VkDescriptorSet>       descriptorSetList = { renderPipelineLoader.GlobalBindlessDescriptorSet };
+    Vector<VkDescriptorSetLayout> descriptorSetLayoutList = { renderPipelineLoader.GlobalBindlessDescriptorSetLayout };
+
     std::unordered_set<uint32> uniqueSets;
     for (const auto& descriptorSet : m_descriptorBindingList)
     {
@@ -46,7 +85,7 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(RenderPipelineLoader& render
 
         //set 0 = global descriptor set
         for (int x = 1; x < descriptorSetLists.size(); x++)
-        {   
+        { 
             VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
             VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
             Vector<VkDescriptorSetLayoutBinding> descriptorSetBindingList;
@@ -103,8 +142,8 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(RenderPipelineLoader& render
                     });
             }
             vkUpdateDescriptorSets(vulkan.LogicalDevice(), static_cast<uint32>(writeDescriptorSetList.size()), writeDescriptorSetList.data(), 0, nullptr);
-            m_descriptorSetList.emplace_back(descriptorSet);
-            m_descriptorSetLayoutList.emplace_back(descriptorSetLayout);
+            descriptorSetList.emplace_back(descriptorSet);
+            descriptorSetLayoutList.emplace_back(descriptorSetLayout);
         }
     }
 }
@@ -178,13 +217,13 @@ void VulkanPipeline::UpdatePipelineDescriptorSets(RenderPipelineLoader& renderPi
 {
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     Vector<VkPushConstantRange> pushConstantRangeList = Vector<VkPushConstantRange>();
-    if (!m_pushConstant.PushConstantName.empty())
+    for(auto& pushConstant : m_pushConstantList)
     {
         pushConstantRangeList.emplace_back(VkPushConstantRange
             {
-                .stageFlags = m_pushConstant.ShaderStageFlags,
+                .stageFlags = pushConstant.ShaderStageFlags,
                 .offset = 0,
-                .size = static_cast<uint>(m_pushConstant.PushConstantSize)
+                .size = static_cast<uint>(pushConstant.PushConstantSize)
             });
     }
 
@@ -205,13 +244,13 @@ void VulkanPipeline::CreatePipelineLayout(RenderPipelineLoader& renderPipelineLo
 {
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     Vector<VkPushConstantRange> pushConstantRangeList = Vector<VkPushConstantRange>();
-    if (!m_pushConstant.PushConstantName.empty())
+    for (auto& pushConstant : m_pushConstantList)
     {
         pushConstantRangeList.emplace_back(VkPushConstantRange
             {
-                .stageFlags = m_pushConstant.ShaderStageFlags,
+                .stageFlags = pushConstant.ShaderStageFlags,
                 .offset = 0,
-                .size = static_cast<uint>(m_pushConstant.PushConstantSize)
+                .size = static_cast<uint>(pushConstant.PushConstantSize)
             });
     }
 
