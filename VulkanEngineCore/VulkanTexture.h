@@ -3,6 +3,29 @@
 #include "BufferSystem.h"
 #include "VkGuid.h"
 
+enum TextureUsageTypeEnum : uint32
+{
+    kUsageType_Undefined,
+    kUsageType_SwapChainTexture,
+    kUsageType_OffscreenColorTexture,
+    kUsageType_DepthBufferTexture,
+    kUsageType_GBufferTexture,
+    kUsageType_IrradianceTexture,
+    kUsageType_PrefilterTexture,
+    kUsageType_CubeMap,
+    kUsageType_BRDFTexture,
+    kUsageType_Texture
+};
+
+enum RenderAttachmentTypeEnum
+{
+    ColorRenderedTexture,
+    InputAttachmentTexture,
+    ResolveAttachmentTexture,
+    DepthRenderedTexture,
+    SkipSubPass
+};
+
 enum ColorChannelEnum
 {
     ChannelR = 1,
