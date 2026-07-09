@@ -13,21 +13,6 @@ struct PushConstantUpdateRule
     bool                                 DirtyFlag = true;
 };
 
-struct RenderPassAttachmentTexture
-{
-    VkGuid                               RenderedTextureId = VkGuid();
-    uint32                               MipMapCount = UINT32_MAX;
-    TextureTypeEnum                      TextureType = TextureTypeEnum::kTextureType_Undefined;
-    TextureUsageTypeEnum                 TextureUsageType = kUsageType_Undefined;
-    Vector<RenderAttachmentTypeEnum>     RenderAttachmentTypes = Vector<RenderAttachmentTypeEnum>();
-    VkFormat                             Format = VK_FORMAT_R8G8B8A8_UNORM;
-    VkAttachmentLoadOp                   LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    VkAttachmentStoreOp                  StoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-    VkSamplerCreateInfo                  SamplerCreateInfo = VkSamplerCreateInfo();
-    VkImageLayout                        FinalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    bool                                 UseMipMaps = false;
-};
-
 struct VulkanSubPassLoader
 {
     String                               Pipeline;
@@ -37,21 +22,6 @@ struct VulkanSubPassLoader
     Vector<VkGuid>                       InputTextureList;
     Vector<VkGuid>                       OutputTextureList;
     bool                                 OffScreenRenderPass = false;
-};
-
-struct RenderPassLoader
-{
-    VkGuid                               RenderPassId = VkGuid();
-    ivec2                                RenderPassResolution = ivec2(INT32_MAX, INT32_MAX);
-    Vector<Vector<VulkanSubPassLoader>>  SubPassList;
-    Vector<String>                       RenderPipelineList;
-    Vector<RenderPassAttachmentTexture>  RenderAttachmentList;
-    Vector<VkSubpassDependency>          SubpassDependencyList;
-    Vector<VkClearValue>                 ClearValueList;
-    VkSampleCountFlagBits                SampleCount = VK_SAMPLE_COUNT_1_BIT;
-    bool                                 UseGlobalBindlessSet = false;
-    bool                                 UseCubeMapMultiView = false;
-    bool                                 IsCubeMapRenderPass = false;
 };
 
 struct RenderPipelineLoader
@@ -76,8 +46,6 @@ struct RenderPipelineLoader
     VkPipelineMultisampleStateCreateInfo        PipelineMultisampleStateCreateInfo = VkPipelineMultisampleStateCreateInfo();
     VkPipelineDepthStencilStateCreateInfo       PipelineDepthStencilStateCreateInfo = VkPipelineDepthStencilStateCreateInfo();
     VkPipelineColorBlendStateCreateInfo         PipelineColorBlendStateCreateInfoModel = VkPipelineColorBlendStateCreateInfo();
-    uint32 SceneDataBufferIndex;
-    uint32 bindlessDataBuffer;
     bool                                        UseGlobalBindlessSet = false;
     bool                                        UseDynamicColorWrite = false;
     bool                                        UseCubeMapMultiview = false;
@@ -112,6 +80,8 @@ public:
     ~VulkanPipeline();
 
     void                                        BuildPipelines(RenderPipelineLoader& pipelineLoader);
+    void                                        Destroy();
+
     [[nodiscard]] VkPipeline                    Pipeline()                 const;
     [[nodiscard]] VkPipelineCache               PipelineCache()            const;
     [[nodiscard]] VkPipelineLayout              PipelineLayout()           const;

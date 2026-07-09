@@ -27,6 +27,21 @@ void VulkanPipeline::BuildPipelines(RenderPipelineLoader& pipelineLoader)
     CreatePipeline(pipelineLoader);
 }
 
+void VulkanPipeline::Destroy()
+{
+    //VkGuid                                      m_pipelineId;
+    //VkPipeline                                  m_pipeline = VK_NULL_HANDLE;
+    //VkPipelineCache                             m_pipelineCache = VK_NULL_HANDLE;
+    //VkPipelineLayout                            m_pipelineLayout = VK_NULL_HANDLE;
+    //VkDescriptorPool							m_globalBindlessPool = VK_NULL_HANDLE;
+    //m_descriptorSetLayoutList = Vector<VkDescriptorSetLayout>();
+    //m_descriptorSetList = Vector<VkDescriptorSet>();
+    //m_pushConstantList;
+    //m_vertexInputAttributeList;
+    //Vector<VkVertexInputBindingDescription>     m_vertexInputBindingList;
+    //Vector<ShaderDescriptorBinding>             m_descriptorBindingList;
+}
+
 void VulkanPipeline::ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShaderList)
 {
     std::unordered_set<uint32> uniqueSets;
@@ -65,8 +80,8 @@ void VulkanPipeline::ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShad
 
 void VulkanPipeline::CreateMemoryPoolDescriptorSets(RenderPipelineLoader& renderPipelineLoader)
 {
-    Vector<VkDescriptorSet>       descriptorSetList = { renderPipelineLoader.GlobalBindlessDescriptorSet };
-    Vector<VkDescriptorSetLayout> descriptorSetLayoutList = { renderPipelineLoader.GlobalBindlessDescriptorSetLayout };
+    Vector<VkDescriptorSet>       descriptorSetList;
+    Vector<VkDescriptorSetLayout> descriptorSetLayoutList;
 
     m_descriptorSetList.emplace_back(renderPipelineLoader.GlobalBindlessDescriptorSet);
     m_descriptorSetLayoutList.emplace_back(renderPipelineLoader.GlobalBindlessDescriptorSetLayout);
@@ -90,13 +105,6 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(RenderPipelineLoader& render
         //set 0 = global descriptor set
         for (int x = 1; x < descriptorSetLists.size(); x++)
         {
-           /* if (x == 0)
-            {
-                descriptorSetList.emplace_back(renderPipelineLoader.GlobalBindlessDescriptorSet);
-                descriptorSetLayoutList.emplace_back(renderPipelineLoader.GlobalBindlessDescriptorSetLayout);
-                continue;
-            }*/
-
             VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
             VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
             Vector<VkDescriptorSetLayoutBinding> descriptorSetBindingList;
@@ -366,12 +374,7 @@ void VulkanPipeline::CreatePipeline(RenderPipelineLoader& renderPipelineLoader)
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0
     };
-
     VULKAN_THROW_IF_FAIL(vkCreateGraphicsPipelines(vulkan.LogicalDevice(), m_pipelineCache, 1, &graphicsPipelineCreateInfo, nullptr, &m_pipeline));
-    for (auto& shader : pipelineShaderStageCreateInfoList)
-    {
-        vkDestroyShaderModule(vulkan.LogicalDevice(), shader.module, nullptr);
-    }
 }
 
 VkPipeline                    VulkanPipeline::Pipeline()                const { return m_pipeline; }

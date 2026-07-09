@@ -132,6 +132,9 @@
     <ClInclude Include="VulkanSubPass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PushConstantRegistry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanCommandBuffer.cpp">
@@ -201,6 +204,9 @@
       <Filter>Source Files\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="VulkanSubPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PushConstantRegistry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -398,6 +398,18 @@ Vector<SpvReflectDescriptorBinding> VulkanShader::GetShaderDescriptorBindings(co
     return descriptorBindingList;
 }
 
+void VulkanShader::Destroy()
+{
+    vkDestroyShaderModule(vulkan.LogicalDevice(), m_shaderModule, nullptr);
+    m_shaderStages = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
+    m_pushConstant = {};
+    m_inputVertexAttributeList.clear();
+    m_outputVertexAttributeList.clear();
+    m_vertexInputBindingList.clear();
+    m_descriptorBindingList.clear();
+    m_specializationConstantList.clear();
+}
+
 Vector<SpvReflectSpecializationConstant> VulkanShader::SearchShaderSpecialConstants(const String& searchString)
 {
     Vector<SpvReflectSpecializationConstant> results;

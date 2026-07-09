@@ -156,6 +156,7 @@
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Platform.h" />
+    <ClInclude Include="PushConstantRegistry.h" />
     <ClInclude Include="RenderSystem2.h" />
     <ClInclude Include="ShaderEnums.h" />
     <ClInclude Include="ShaderStructs.h" />
@@ -185,6 +186,7 @@
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Platform.cpp" />
+    <ClCompile Include="PushConstantRegistry.cpp" />
     <ClCompile Include="RenderSystem2.cpp" />
     <ClCompile Include="ShaderEnums.cpp" />
     <ClCompile Include="VulkanPipeline.cpp" />

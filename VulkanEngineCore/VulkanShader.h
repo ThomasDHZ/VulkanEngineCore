@@ -37,6 +37,7 @@ public:
     Vector<SpvReflectSpecializationConstant>                   GetShaderSpecialConstants(const SpvReflectShaderModule& shaderModule);
     Vector<SpvReflectBlockVariable>                            GetShaderPushConstants(const SpvReflectShaderModule& shaderModule);
     Vector<SpvReflectDescriptorBinding>                        GetShaderDescriptorBindings(const SpvReflectShaderModule& shaderModule);
+    void                                                       Destroy();
 
     Vector<SpvReflectSpecializationConstant>                   SearchShaderSpecialConstants(const String& searchString);
 
