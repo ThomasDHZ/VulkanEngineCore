@@ -76,6 +76,8 @@ struct RenderPipelineLoader
     VkPipelineMultisampleStateCreateInfo        PipelineMultisampleStateCreateInfo = VkPipelineMultisampleStateCreateInfo();
     VkPipelineDepthStencilStateCreateInfo       PipelineDepthStencilStateCreateInfo = VkPipelineDepthStencilStateCreateInfo();
     VkPipelineColorBlendStateCreateInfo         PipelineColorBlendStateCreateInfoModel = VkPipelineColorBlendStateCreateInfo();
+    uint32 SceneDataBufferIndex;
+    uint32 bindlessDataBuffer;
     bool                                        UseGlobalBindlessSet = false;
     bool                                        UseDynamicColorWrite = false;
     bool                                        UseCubeMapMultiview = false;

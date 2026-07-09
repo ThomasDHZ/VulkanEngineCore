@@ -10,9 +10,9 @@ VulkanShader::VulkanShader(const Vector<byte>& shaderCode)
     SPV_VULKAN_RESULT(spvReflectCreateShaderModule(shaderCode.size(), shaderCode.data(), &spvReflectModule));
     m_shaderStages = static_cast<VkShaderStageFlagBits>(spvReflectModule.shader_stage);
 
+    LoadShaderSpecialConstants(spvReflectModule);
     LoadShader(shaderCode);
     if (spvReflectModule.shader_stage == SPV_REFLECT_SHADER_STAGE_VERTEX_BIT) LoadShaderVertexInputVariables(spvReflectModule);
-    LoadShaderSpecialConstants(spvReflectModule);
     LoadShaderConstantBufferData(spvReflectModule);
     LoadShaderDescriptorBindings(spvReflectModule);
     spvReflectDestroyShaderModule(&spvReflectModule);
@@ -131,7 +131,7 @@ void VulkanShader::LoadShaderConstantBufferData(const SpvReflectShaderModule& sp
     size_t bufferSize = 0;
     String pushConstantName(pushConstants.front().name);
     Vector<ShaderVariable> shaderStructVariableList = LoadShaderStructVariables(*pushConstants.front().type_description, bufferSize);
-    for (auto& shaderVariable : m_pushConstant.PushConstantVariableList)
+    for (auto& shaderVariable : shaderStructVariableList)
     {
         shaderVariable.Value = Vector<byte>(shaderVariable.Size, 0x00);
     }
@@ -315,7 +315,7 @@ void VulkanShader::LoadShader(const Vector<byte>& shaderCode)
 
 VkVertexInputRate VulkanShader::LoadVertexInputRate()
 {
-    Vector<SpvReflectSpecializationConstant> specialConstantResult = SearchShaderSpecialConstants("VertexAttributeLocation");
+    Vector<SpvReflectSpecializationConstant> specialConstantResult = SearchShaderSpecialConstants("VertexInputRate");
     if (specialConstantResult.size())
     {
        return *static_cast<VkVertexInputRate*>(specialConstantResult[0].default_value);
