@@ -2,54 +2,7 @@
 #include "Platform.h"
 #include "VulkanShader.h"
 #include "VulkanTexture.h"
-#include "VulkanRenderPass.h"
-
-struct PushConstantUpdateRule
-{
-    String                               Variable;
-    String                               SourceId;
-    String                               Value;
-    bool                                 ConstValue;
-    bool                                 DirtyFlag = true;
-};
-
-struct VulkanSubPassLoader
-{
-    String                               Pipeline;
-    MeshTypeEnum                         MeshType;
-    std::optional<String>                ShaderPushConstant;
-    Vector<PushConstantUpdateRule>       PushConstantUpdates;
-    Vector<VkGuid>                       InputTextureList;
-    Vector<VkGuid>                       OutputTextureList;
-    bool                                 OffScreenRenderPass = false;
-};
-
-struct RenderPipelineLoader
-{
-    VkGuid                                      PipelineId = VkGuid();
-    VkGuid                                      RenderPassId = VkGuid();
-    VkGuid                                      LevelId = VkGuid();
-    uint32                                      SubPassId = UINT32_MAX;
-    uint32                                      BindlessDescriptorSetIndex = UINT32_MAX;
-    ivec2                                       RenderPassResolution = ivec2();
-    VkRenderPass                                RenderPass = VK_NULL_HANDLE;
-    VkDescriptorPool							GlobalBindlessPool = VK_NULL_HANDLE;
-    VkDescriptorSet								GlobalBindlessDescriptorSet = VK_NULL_HANDLE;
-    VkDescriptorSetLayout						GlobalBindlessDescriptorSetLayout = VK_NULL_HANDLE;
-    Vector<VulkanShader>                        VulkanShaderList;
-    Vector<VkDescriptorImageInfo>               RenderPassInputTextures;
-    Vector<VkViewport>                          ViewportList;
-    Vector<VkRect2D>                            ScissorList;
-    Vector<VkPipelineColorBlendAttachmentState> PipelineColorBlendAttachmentStateList;
-    VkPipelineInputAssemblyStateCreateInfo      PipelineInputAssemblyStateCreateInfo = VkPipelineInputAssemblyStateCreateInfo();
-    VkPipelineRasterizationStateCreateInfo      PipelineRasterizationStateCreateInfo = VkPipelineRasterizationStateCreateInfo();
-    VkPipelineMultisampleStateCreateInfo        PipelineMultisampleStateCreateInfo = VkPipelineMultisampleStateCreateInfo();
-    VkPipelineDepthStencilStateCreateInfo       PipelineDepthStencilStateCreateInfo = VkPipelineDepthStencilStateCreateInfo();
-    VkPipelineColorBlendStateCreateInfo         PipelineColorBlendStateCreateInfoModel = VkPipelineColorBlendStateCreateInfo();
-    bool                                        UseGlobalBindlessSet = false;
-    bool                                        UseDynamicColorWrite = false;
-    bool                                        UseCubeMapMultiview = false;
-};
+#include "VulkanPipelineLoader.h"
 
 class DLL_EXPORT VulkanPipeline
 {
@@ -68,18 +21,18 @@ private:
     Vector<ShaderDescriptorBinding>             m_descriptorBindingList;
 
     void                                        ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShaderList);
-    void                                        CreateMemoryPoolDescriptorSets(RenderPipelineLoader& renderPipelineLoader);
-    void                                        CreatePipelineDescriptorSetLayout(RenderPipelineLoader& renderPipelineLoader);
-    void                                        AllocatePipelineDescriptorSets(RenderPipelineLoader& renderPipelineLoader);
-    void                                        UpdatePipelineDescriptorSets(RenderPipelineLoader& renderPipelineLoader);
-    void                                        CreatePipelineLayout(RenderPipelineLoader& renderPipelineLoader);
-    void                                        CreatePipeline(RenderPipelineLoader& renderPipelineLoader);
+    void                                        CreateMemoryPoolDescriptorSets(VulkanPipelineLoader& pipelineLoader);
+    void                                        CreatePipelineDescriptorSetLayout(VulkanPipelineLoader& pipelineLoader);
+    void                                        AllocatePipelineDescriptorSets(VulkanPipelineLoader& pipelineLoader);
+    void                                        UpdatePipelineDescriptorSets(VulkanPipelineLoader& pipelineLoader);
+    void                                        CreatePipelineLayout(VulkanPipelineLoader& pipelineLoader);
+    void                                        CreatePipeline(VulkanPipelineLoader& pipelineLoader);
 
 public:
     VulkanPipeline();
     ~VulkanPipeline();
 
-    void                                        BuildPipelines(RenderPipelineLoader& pipelineLoader);
+    void                                        BuildPipelines(VulkanPipelineLoader& pipelineLoader);
     void                                        Destroy();
 
     [[nodiscard]] VkPipeline                    Pipeline()                 const;

@@ -10,7 +10,7 @@ VulkanPipeline::~VulkanPipeline()
 {
 }
 
-void VulkanPipeline::BuildPipelines(RenderPipelineLoader& pipelineLoader)
+void VulkanPipeline::BuildPipelines(VulkanPipelineLoader& pipelineLoader)
 {
     ShaderToPipelineBindings(pipelineLoader.VulkanShaderList);
     if (pipelineLoader.UseGlobalBindlessSet)
@@ -78,13 +78,13 @@ void VulkanPipeline::ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShad
     }
 }
 
-void VulkanPipeline::CreateMemoryPoolDescriptorSets(RenderPipelineLoader& renderPipelineLoader)
+void VulkanPipeline::CreateMemoryPoolDescriptorSets(VulkanPipelineLoader& pipelineLoader)
 {
     Vector<VkDescriptorSet>       descriptorSetList;
     Vector<VkDescriptorSetLayout> descriptorSetLayoutList;
 
-    m_descriptorSetList.emplace_back(renderPipelineLoader.GlobalBindlessDescriptorSet);
-    m_descriptorSetLayoutList.emplace_back(renderPipelineLoader.GlobalBindlessDescriptorSetLayout);
+    m_descriptorSetList.emplace_back(pipelineLoader.GlobalBindlessDescriptorSet);
+    m_descriptorSetLayoutList.emplace_back(pipelineLoader.GlobalBindlessDescriptorSetLayout);
 
     std::unordered_set<uint32> uniqueSets;
     for (const auto& descriptorSet : m_descriptorBindingList)
@@ -134,13 +134,13 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(RenderPipelineLoader& render
             {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
                 .pNext = nullptr,
-                .descriptorPool = renderPipelineLoader.GlobalBindlessPool,
+                .descriptorPool = pipelineLoader.GlobalBindlessPool,
                 .descriptorSetCount = 1,
                 .pSetLayouts = &descriptorSetLayout
             };
             VULKAN_THROW_IF_FAIL(vkAllocateDescriptorSets(vulkan.LogicalDevice(), &allocInfo, &descriptorSet));
 
-            Vector<VkDescriptorImageInfo> subpassInputInfo = renderPipelineLoader.RenderPassInputTextures;
+            Vector<VkDescriptorImageInfo> subpassInputInfo = pipelineLoader.RenderPassInputTextures;
             if (subpassInputInfo.size() > descriptorSetBindingList.size()) subpassInputInfo.resize(descriptorSetBindingList.size());
 
             Vector<VkWriteDescriptorSet> writeDescriptorSetList;
@@ -167,7 +167,7 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(RenderPipelineLoader& render
     }
 }
 
-void VulkanPipeline::CreatePipelineDescriptorSetLayout(RenderPipelineLoader& renderPipelineLoader)
+void VulkanPipeline::CreatePipelineDescriptorSetLayout(VulkanPipelineLoader& pipelineLoader)
 {
     std::unordered_set<int> uniqueValues;
     std::for_each(m_descriptorBindingList.begin(), m_descriptorBindingList.end(), [&](const ShaderDescriptorBinding& binding) { uniqueValues.insert(binding.DescriptorSet); });
@@ -206,7 +206,7 @@ void VulkanPipeline::CreatePipelineDescriptorSetLayout(RenderPipelineLoader& ren
     }
 }
 
-void VulkanPipeline::AllocatePipelineDescriptorSets(RenderPipelineLoader& renderPipelineLoader)
+void VulkanPipeline::AllocatePipelineDescriptorSets(VulkanPipelineLoader& pipelineLoader)
 {
     for (int x = 0; x < m_descriptorSetLayoutList.size(); x++)
     {
@@ -232,7 +232,7 @@ void VulkanPipeline::AllocatePipelineDescriptorSets(RenderPipelineLoader& render
     }
 }
 
-void VulkanPipeline::UpdatePipelineDescriptorSets(RenderPipelineLoader& renderPipelineLoader)
+void VulkanPipeline::UpdatePipelineDescriptorSets(VulkanPipelineLoader& pipelineLoader)
 {
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     Vector<VkPushConstantRange> pushConstantRangeList = Vector<VkPushConstantRange>();
@@ -259,7 +259,7 @@ void VulkanPipeline::UpdatePipelineDescriptorSets(RenderPipelineLoader& renderPi
     VULKAN_THROW_IF_FAIL(vkCreatePipelineLayout(vulkan.LogicalDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout));
 }
 
-void VulkanPipeline::CreatePipelineLayout(RenderPipelineLoader& renderPipelineLoader)
+void VulkanPipeline::CreatePipelineLayout(VulkanPipelineLoader& pipelineLoader)
 {
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     Vector<VkPushConstantRange> pushConstantRangeList = Vector<VkPushConstantRange>();
@@ -286,7 +286,7 @@ void VulkanPipeline::CreatePipelineLayout(RenderPipelineLoader& renderPipelineLo
     VULKAN_THROW_IF_FAIL(vkCreatePipelineLayout(vulkan.LogicalDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout));
 }
 
-void VulkanPipeline::CreatePipeline(RenderPipelineLoader& renderPipelineLoader)
+void VulkanPipeline::CreatePipeline(VulkanPipelineLoader& pipelineLoader)
 {
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = VkPipelineVertexInputStateCreateInfo
     {
@@ -299,16 +299,16 @@ void VulkanPipeline::CreatePipeline(RenderPipelineLoader& renderPipelineLoader)
         .pVertexAttributeDescriptions = m_vertexInputAttributeList.data()
     };
 
-    for (auto& viewPort : renderPipelineLoader.ViewportList)
+    for (auto& viewPort : pipelineLoader.ViewportList)
     {
-        viewPort.width = static_cast<float>(renderPipelineLoader.RenderPassResolution.x);
-        viewPort.height = static_cast<float>(renderPipelineLoader.RenderPassResolution.y);
+        viewPort.width = static_cast<float>(pipelineLoader.RenderPassResolution.x);
+        viewPort.height = static_cast<float>(pipelineLoader.RenderPassResolution.y);
     }
 
-    for (auto& scissor : renderPipelineLoader.ScissorList)
+    for (auto& scissor : pipelineLoader.ScissorList)
     {
-        scissor.extent.width = static_cast<float>(renderPipelineLoader.RenderPassResolution.x);
-        scissor.extent.height = static_cast<float>(renderPipelineLoader.RenderPassResolution.y);
+        scissor.extent.width = static_cast<float>(pipelineLoader.RenderPassResolution.x);
+        scissor.extent.height = static_cast<float>(pipelineLoader.RenderPassResolution.y);
     }
 
     VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo = 
@@ -316,14 +316,14 @@ void VulkanPipeline::CreatePipeline(RenderPipelineLoader& renderPipelineLoader)
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .pNext = nullptr,
         .flags = 0,
-        .viewportCount = static_cast<uint32>(renderPipelineLoader.ViewportList.size() ? renderPipelineLoader.ViewportList.size() : 1),
-        .pViewports = renderPipelineLoader.ViewportList.data(),
-        .scissorCount = static_cast<uint32>(renderPipelineLoader.ScissorList.size() ? renderPipelineLoader.ScissorList.size() : 1),
-        .pScissors = renderPipelineLoader.ScissorList.data()
+        .viewportCount = static_cast<uint32>(pipelineLoader.ViewportList.size() ? pipelineLoader.ViewportList.size() : 1),
+        .pViewports = pipelineLoader.ViewportList.data(),
+        .scissorCount = static_cast<uint32>(pipelineLoader.ScissorList.size() ? pipelineLoader.ScissorList.size() : 1),
+        .pScissors = pipelineLoader.ScissorList.data()
     };
 
     Vector<VkDynamicState> dynamicStateList;
-    if (renderPipelineLoader.ViewportList.empty() || renderPipelineLoader.ScissorList.empty())
+    if (pipelineLoader.ViewportList.empty() || pipelineLoader.ScissorList.empty())
     {
         dynamicStateList.push_back(VK_DYNAMIC_STATE_VIEWPORT);
         dynamicStateList.push_back(VK_DYNAMIC_STATE_SCISSOR);
@@ -338,16 +338,16 @@ void VulkanPipeline::CreatePipeline(RenderPipelineLoader& renderPipelineLoader)
     };
 
     Vector<VkPipelineShaderStageCreateInfo> pipelineShaderStageCreateInfoList;
-    for (auto& shader : renderPipelineLoader.VulkanShaderList)
+    for (auto& shader : pipelineLoader.VulkanShaderList)
     {
         pipelineShaderStageCreateInfoList.emplace_back(shader.GetShader());
     }
 
-    VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfoModel = renderPipelineLoader.PipelineColorBlendStateCreateInfoModel;
-    pipelineColorBlendStateCreateInfoModel.attachmentCount = renderPipelineLoader.PipelineColorBlendAttachmentStateList.size();
-    pipelineColorBlendStateCreateInfoModel.pAttachments = renderPipelineLoader.PipelineColorBlendAttachmentStateList.data();
+    VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfoModel = pipelineLoader.PipelineColorBlendStateCreateInfoModel;
+    pipelineColorBlendStateCreateInfoModel.attachmentCount = pipelineLoader.PipelineColorBlendAttachmentStateList.size();
+    pipelineColorBlendStateCreateInfoModel.pAttachments = pipelineLoader.PipelineColorBlendAttachmentStateList.data();
 
-    VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo = renderPipelineLoader.PipelineMultisampleStateCreateInfo;
+    VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo = pipelineLoader.PipelineMultisampleStateCreateInfo;
     pipelineMultisampleStateCreateInfo.rasterizationSamples = pipelineMultisampleStateCreateInfo.rasterizationSamples >= vulkan.MaxSampleCount() ? vulkan.MaxSampleCount() : pipelineMultisampleStateCreateInfo.rasterizationSamples;
     pipelineMultisampleStateCreateInfo.sampleShadingEnable = pipelineMultisampleStateCreateInfo.rasterizationSamples > VK_SAMPLE_COUNT_1_BIT ? VK_TRUE : VK_FALSE;
     pipelineMultisampleStateCreateInfo.pSampleMask = nullptr;
@@ -360,17 +360,17 @@ void VulkanPipeline::CreatePipeline(RenderPipelineLoader& renderPipelineLoader)
         .stageCount = static_cast<uint32>(pipelineShaderStageCreateInfoList.size()),
         .pStages = pipelineShaderStageCreateInfoList.data(),
         .pVertexInputState = &vertexInputInfo,
-        .pInputAssemblyState = &renderPipelineLoader.PipelineInputAssemblyStateCreateInfo,
+        .pInputAssemblyState = &pipelineLoader.PipelineInputAssemblyStateCreateInfo,
         .pTessellationState = nullptr,
         .pViewportState = &pipelineViewportStateCreateInfo,
-        .pRasterizationState = &renderPipelineLoader.PipelineRasterizationStateCreateInfo,
+        .pRasterizationState = &pipelineLoader.PipelineRasterizationStateCreateInfo,
         .pMultisampleState = &pipelineMultisampleStateCreateInfo,
-        .pDepthStencilState = &renderPipelineLoader.PipelineDepthStencilStateCreateInfo,
+        .pDepthStencilState = &pipelineLoader.PipelineDepthStencilStateCreateInfo,
         .pColorBlendState = &pipelineColorBlendStateCreateInfoModel,
         .pDynamicState = &pipelineDynamicStateCreateInfo,
         .layout = m_pipelineLayout,
-        .renderPass = renderPipelineLoader.RenderPass,
-        .subpass = renderPipelineLoader.SubPassId,
+        .renderPass = pipelineLoader.RenderPass,
+        .subpass = pipelineLoader.SubPassId,
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0
     };

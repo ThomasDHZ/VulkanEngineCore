@@ -1,7 +1,6 @@
 #pragma once
 #include "Platform.h"
 #include "BufferSystem.h"
-#include "VkGuid.h"
 
 enum TextureUsageTypeEnum : uint32
 {
@@ -45,24 +44,41 @@ enum class TextureTypeEnum : uint32
     kTextureType_StorageTexture
 };
 
+struct RenderPassAttachmentLoader
+{
+    VkGuid                               RenderedTextureId = VkGuid();
+    ivec3                                AttachmentSize = ivec3(UINT32_MAX);
+    uint32                               MipMapCount = UINT32_MAX;
+    TextureTypeEnum                      TextureType = TextureTypeEnum::kTextureType_Undefined;
+    TextureUsageTypeEnum                 TextureUsageType = kUsageType_Undefined;
+    Vector<RenderAttachmentTypeEnum>     RenderAttachmentTypes = Vector<RenderAttachmentTypeEnum>();
+    VkFormat                             TextureByteFormat = VK_FORMAT_R8G8B8A8_UNORM;
+    VkAttachmentLoadOp                   LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    VkAttachmentStoreOp                  StoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+    VkSamplerCreateInfo                  SamplerCreateInfo = VkSamplerCreateInfo();
+    VkImageLayout                        FinalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    VkSampleCountFlagBits                SampleCount = VK_SAMPLE_COUNT_1_BIT;
+    bool                                 UseMipMaps = false;
+    bool                                 IsSkyBox = false;
+};
+
 struct VulkanTextureLoader
 {
-    void*                 TextureData;
-    uint32                TextureByteSize = UINT32_MAX;
-    ivec3                 TextureDimentions = ivec3(UINT32_MAX);
+    Vector<byte>          TextureData;
+    ivec3                 TextureDimensions = ivec3(UINT32_MAX);
     VkSamplerCreateInfo   SamplerCreateInfo;
-
     uint32                MipMapCount = UINT32_MAX;
-    VkImageAspectFlags    ImageType = VK_IMAGE_ASPECT_FLAG_BITS_MAX_ENUM;
     ColorChannelEnum      ColorChannels = ColorChannelEnum::ChannelRGBA;
     VkImageLayout         TextureImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     VkSampleCountFlagBits SampleCount = VK_SAMPLE_COUNT_1_BIT;
     VkFormat              TextureByteFormat = VK_FORMAT_UNDEFINED;
     TextureTypeEnum       TextureType;
-    bool                  IsRenderPassAttachmentTexture;
+    bool                  IsRenderPassAttachment;
+    bool                  IsCubeMap;
+    bool                  UseMipMaps;
 };
 
-class VulkanTexture
+class DLL_EXPORT VulkanTexture
 {
 private:
     ivec3                 m_textureSize = ivec3(UINT32_MAX);
@@ -77,28 +93,36 @@ private:
     VkImageLayout         m_textureImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     VkSampleCountFlagBits m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
     ColorChannelEnum      m_colorChannels = ColorChannelEnum::ChannelRGBA;
+    bool                  m_isRenderPassAttachment = false;
+    bool                  m_isCubeMap = false;
 
-    void CreateTextureImage(VulkanTextureLoader& textureLoader);
-    void CreateTextureView(VulkanTextureLoader& textureLoader);
+    void CreateTextureImage();
+    void CreateTextureView();
     void CreateTextureSampler(VulkanTextureLoader& textureLoader);
     void UploadTextureDataAndTransition(VulkanTextureLoader& textureLoader);
     void GenerateMipmaps();
-
-    bool IsDepthFormat(VkFormat format);
-    bool HasStencilComponent(VkFormat format);
-    void TransitionImageLayout(VkImageLayout newLayout, uint32 baseMipLevel = 0, uint32 levelCount = VK_REMAINING_MIP_LEVELS);
-    void TransitionImageLayout(VkCommandBuffer cmd, VkImageLayout newLayout, uint32 baseMip = 0, uint32 mipCount = VK_REMAINING_MIP_LEVELS, uint32 baseLayer = 0, uint32 layerCount = VK_REMAINING_ARRAY_LAYERS);
+    uint32 MaxMipLevels(VulkanTextureLoader& textureLoader);
 
 public:
     VulkanTexture();
     VulkanTexture(VulkanTextureLoader& textureLoader);
+    VulkanTexture(RenderPassAttachmentLoader& attachment);
     ~VulkanTexture();
 
+    void TransitionImageLayout(VkImageLayout newLayout, uint32 baseMipLevel = 0, uint32 levelCount = VK_REMAINING_MIP_LEVELS);
+    void TransitionImageLayout(VkCommandBuffer cmd, VkImageLayout newLayout, uint32 baseMip = 0, uint32 mipCount = VK_REMAINING_MIP_LEVELS, uint32 baseLayer = 0, uint32 layerCount = VK_REMAINING_ARRAY_LAYERS);
     void DestroyTexture();
 
-    [[nodiscard]] VkImage             TextureImage()        const noexcept;
-    [[nodiscard]] Vector<VkImageView> TextureViews()        const noexcept;
-    [[nodiscard]] VkSampler           TextureSampler()      const noexcept;
-    [[nodiscard]] ivec3               TextureSize()         const noexcept;
-    [[nodiscard]] VkImageLayout       TextureImageLayout()  const noexcept;
+    static bool         IsDepthFormat(VkFormat format);
+    static bool         IsStencilFormat(VkFormat format);
+
+    [[nodiscard]] VkImage             TextureImage()                        const noexcept;
+    [[nodiscard]] Vector<VkImageView> TextureViews()                        const noexcept;
+    [[nodiscard]] VkSampler           TextureSampler()                      const noexcept;
+    [[nodiscard]] ivec3               TextureSize()                         const noexcept;
+    [[nodiscard]] VkImageLayout       TextureImageLayout()                  const noexcept;
+    [[nodiscard]] uint32              MipMapLevels()                        const noexcept;
+    [[nodiscard]] bool                IsRenderPassAttachment()              const noexcept;
+    [[nodiscard]] bool                IsCubeMap()                           const noexcept;
+    [[nodiscard]] uint32              TextureArrayLayers()                  const noexcept;
 };

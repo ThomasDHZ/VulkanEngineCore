@@ -3,6 +3,13 @@
 #include "VulkanSystem.h"
 #include "ShaderStructs.h"
 
+struct ShaderLoader
+{
+    VkGuid                ShaderId;
+    String                ShaderFile;
+    VkShaderStageFlagBits ShaderStage;
+};
+
 class DLL_EXPORT VulkanShader
 {
 private:
