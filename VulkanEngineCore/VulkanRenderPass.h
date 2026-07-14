@@ -120,7 +120,7 @@ public:
     
         void                            LoadRenderPass(RenderPassLoader& renderPassLoader);
         void                            BuildRenderPass(RenderPassLoader& renderPassLoader);
-        void                            BuildPipeline(VulkanPipelineLoader& pipelineLoader);
+        void                            BuildPipeline(VulkanPipelineLoader& pipelineLoader, bool useGlobalBindlessSet);
         VulkanSubPass                   BuildSubpasses(RenderPassLoader& renderPassLoader, VulkanSubPassLoader& subPassLoader);
         void                            BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
         void                            BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);

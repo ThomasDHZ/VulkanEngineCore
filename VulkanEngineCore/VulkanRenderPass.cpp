@@ -139,8 +139,15 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
     VULKAN_THROW_IF_FAIL(vkCreateRenderPass(vulkan.LogicalDevice(), &renderPassInfo, nullptr, &RenderPass));
 }
 
-void VulkanRenderPass::BuildPipeline(VulkanPipelineLoader& pipelineLoader)
+void VulkanRenderPass::BuildPipeline(VulkanPipelineLoader& pipelineLoader, bool useGlobalBindlessSet)
 {
+    pipelineLoader.PipelineMultisampleStateCreateInfo.rasterizationSamples = SampleCount;
+    pipelineLoader.PipelineMultisampleStateCreateInfo.sampleShadingEnable = (SampleCount > VK_SAMPLE_COUNT_1_BIT);
+    pipelineLoader.RenderPassId = RenderPassId;
+    pipelineLoader.RenderPass = RenderPass;
+    pipelineLoader.RenderPassResolution = RenderPassResolution;
+    pipelineLoader.UseGlobalBindlessSet = useGlobalBindlessSet;
+
     VulkanPipeline pipeline;
     pipeline.BuildPipelines(pipelineLoader);
     PipelineList.emplace_back(pipeline);

@@ -57,5 +57,6 @@ public:
     [[nodiscard]] Vector<VkVertexInputBindingDescription>      VertexInputBindingList()     const;
     [[nodiscard]] Vector<ShaderDescriptorBinding>              DescriptorBindingList()      const;
     [[nodiscard]] Vector<SpvReflectSpecializationConstant>     SpecializationConstantList() const;
+
 };
 
