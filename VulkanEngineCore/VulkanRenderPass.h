@@ -53,8 +53,8 @@ struct RenderPassLoader
     ivec2                                RenderPassResolution = ivec2(INT32_MAX);
     Vector<RenderPassAttachmentLoader>   AttachmentList;
     Vector<VkSubpassDependency>          SubpassDependencyList;
-    Vector<Vector<VulkanSubPassLoader>>  SubPassList;
     Vector<VulkanPipelineLoader>         PipelineList;
+    Vector<Vector<VulkanSubPassLoader>>  SubPassList;
     Vector<VkClearValue>                 ClearValueList;
     VkSampleCountFlagBits                SampleCount = VK_SAMPLE_COUNT_1_BIT;
     bool                                 UseGlobalBindlessSet = false;
@@ -103,6 +103,7 @@ public:
     VkGuid                               RenderPassId = VkGuid();
     ivec2                                RenderPassResolution = ivec2(INT32_MAX, INT32_MAX);
     VkRenderPass                         RenderPass = VK_NULL_HANDLE;
+    Vector<VulkanPipeline>               PipelineList;
     Vector<VkFramebuffer>                FrameBufferList;
     Vector<VulkanTexture>                AttachmentList;
     Vector<VkAttachmentDescription>      AttachmentDescriptionList;
@@ -118,9 +119,9 @@ public:
         ~VulkanRenderPass();
     
         void                            LoadRenderPass(RenderPassLoader& renderPassLoader);
-    //    void                            BuildRenderPass(RenderPassLoader& renderPassLoader);
-    //    void                            BuildPipelines(RenderPassLoader& renderPassLoader);
-    //    VulkanSubPass                   BuildSubpasses(RenderPassLoader& renderPassLoader, VulkanSubPassLoader& subPassLoader);
+        void                            BuildRenderPass(RenderPassLoader& renderPassLoader);
+        void                            BuildPipeline(VulkanPipelineLoader& pipelineLoader);
+        VulkanSubPass                   BuildSubpasses(RenderPassLoader& renderPassLoader, VulkanSubPassLoader& subPassLoader);
         void                            BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
         void                            BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
         //void                            BuildFrameBuffer(RenderPassLoader& renderPassLoader);

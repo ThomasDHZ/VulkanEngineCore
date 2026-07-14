@@ -18,6 +18,7 @@ struct VulkanPipelineLoader
     Vector<VkDescriptorImageInfo>               RenderPassInputTextures;
     Vector<VkViewport>                          ViewportList;
     Vector<VkRect2D>                            ScissorList;
+    Vector<ShaderLoader>                        ShaderLoaderList;
     Vector<VkPipelineColorBlendAttachmentState> PipelineColorBlendAttachmentStateList;
     VkPipelineInputAssemblyStateCreateInfo      PipelineInputAssemblyStateCreateInfo = VkPipelineInputAssemblyStateCreateInfo();
     VkPipelineRasterizationStateCreateInfo      PipelineRasterizationStateCreateInfo = VkPipelineRasterizationStateCreateInfo();

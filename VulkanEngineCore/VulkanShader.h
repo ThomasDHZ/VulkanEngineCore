@@ -8,6 +8,7 @@ struct ShaderLoader
     VkGuid                ShaderId;
     String                ShaderFile;
     VkShaderStageFlagBits ShaderStage;
+    Vector<byte>          ShaderCode;
 };
 
 class DLL_EXPORT VulkanShader

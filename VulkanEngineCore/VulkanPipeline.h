@@ -7,7 +7,6 @@
 class DLL_EXPORT VulkanPipeline
 {
 private:
-    VkGuid                                      m_pipelineId;
     VkPipeline                                  m_pipeline = VK_NULL_HANDLE;
     VkPipelineCache                             m_pipelineCache = VK_NULL_HANDLE;
     VkPipelineLayout                            m_pipelineLayout = VK_NULL_HANDLE;
@@ -15,7 +14,6 @@ private:
     Vector<VkDescriptorSetLayout>               m_descriptorSetLayoutList = Vector<VkDescriptorSetLayout>();
     Vector<VkDescriptorSet>                     m_descriptorSetList = Vector<VkDescriptorSet>();
 
-    Vector<ShaderPushConstant>                  m_pushConstantList;
     Vector<VkVertexInputAttributeDescription>   m_vertexInputAttributeList;
     Vector<VkVertexInputBindingDescription>     m_vertexInputBindingList;
     Vector<ShaderDescriptorBinding>             m_descriptorBindingList;
@@ -32,6 +30,8 @@ public:
     VulkanPipeline();
     ~VulkanPipeline();
 
+    VkGuid                                      m_pipelineId;
+    Vector<ShaderPushConstant>                  m_pushConstantList;
     void                                        BuildPipelines(VulkanPipelineLoader& pipelineLoader);
     void                                        Destroy();
 
