@@ -47,7 +47,6 @@ enum class TextureTypeEnum : uint32
 struct RenderPassAttachmentLoader
 {
     VkGuid                               RenderedTextureId = VkGuid();
-    ivec3                                AttachmentSize = ivec3(UINT32_MAX);
     uint32                               MipMapCount = UINT32_MAX;
     TextureTypeEnum                      TextureType = TextureTypeEnum::kTextureType_Undefined;
     TextureUsageTypeEnum                 TextureUsageType = kUsageType_Undefined;
@@ -81,7 +80,16 @@ struct VulkanTextureLoader
 class DLL_EXPORT VulkanTexture
 {
 private:
-    ivec3                 m_textureSize = ivec3(UINT32_MAX);
+
+    void CreateTextureImage();
+    void CreateTextureView();
+    void CreateTextureSampler(VulkanTextureLoader& textureLoader);
+    void UploadTextureDataAndTransition(VulkanTextureLoader& textureLoader);
+    void GenerateMipmaps();
+    uint32 MaxMipLevels(VulkanTextureLoader& textureLoader);
+
+public:
+    ivec3                 m_textureSize = ivec3(UINT32_MAX, UINT32_MAX, 1);
     uint32                m_mipMapLevels = UINT32_MAX;
 
     VkImage               m_textureImage = VK_NULL_HANDLE;
@@ -93,20 +101,15 @@ private:
     VkImageLayout         m_textureImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     VkSampleCountFlagBits m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
     ColorChannelEnum      m_colorChannels = ColorChannelEnum::ChannelRGBA;
+    TextureTypeEnum       m_textureType = TextureTypeEnum::kTextureType_Undefined;
+    bool                  m_isDepthTexture = false;
+    bool                  m_isStencil = false;
     bool                  m_isRenderPassAttachment = false;
     bool                  m_isCubeMap = false;
 
-    void CreateTextureImage();
-    void CreateTextureView();
-    void CreateTextureSampler(VulkanTextureLoader& textureLoader);
-    void UploadTextureDataAndTransition(VulkanTextureLoader& textureLoader);
-    void GenerateMipmaps();
-    uint32 MaxMipLevels(VulkanTextureLoader& textureLoader);
-
-public:
     VulkanTexture();
     VulkanTexture(VulkanTextureLoader& textureLoader);
-    VulkanTexture(RenderPassAttachmentLoader& attachment);
+    VulkanTexture(ivec2& attachmentSize, RenderPassAttachmentLoader& attachment);
     ~VulkanTexture();
 
     void TransitionImageLayout(VkImageLayout newLayout, uint32 baseMipLevel = 0, uint32 levelCount = VK_REMAINING_MIP_LEVELS);
@@ -122,6 +125,8 @@ public:
     [[nodiscard]] ivec3               TextureSize()                         const noexcept;
     [[nodiscard]] VkImageLayout       TextureImageLayout()                  const noexcept;
     [[nodiscard]] uint32              MipMapLevels()                        const noexcept;
+    [[nodiscard]] bool                IsDepthTexture()                      const noexcept;
+    [[nodiscard]] bool                IsStencil()                           const noexcept;
     [[nodiscard]] bool                IsRenderPassAttachment()              const noexcept;
     [[nodiscard]] bool                IsCubeMap()                           const noexcept;
     [[nodiscard]] uint32              TextureArrayLayers()                  const noexcept;

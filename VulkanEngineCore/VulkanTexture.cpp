@@ -12,7 +12,10 @@ VulkanTexture::VulkanTexture(VulkanTextureLoader& textureLoader)
 	m_textureImageLayout = textureLoader.TextureImageLayout;
 	m_sampleCount = textureLoader.SampleCount;
 	m_colorChannels = textureLoader.ColorChannels;
+	m_textureType = textureLoader.TextureType;
 	m_isCubeMap = textureLoader.IsCubeMap;
+	m_isDepthTexture = IsDepthFormat(textureLoader.TextureByteFormat);
+	m_isStencil = IsStencilFormat(textureLoader.TextureByteFormat);
 	m_isRenderPassAttachment = false;
 
 	CreateTextureImage();
@@ -20,7 +23,7 @@ VulkanTexture::VulkanTexture(VulkanTextureLoader& textureLoader)
 	CreateTextureSampler(textureLoader);
 }
 
-VulkanTexture::VulkanTexture(RenderPassAttachmentLoader& attachment)
+VulkanTexture::VulkanTexture(ivec2& attachmentSize, RenderPassAttachmentLoader& attachment)
 {
 	bool isDepthFormat = (attachment.TextureByteFormat >= VK_FORMAT_D16_UNORM && attachment.TextureByteFormat <= VK_FORMAT_D32_SFLOAT_S8_UINT) || (attachment.TextureByteFormat == VK_FORMAT_X8_D24_UNORM_PACK32);
 	bool hasStencil = (attachment.TextureByteFormat == VK_FORMAT_D32_SFLOAT_S8_UINT || attachment.TextureByteFormat == VK_FORMAT_D24_UNORM_S8_UINT);
@@ -30,24 +33,27 @@ VulkanTexture::VulkanTexture(RenderPassAttachmentLoader& attachment)
 		VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
 		VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
-	m_textureSize = attachment.AttachmentSize;
+	m_textureSize = ivec3(attachmentSize.x, attachmentSize.y, 1);
 	m_mipMapLevels = attachment.MipMapCount == UINT32_MAX ? static_cast<uint32>(std::floor(std::log2(std::max(m_textureSize.x, m_textureSize.y)))) + 1 : 1;
 	m_textureByteFormat = attachment.TextureByteFormat;
 	m_textureImageLayout = attachment.FinalLayout;
 	m_sampleCount = attachment.SampleCount;
-	m_isCubeMap = attachment.TextureUsageType == kUsageType_CubeMap ? true : false;
+	m_textureType = attachment.TextureType;
+	m_isCubeMap = attachment.TextureType == TextureTypeEnum::kTextureType_CubeMap ? true : false;
+	m_isDepthTexture = (attachment.TextureByteFormat >= VK_FORMAT_D16_UNORM && attachment.TextureByteFormat <= VK_FORMAT_D32_SFLOAT_S8_UINT) || (attachment.TextureByteFormat == VK_FORMAT_X8_D24_UNORM_PACK32);
+	m_isStencil = (attachment.TextureByteFormat == VK_FORMAT_D32_SFLOAT_S8_UINT || attachment.TextureByteFormat == VK_FORMAT_D24_UNORM_S8_UINT);
 	m_isRenderPassAttachment = true;
 
 	switch (attachment.TextureUsageType)
 	{
-		case kUsageType_DepthBufferTexture:     m_textureImageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
-		case kUsageType_GBufferTexture:         m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-		case kUsageType_IrradianceTexture:      m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-		case kUsageType_PrefilterTexture:       m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-		case kUsageType_OffscreenColorTexture:  m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-		case kUsageType_SwapChainTexture:       m_textureImageLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
-		case kUsageType_CubeMap:				m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-		case kUsageType_BRDFTexture:			m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+	case kUsageType_DepthBufferTexture:     m_textureImageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+	case kUsageType_GBufferTexture:         m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+	case kUsageType_IrradianceTexture:      m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+	case kUsageType_PrefilterTexture:       m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+	case kUsageType_OffscreenColorTexture:  m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+	case kUsageType_SwapChainTexture:       m_textureImageLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
+	case kUsageType_CubeMap:				m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+	case kUsageType_BRDFTexture:			m_textureImageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
 	}
 
 	if (isDepthFormat)
@@ -105,9 +111,57 @@ VulkanTexture::VulkanTexture(RenderPassAttachmentLoader& attachment)
 		aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 	}
 
-	CreateTextureView();
-	VULKAN_THROW_IF_FAIL(vkCreateSampler(vulkan.LogicalDevice(), &attachment.SamplerCreateInfo, nullptr, &m_textureSampler));
+	VkImageAspectFlags aspect = aspectMask;
+	if (aspect == 0)
+	{
+		std::cout << "CreateTextureView: imageAspectFlags not set ? using auto-detect." << std::endl;
 
+		bool isDepthFormat = (m_textureByteFormat >= VK_FORMAT_D16_UNORM &&
+			m_textureByteFormat <= VK_FORMAT_D32_SFLOAT_S8_UINT) ||
+			(m_textureByteFormat == VK_FORMAT_X8_D24_UNORM_PACK32);
+
+		if (isDepthFormat)
+		{
+			aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
+			if (m_textureByteFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+				m_textureByteFormat == VK_FORMAT_D24_UNORM_S8_UINT)
+			{
+				aspect |= VK_IMAGE_ASPECT_STENCIL_BIT;
+			}
+		}
+		else
+		{
+			aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+		}
+	}
+
+	for (uint32 mip = 0; mip < m_mipMapLevels; ++mip)
+	{
+		VkImageView imageView = VK_NULL_HANDLE;
+		VkImageViewCreateInfo viewInfo = {};
+		viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		viewInfo.image = m_textureImage;
+
+		if (m_textureType == TextureTypeEnum::kTextureType_CubeMap)
+		{
+			viewInfo.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+		}
+		else
+		{
+			viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		}
+
+		viewInfo.format = m_textureByteFormat;
+		viewInfo.subresourceRange.aspectMask = aspect;
+		viewInfo.subresourceRange.baseMipLevel = mip;
+		viewInfo.subresourceRange.levelCount = 1;
+		viewInfo.subresourceRange.baseArrayLayer = 0;
+		viewInfo.subresourceRange.layerCount = m_isCubeMap ? 6u : 1u;
+
+		VULKAN_THROW_IF_FAIL(vkCreateImageView(vulkan.LogicalDevice(), &viewInfo, nullptr, &imageView));
+		m_textureViewList.emplace_back(imageView);
+	}
+	VULKAN_THROW_IF_FAIL(vkCreateSampler(vulkan.LogicalDevice(), &attachment.SamplerCreateInfo, nullptr, &m_textureSampler));
 }
 
 VulkanTexture::~VulkanTexture()
@@ -491,6 +545,8 @@ VkSampler			VulkanTexture::TextureSampler()			const noexcept { return m_textureS
 ivec3				VulkanTexture::TextureSize()			const noexcept { return m_textureSize; }
 VkImageLayout       VulkanTexture::TextureImageLayout()		const noexcept { return m_textureImageLayout; }
 uint32				VulkanTexture::MipMapLevels()			const noexcept { return m_mipMapLevels; }
+bool				VulkanTexture::IsDepthTexture()			const noexcept { return m_isDepthTexture; }
+bool				VulkanTexture::IsStencil()				const noexcept { return m_isStencil; }
 bool				VulkanTexture::IsRenderPassAttachment() const noexcept { return m_isRenderPassAttachment; }
 bool				VulkanTexture::IsCubeMap()				const noexcept { return m_isCubeMap; }
 uint32				VulkanTexture::TextureArrayLayers()		const noexcept { return m_isCubeMap ? 6u : 1u; };
