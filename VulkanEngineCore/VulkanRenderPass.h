@@ -125,5 +125,8 @@ public:
         VulkanSubPass                   BuildSubpasses(RenderPassLoader& renderPassLoader, VulkanSubPassLoader& subPassLoader);
         void                            BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
         void                            BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
-        //void                            BuildFrameBuffer(RenderPassLoader& renderPassLoader);
+        void                            BuildFrameBuffer(RenderPassLoader& renderPassLoader);
+
+        void                            Destroy();
+        //void RenderSystem::BeginRenderPass(VkCommandBuffer& commandBuffer, const VulkanRenderPass& renderPass, ivec2 renderPassResolution, uint mipLevel)
 };

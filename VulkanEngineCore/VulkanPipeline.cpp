@@ -30,17 +30,33 @@ void VulkanPipeline::BuildPipelines(VulkanPipelineLoader& pipelineLoader)
 
 void VulkanPipeline::Destroy()
 {
-    //VkGuid                                      m_pipelineId;
-    //VkPipeline                                  m_pipeline = VK_NULL_HANDLE;
-    //VkPipelineCache                             m_pipelineCache = VK_NULL_HANDLE;
-    //VkPipelineLayout                            m_pipelineLayout = VK_NULL_HANDLE;
-    //VkDescriptorPool							m_globalBindlessPool = VK_NULL_HANDLE;
-    //m_descriptorSetLayoutList = Vector<VkDescriptorSetLayout>();
-    //m_descriptorSetList = Vector<VkDescriptorSet>();
-    //m_pushConstantList;
-    //m_vertexInputAttributeList;
-    //Vector<VkVertexInputBindingDescription>     m_vertexInputBindingList;
-    //Vector<ShaderDescriptorBinding>             m_descriptorBindingList;
+    for (auto& shader : m_shaderList)
+    {
+        shader.Destroy();
+    }
+    for (auto& descriptorSet : m_descriptorSetLayoutList)
+    {
+        if (!descriptorSet)
+        {
+            vkDestroyDescriptorSetLayout(vulkan.LogicalDevice(), descriptorSet, NULL);
+            descriptorSet = VK_NULL_HANDLE;
+        }
+    }
+    if (!m_pipelineCache)
+    {
+        vkDestroyPipelineCache(vulkan.LogicalDevice(), m_pipelineCache, NULL);
+        m_pipelineCache = VK_NULL_HANDLE;
+    }
+    if (!m_pipelineLayout)
+    {
+        vkDestroyPipelineLayout(vulkan.LogicalDevice(), m_pipelineLayout, NULL);
+        m_pipelineLayout = VK_NULL_HANDLE;
+    }
+    if (!m_pipeline)
+    {
+        vkDestroyPipeline(vulkan.LogicalDevice(), m_pipeline, NULL);
+        m_pipeline = VK_NULL_HANDLE;
+    }
 }
 
 void VulkanPipeline::ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShaderList)

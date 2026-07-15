@@ -51,7 +51,7 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
         }
        // SubPassList.emplace_back(subPassList);
     }
-    //BuildFrameBuffer(renderPassLoader);
+    BuildFrameBuffer(renderPassLoader);
 }
 
 void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
@@ -212,44 +212,57 @@ void VulkanRenderPass::BuildAttachments(Vector<RenderPassAttachmentLoader>& atta
     }
 }
 
-//void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
-//{
-//    if (AttachmentList.empty()) return;
-//
-//    uint32 maxMips = 0;
-//    for (const auto& attachment : AttachmentList) maxMips = std::max(maxMips, attachment.MipMapLevels());
-//    FrameBufferList.resize(maxMips);
-//
-//    for (uint32 mip = 0; mip < maxMips; ++mip)
-//    {
-//        uint32 width = 0;
-//        uint32 height = 0;
-//        Vector<VkImageView> attachmentViews;
-//
-//        for (auto& attachment : AttachmentList)
-//        {
-//            if (mip < attachment.TextureViews().size())
-//            {
-//                attachmentViews.push_back(attachment.TextureViews()[mip]);
-//                if (width == 0)
-//                {
-//                    width = std::max(1u, static_cast<uint32>(attachment.TextureSize().x) >> mip);
-//                    height = std::max(1u, static_cast<uint32>(attachment.TextureSize().y) >> mip);
-//                }
-//            }
-//        }
-//
-//        if (attachmentViews.empty()) continue;
-//        VkFramebufferCreateInfo info
-//        {
-//            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-//            .renderPass = RenderPass,
-//            .attachmentCount = static_cast<uint32>(attachmentViews.size()),
-//            .pAttachments = attachmentViews.data(),
-//            .width = width,
-//            .height = height,
-//            .layers = info.layers = IsCubeMapRenderPass ? 6u : 1u
-//        };
-//        VULKAN_THROW_IF_FAIL(vkCreateFramebuffer(vulkan.LogicalDevice(), &info, nullptr, &FrameBufferList[mip]));
-//    }
-//}
+void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
+{
+    if (AttachmentList.empty()) return;
+
+    uint32 maxMips = 0;
+    for (const auto& attachment : AttachmentList) maxMips = std::max(maxMips, attachment.MipMapLevels());
+    FrameBufferList.resize(maxMips);
+
+    for (uint32 mip = 0; mip < maxMips; ++mip)
+    {
+        uint32 width = 0;
+        uint32 height = 0;
+        Vector<VkImageView> attachmentViews;
+
+        for (auto& attachment : AttachmentList)
+        {
+            if (mip < attachment.TextureViews().size())
+            {
+                attachmentViews.push_back(attachment.TextureViews()[mip]);
+                if (width == 0)
+                {
+                    width = std::max(1u, static_cast<uint32>(attachment.TextureSize().x) >> mip);
+                    height = std::max(1u, static_cast<uint32>(attachment.TextureSize().y) >> mip);
+                }
+            }
+        }
+
+        if (attachmentViews.empty()) continue;
+        VkFramebufferCreateInfo info
+        {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .renderPass = RenderPass,
+            .attachmentCount = static_cast<uint32>(attachmentViews.size()),
+            .pAttachments = attachmentViews.data(),
+            .width = width,
+            .height = height,
+            .layers = info.layers = IsCubeMapRenderPass ? 6u : 1u
+        };
+        VULKAN_THROW_IF_FAIL(vkCreateFramebuffer(vulkan.LogicalDevice(), &info, nullptr, &FrameBufferList[mip]));
+    }
+}
+
+void VulkanRenderPass::Destroy()
+{
+    for (auto& pipeline : PipelineList)
+    {
+        pipeline.Destroy();
+    }
+    if (!RenderPass)
+    {
+        vkDestroyRenderPass(vulkan.LogicalDevice(), RenderPass, nullptr);
+        RenderPass = VK_NULL_HANDLE;
+    }
+}

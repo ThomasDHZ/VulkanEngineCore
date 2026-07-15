@@ -81,12 +81,12 @@ class DLL_EXPORT VulkanTexture
 {
 private:
 
-    void CreateTextureImage();
+    void CreateTextureImage(const Vector<byte>& textureData);
     void CreateTextureView();
-    void CreateTextureSampler(VulkanTextureLoader& textureLoader);
-    void UploadTextureDataAndTransition(VulkanTextureLoader& textureLoader);
-    void GenerateMipmaps();
-    uint32 MaxMipLevels(VulkanTextureLoader& textureLoader);
+    void CreateTextureSampler(VkSamplerCreateInfo& samplerCreateInfo);
+    void UploadTextureDataAndTransition(const Vector<byte>& textureData);
+    void GenerateMipmaps(VkCommandBuffer& cmd);
+    uint32 MaxMipLevels(uint32 mipMapCount, bool usingMips);
 
 public:
     ivec3                 m_textureSize = ivec3(UINT32_MAX, UINT32_MAX, 1);
