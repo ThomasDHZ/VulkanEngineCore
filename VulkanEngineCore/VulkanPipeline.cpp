@@ -12,6 +12,7 @@ VulkanPipeline::~VulkanPipeline()
 
 void VulkanPipeline::BuildPipelines(VulkanPipelineLoader& pipelineLoader)
 {
+    m_pipelineId = pipelineLoader.PipelineId;
     ShaderToPipelineBindings(pipelineLoader.VulkanShaderList);
     if (pipelineLoader.UseGlobalBindlessSet)
     {

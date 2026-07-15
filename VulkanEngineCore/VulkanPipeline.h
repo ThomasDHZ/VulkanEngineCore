@@ -13,6 +13,7 @@ private:
     VkDescriptorPool							m_globalBindlessPool = VK_NULL_HANDLE;
     Vector<VkDescriptorSetLayout>               m_descriptorSetLayoutList = Vector<VkDescriptorSetLayout>();
     Vector<VkDescriptorSet>                     m_descriptorSetList = Vector<VkDescriptorSet>();
+    Vector<VulkanShader>                        m_shaderList;
 
     Vector<VkVertexInputAttributeDescription>   m_vertexInputAttributeList;
     Vector<VkVertexInputBindingDescription>     m_vertexInputBindingList;

@@ -22,35 +22,35 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
     IsCubeMapRenderPass = renderPassLoader.IsCubeMapRenderPass;
 
     BuildRenderPass(renderPassLoader);
-    //for (auto& renderPass : renderPassLoader.SubPassList)
-    //{
-    //    Vector<VulkanSubPass> subPassList;
-    //    for (auto& subPass : renderPass)
-    //    {
-    ////        //for (auto& pipeline : renderPassLoader.PipelineList)
-    ////        //{
-    ////        //    pipeline.RenderPassId = RenderPassId;
-    ////        //    pipeline.RenderPass = RenderPass;
-    ////        //    pipeline.RenderPassResolution = RenderPassResolution;
-    ////        //    pipeline.UseGlobalBindlessSet = renderPassLoader.UseGlobalBindlessSet;
+    for (auto& renderPass : renderPassLoader.SubPassList)
+    {
+        //Vector<VulkanSubPass> subPassList;
+        for (auto& subPass : renderPass)
+        {
+            for (auto& pipeline : renderPassLoader.PipelineList)
+            {
+                pipeline.RenderPassId = RenderPassId;
+                pipeline.RenderPass = RenderPass;
+                pipeline.RenderPassResolution = RenderPassResolution;
+                pipeline.UseGlobalBindlessSet = renderPassLoader.UseGlobalBindlessSet;
 
-    ////        //    Vector<VkDescriptorImageInfo> descriptorSetInfoList;
-    ////        //    for (auto& attachment : AttachmentList)
-    ////        //    {
-    ////        //        descriptorSetInfoList.emplace_back(VkDescriptorImageInfo
-    ////        //            {
-    ////        //                .sampler = attachment.m_textureSampler,
-    ////        //                .imageView = attachment.m_textureViewList.front(),
-    ////        //                .imageLayout = attachment.m_textureImageLayout
-    ////        //            });
-    ////        //    }
-    ////        //    pipeline.RenderPassInputTextures = descriptorSetInfoList;
-    ////        //    BuildPipeline(pipeline);
-    ////       // }
-    //      // subPassList.emplace_back(BuildSubpasses(renderPassLoader, subPass));
-    //    }
-    //    SubPassList.emplace_back(subPassList);
-    //}
+                Vector<VkDescriptorImageInfo> descriptorSetInfoList;
+                for (auto& attachment : AttachmentList)
+                {
+                    descriptorSetInfoList.emplace_back(VkDescriptorImageInfo
+                        {
+                            .sampler = attachment.m_textureSampler,
+                            .imageView = attachment.m_textureViewList.front(),
+                            .imageLayout = attachment.m_textureImageLayout
+                        });
+                }
+                pipeline.RenderPassInputTextures = descriptorSetInfoList;
+                BuildPipeline(pipeline, renderPassLoader.UseGlobalBindlessSet);
+            }
+         //  subPassList.emplace_back(BuildSubpasses(renderPassLoader, subPass));
+        }
+       // SubPassList.emplace_back(subPassList);
+    }
     //BuildFrameBuffer(renderPassLoader);
 }
 

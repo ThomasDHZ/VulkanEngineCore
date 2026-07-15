@@ -55,6 +55,7 @@ struct RenderPassLoader
     Vector<VkSubpassDependency>          SubpassDependencyList;
     Vector<VulkanPipelineLoader>         PipelineList;
     Vector<Vector<VulkanSubPassLoader>>  SubPassList;
+    Vector<VulkanShader>                 ShaderList;
     Vector<VkClearValue>                 ClearValueList;
     VkSampleCountFlagBits                SampleCount = VK_SAMPLE_COUNT_1_BIT;
     bool                                 UseGlobalBindlessSet = false;
