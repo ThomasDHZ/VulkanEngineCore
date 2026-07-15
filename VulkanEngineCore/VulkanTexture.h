@@ -118,11 +118,11 @@ public:
 
     static bool         IsDepthFormat(VkFormat format);
     static bool         IsStencilFormat(VkFormat format);
+    ivec3               TextureSize();
 
     [[nodiscard]] VkImage             TextureImage()                        const noexcept;
     [[nodiscard]] Vector<VkImageView> TextureViews()                        const noexcept;
     [[nodiscard]] VkSampler           TextureSampler()                      const noexcept;
-    [[nodiscard]] ivec3               TextureSize()                         const noexcept;
     [[nodiscard]] VkImageLayout       TextureImageLayout()                  const noexcept;
     [[nodiscard]] uint32              MipMapLevels()                        const noexcept;
     [[nodiscard]] bool                IsDepthTexture()                      const noexcept;

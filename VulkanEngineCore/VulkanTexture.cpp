@@ -452,7 +452,7 @@ void VulkanTexture::DestroyTexture()
 VkImage				VulkanTexture::TextureImage()			const noexcept { return m_textureImage; }
 Vector<VkImageView> VulkanTexture::TextureViews()			const noexcept { return m_textureViewList; }
 VkSampler			VulkanTexture::TextureSampler()			const noexcept { return m_textureSampler; }
-ivec3				VulkanTexture::TextureSize()			const noexcept { return m_textureSize; }
+ivec3				VulkanTexture::TextureSize()			{ return m_textureSize; }
 VkImageLayout       VulkanTexture::TextureImageLayout()		const noexcept { return m_textureImageLayout; }
 uint32				VulkanTexture::MipMapLevels()			const noexcept { return m_mipMapLevels; }
 bool				VulkanTexture::IsDepthTexture()			const noexcept { return m_isDepthTexture; }
