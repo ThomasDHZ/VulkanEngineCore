@@ -16,6 +16,24 @@ enum MeshTypeEnum
     kMesh_Undefined
 };
 
+struct MeshDrawMessage
+{
+    uint32		   MeshId = UINT32_MAX;
+    uint32	       Drawlayer = UINT32_MAX;
+    uint32         VertexBufferBinding = 0;
+    uint32		   VertexCount = 0;
+    uint32		   IndexCount = 0;
+    uint32		   InstanceCount = 1;
+    uint32         FirstVertex = 0;
+    uint32	       FirstIndex = 0;
+    uint32	       StartInstanceIndex = 0;
+    VkDeviceSize   VertexOffset = 0;
+    VkDeviceSize   InstanceOffset = 0;
+    VkBuffer	   VertexBuffer = VK_NULL_HANDLE;
+    VkBuffer	   IndexBuffer = VK_NULL_HANDLE;
+    VkBuffer       InstanceBuffer = VK_NULL_HANDLE;
+};
+
 struct VulkanSubPass
 {
     VkGuid                               RenderPassGuid;
@@ -98,6 +116,7 @@ struct RenderPassLoader
 struct DLL_EXPORT VulkanRenderPass
 {
 private:
+    const VulkanPipeline* FindRenderPipeline(const VkGuid& pipelineId);
 
 public:
 
@@ -127,6 +146,11 @@ public:
         void                            BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
         void                            BuildFrameBuffer(RenderPassLoader& renderPassLoader);
 
+        void                            BeginRenderPass(VkCommandBuffer& commandBuffer, uint mipLevel = 0);
+        void                            NextSubpass(VkCommandBuffer& commandBuffer);
+        void                            BindViewPort(VkCommandBuffer& commandBuffer, uint drawMipLevel = 0);
+        void                            BindRenderPassPipeline(VkCommandBuffer& commandBuffer, const VulkanPipeline& pipeline, uint32 firstSet);
+        void                            DrawMesh(VkCommandBuffer cmd, MeshDrawMessage& mesh);
+        void                            EndRenderPass(VkCommandBuffer& commandBuffer);
         void                            Destroy();
-        //void RenderSystem::BeginRenderPass(VkCommandBuffer& commandBuffer, const VulkanRenderPass& renderPass, ivec2 renderPassResolution, uint mipLevel)
 };

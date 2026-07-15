@@ -1,6 +1,17 @@
 #include "VulkanRenderPass.h"
 #include <VulkanPipeline.h>
 
+const VulkanPipeline* VulkanRenderPass::FindRenderPipeline(const VkGuid& pipelineId)
+{
+    auto it = std::find_if(PipelineList.begin(), PipelineList.end(), [&](const VulkanPipeline& pipeline) 
+        { 
+            return pipeline.m_pipelineId == pipelineId;
+        });
+
+    if (it != PipelineList.end()) return &(*it);
+    return nullptr;
+}
+
 VulkanRenderPass::VulkanRenderPass()
 {
 }
@@ -15,7 +26,6 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
     RenderPassResolution = ivec2(INT32_MAX, INT32_MAX) == renderPassLoader.RenderPassResolution || ivec2(0) == renderPassLoader.RenderPassResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
     RenderPass = VK_NULL_HANDLE;
     FrameBufferList = Vector<VkFramebuffer>();
-    SubPassList = Vector<Vector<VulkanSubPass>>();
     ClearValueList = renderPassLoader.ClearValueList;
     SampleCount = renderPassLoader.SampleCount >= vulkan.MaxSampleCount() ? vulkan.MaxSampleCount() : renderPassLoader.SampleCount;
     UseCubeMapMultiView = renderPassLoader.UseCubeMapMultiView;
@@ -24,32 +34,26 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
     BuildRenderPass(renderPassLoader);
     for (auto& renderPass : renderPassLoader.SubPassList)
     {
-        //Vector<VulkanSubPass> subPassList;
-        for (auto& subPass : renderPass)
+        for (auto& pipeline : renderPassLoader.PipelineList)
         {
-            for (auto& pipeline : renderPassLoader.PipelineList)
-            {
-                pipeline.RenderPassId = RenderPassId;
-                pipeline.RenderPass = RenderPass;
-                pipeline.RenderPassResolution = RenderPassResolution;
-                pipeline.UseGlobalBindlessSet = renderPassLoader.UseGlobalBindlessSet;
+            pipeline.RenderPassId = RenderPassId;
+            pipeline.RenderPass = RenderPass;
+            pipeline.RenderPassResolution = RenderPassResolution;
+            pipeline.UseGlobalBindlessSet = renderPassLoader.UseGlobalBindlessSet;
 
-                Vector<VkDescriptorImageInfo> descriptorSetInfoList;
-                for (auto& attachment : AttachmentList)
-                {
-                    descriptorSetInfoList.emplace_back(VkDescriptorImageInfo
-                        {
-                            .sampler = attachment.m_textureSampler,
-                            .imageView = attachment.m_textureViewList.front(),
-                            .imageLayout = attachment.m_textureImageLayout
-                        });
-                }
-                pipeline.RenderPassInputTextures = descriptorSetInfoList;
-                BuildPipeline(pipeline, renderPassLoader.UseGlobalBindlessSet);
+            Vector<VkDescriptorImageInfo> descriptorSetInfoList;
+            for (auto& attachment : AttachmentList)
+            {
+                descriptorSetInfoList.emplace_back(VkDescriptorImageInfo
+                    {
+                        .sampler = attachment.m_textureSampler,
+                        .imageView = attachment.m_textureViewList.front(),
+                        .imageLayout = attachment.m_textureImageLayout
+                    });
             }
-         //  subPassList.emplace_back(BuildSubpasses(renderPassLoader, subPass));
+            pipeline.RenderPassInputTextures = descriptorSetInfoList;
+            BuildPipeline(pipeline, renderPassLoader.UseGlobalBindlessSet);
         }
-       // SubPassList.emplace_back(subPassList);
     }
     BuildFrameBuffer(renderPassLoader);
 }
@@ -254,11 +258,102 @@ void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
     }
 }
 
+void VulkanRenderPass::BeginRenderPass(VkCommandBuffer& commandBuffer, uint mipLevel)
+{
+    const uint32 renderPassWidth = std::max(1, RenderPassResolution.x >> mipLevel);
+    const uint32 renderPassHeight = std::max(1, RenderPassResolution.y >> mipLevel);
+    VkRenderPassBeginInfo renderPassBeginInfo = VkRenderPassBeginInfo
+    {
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+        .renderPass = RenderPass,
+        .framebuffer = FrameBufferList[mipLevel],
+        .renderArea = VkRect2D
+        {
+           .offset = VkOffset2D
+            {
+                .x = 0,
+                .y = 0
+            },
+           .extent = VkExtent2D
+            {
+                .width = renderPassWidth,
+                .height = renderPassHeight
+            }
+        },
+        .clearValueCount = static_cast<uint32>(ClearValueList.size()),
+        .pClearValues = ClearValueList.data()
+    };
+    vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void VulkanRenderPass::BindViewPort(VkCommandBuffer& commandBuffer, uint drawMipLevel)
+{
+    VkViewport viewport
+    {
+        .x = 0.0f,
+        .y = 0.0f,
+        .width = static_cast<float>(RenderPassResolution.x),
+        .height = static_cast<float>(RenderPassResolution.y),
+        .minDepth = 0.0f,
+        .maxDepth = 1.0f
+    };
+
+    VkRect2D rect2D = VkRect2D
+    {
+       .offset = VkOffset2D {.x = 0, .y = 0 },
+       .extent = VkExtent2D {.width = static_cast<uint32>(RenderPassResolution.x), .height = static_cast<uint32>(RenderPassResolution.y) }
+    };
+
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+    vkCmdSetScissor(commandBuffer, 0, 1, &rect2D);
+}
+
+void VulkanRenderPass::BindRenderPassPipeline(VkCommandBuffer& commandBuffer, const VulkanPipeline& pipeline, uint32 firstSet)
+{
+    if (pipeline.Pipeline() == nullptr)
+    {
+        std::cout << "Pipeline not set" << std::endl;
+        return;
+    }
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.Pipeline());
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.PipelineLayout(), firstSet, pipeline.DescriptorSetList().size(), pipeline.DescriptorSetList().data(), 0, nullptr);
+}
+
+void VulkanRenderPass::DrawMesh(VkCommandBuffer cmd, MeshDrawMessage& mesh)
+{
+    if (mesh.VertexBuffer != VK_NULL_HANDLE) vkCmdBindVertexBuffers(cmd, mesh.VertexBufferBinding, 1, &mesh.VertexBuffer, &mesh.VertexOffset);
+    if (mesh.IndexBuffer != VK_NULL_HANDLE)
+    {
+        vkCmdBindIndexBuffer(cmd, mesh.IndexBuffer, mesh.FirstIndex * sizeof(uint32), VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(cmd, mesh.IndexCount, mesh.InstanceCount, mesh.FirstIndex, 0, mesh.StartInstanceIndex);
+    }
+    else
+    {
+        vkCmdDraw(cmd, mesh.VertexCount, mesh.InstanceCount, mesh.FirstVertex, mesh.StartInstanceIndex);
+    }
+}
+
+void VulkanRenderPass::NextSubpass(VkCommandBuffer& commandBuffer)
+{
+    vkCmdNextSubpass(commandBuffer, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void VulkanRenderPass::EndRenderPass(VkCommandBuffer& commandBuffer)
+{
+    vkCmdEndRenderPass(commandBuffer);
+}
+
 void VulkanRenderPass::Destroy()
 {
     for (auto& pipeline : PipelineList)
     {
         pipeline.Destroy();
+    }
+    for (auto& frameBuffer : FrameBufferList)
+    {
+        if (!frameBuffer) vkDestroyFramebuffer(vulkan.LogicalDevice(), frameBuffer, nullptr);
+        frameBuffer = VK_NULL_HANDLE;
     }
     if (!RenderPass)
     {
