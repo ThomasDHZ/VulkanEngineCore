@@ -82,6 +82,41 @@ void BufferSystem::SetUpVmaAllocation()
     }
 }
 
+void BufferSystem::CreateStagingBuffer(VkBuffer& outBuffer, VmaAllocation& outAllocation, VkDeviceSize size, const void* data)
+{
+    if (size == 0)
+    {
+        outBuffer = VK_NULL_HANDLE;
+        outAllocation = VK_NULL_HANDLE;
+        return;
+    }
+
+    VkBufferCreateInfo bufferInfo = 
+    {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = size,
+        .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+    };
+
+    VmaAllocationCreateInfo allocInfo = 
+    {
+        .flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+               | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO
+    };
+
+    VmaAllocationInfo allocResult{};
+    VULKAN_THROW_IF_FAIL(vmaCreateBuffer(VmaAllocatorHandle(), &bufferInfo, &allocInfo, &outBuffer, &outAllocation, &allocResult));
+    if (data)
+    {
+        void* mapped = allocResult.pMappedData;
+        if (!mapped) vmaMapMemory(VmaAllocatorHandle(), outAllocation, &mapped);
+        memcpy(mapped, data, size);
+        vmaFlushAllocation(VmaAllocatorHandle(), outAllocation, 0, size);
+        if (!allocResult.pMappedData) vmaUnmapMemory(VmaAllocatorHandle(), outAllocation);
+    }
+}
+
 uint32 BufferSystem::CreateStaticVulkanBuffer(const void* srcData, VkDeviceSize size,
     VkBufferUsageFlags shaderUsageFlags, VkDeviceSize offset)
 {

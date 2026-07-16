@@ -97,6 +97,7 @@ public:
     }
 
     void                                                    SetUpVmaAllocation();
+    void                                                    CreateStagingBuffer(VkBuffer& outBuffer, VmaAllocation& outAllocation, VkDeviceSize size, const void* data);
     uint32                                                  CreateStaticVulkanBuffer(const void* srcData, VkDeviceSize size, VkBufferUsageFlags shaderUsageFlags, VkDeviceSize offset = 0);
     uint32                                                  CreateDynamicBuffer(const void* srcData, VkDeviceSize size, VkBufferUsageFlags usageFlags);
     void                                                    UpdateDynamicBuffer(uint32 bufferId, const void* data, VkDeviceSize size, VkDeviceSize offset = 0);

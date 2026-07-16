@@ -93,6 +93,10 @@ void VulkanTexture::CreateTextureImage(const Vector<byte>& textureData)
 	};
 	if (m_textureSize.x * m_textureSize.y * m_textureSize.z > 1024 * 1024) vmaAllocationCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 
+	std::cout << "Texture size: " << m_textureSize.x << "x" << m_textureSize.y
+		<< " Format: " << m_textureByteFormat
+		<< " Expected bytes: " << (m_textureSize.x * m_textureSize.y * 16 * (m_isCubeMap ? 6 : 1))
+		<< " Actual data bytes: " << textureData.size() << std::endl;
 	VULKAN_THROW_IF_FAIL(vmaCreateImage(bufferSystem.VmaAllocatorHandle(), &imageInfo, &vmaAllocationCreateInfo, &m_textureImage, &m_vmaTextureAllocation, nullptr));
 	if (!m_isRenderPassAttachment) UploadTextureDataAndTransition(textureData);
 }
@@ -153,69 +157,71 @@ void VulkanTexture::UploadTextureDataAndTransition(const Vector<byte>& textureDa
 	if (textureData.empty() || m_isRenderPassAttachment)
 		return;
 
-
-	VkBufferCreateInfo stagingInfo = VkBufferCreateInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.size = textureData.size(),
-		.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT
-	};
-
-	VmaAllocationCreateInfo stagingAllocInfo = VmaAllocationCreateInfo
-	{
-		.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-		.usage = VMA_MEMORY_USAGE_AUTO
-	};
-
-	VmaAllocationInfo allocInfo{};
-	VkBuffer stagingBuffer = VK_NULL_HANDLE;
-	VmaAllocation stagingAllocation = VK_NULL_HANDLE;
-	VULKAN_THROW_IF_FAIL(vmaCreateBuffer(bufferSystem.VmaAllocatorHandle(), &stagingInfo, &stagingAllocInfo, &stagingBuffer, &stagingAllocation, &allocInfo));
-
-	void* mapped = allocInfo.pMappedData;
-	if (!mapped) VULKAN_THROW_IF_FAIL(vmaMapMemory(bufferSystem.VmaAllocatorHandle(), stagingAllocation, &mapped));
-
-	memcpy(mapped, textureData.data(), textureData.size());
-	vmaFlushAllocation(bufferSystem.VmaAllocatorHandle(), stagingAllocation, 0, VK_WHOLE_SIZE);
-
-	if (!allocInfo.pMappedData) vmaUnmapMemory(bufferSystem.VmaAllocatorHandle(), stagingAllocation);
-
 	uint32 arrayLayers = m_isCubeMap ? 6u : 1u;
-	VkDeviceSize layerSize = textureData.size() / arrayLayers;
-	VkCommandBuffer cmd = vulkan.CommandBuffer().BeginSingleUseCommand();
-	TransitionImageLayout(cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0, VK_REMAINING_MIP_LEVELS, 0, arrayLayers);
-	std::vector<VkBufferImageCopy> copyRegions;
-	copyRegions.reserve(arrayLayers);
-	for (uint32 layer = 0; layer < arrayLayers; ++layer)
-	{
-		copyRegions.push_back(VkBufferImageCopy
-			{
-				.bufferOffset = layer * layerSize,
-				.bufferRowLength = 0,
-				.bufferImageHeight = 0,
-				.imageSubresource = 
-				{
-					.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-					.mipLevel = 0,
-					.baseArrayLayer = layer,
-					.layerCount = 1
-				},
-				.imageOffset = {0, 0, 0},
-				.imageExtent = 
-				{
-					static_cast<uint32_t>(m_textureSize.x),
-					static_cast<uint32_t>(m_textureSize.y),
-					static_cast<uint32_t>(m_textureSize.z)
-				}
-			});
-	}
-	vkCmdCopyBufferToImage(cmd, stagingBuffer, m_textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t>(copyRegions.size()), copyRegions.data());
+	VkDeviceSize totalSize = textureData.size();
 
-	if (m_mipMapLevels > 1) GenerateMipmaps(cmd);
-	else TransitionImageLayout(cmd, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 0, VK_REMAINING_MIP_LEVELS, 0, arrayLayers);
+	VkBuffer stagingBuffer = VK_NULL_HANDLE;
+	VmaAllocation stagingAlloc = VK_NULL_HANDLE;
+	bufferSystem.CreateStagingBuffer(stagingBuffer, stagingAlloc, totalSize, textureData.data());
+
+	VkCommandBuffer cmd = vulkan.CommandBuffer().BeginSingleUseCommand();
+
+	// 1. Initial transition from UNDEFINED → TRANSFER_DST
+	TransitionImageLayout(cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		0, VK_REMAINING_MIP_LEVELS, 0, arrayLayers);
+
+	// 2. Copy
+	VkBufferImageCopy copyRegion{
+		.bufferOffset = 0,
+		.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, arrayLayers },
+		.imageExtent = {
+			static_cast<uint32_t>(m_textureSize.x),
+			static_cast<uint32_t>(m_textureSize.y),
+			static_cast<uint32_t>(m_textureSize.z)
+		}
+	};
+
+	VkImageMemoryBarrier preCopyBarrier{
+	.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+	.srcAccessMask = 0,                          // No previous access
+	.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+	.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+	.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+	.image = m_textureImage,
+	.subresourceRange = {
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		0, VK_REMAINING_MIP_LEVELS,
+		0, arrayLayers
+	}
+	};
+
+	vkCmdPipelineBarrier(cmd,
+		VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,      // From top
+		VK_PIPELINE_STAGE_TRANSFER_BIT,         // To transfer
+		0,
+		0, nullptr,
+		0, nullptr,
+		1, &preCopyBarrier);
+
+	// Now do the copy
+	vkCmdCopyBufferToImage(cmd, stagingBuffer, m_textureImage,
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		1, &copyRegion);
+
+	// 3. Final transition
+	if (m_mipMapLevels > 1)
+	{
+		GenerateMipmaps(cmd);
+	}
+	else
+	{
+		TransitionImageLayout(cmd, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			0, VK_REMAINING_MIP_LEVELS, 0, arrayLayers);
+	}
 
 	vulkan.CommandBuffer().EndSingleUseCommand(cmd);
-	vmaDestroyBuffer(bufferSystem.VmaAllocatorHandle(), stagingBuffer, stagingAllocation);
+
+	vmaDestroyBuffer(bufferSystem.VmaAllocatorHandle(), stagingBuffer, stagingAlloc);
 }
 
 void VulkanTexture::GenerateMipmaps(VkCommandBuffer& cmd)
