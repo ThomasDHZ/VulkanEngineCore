@@ -86,11 +86,15 @@ private:
     void CreateTextureSampler(VkSamplerCreateInfo& samplerCreateInfo);
     void UploadTextureDataAndTransition(const Vector<byte>& textureData);
     void GenerateMipmaps(VkCommandBuffer& cmd);
+
     uint32 MaxMipLevels(uint32 mipMapCount, bool usingMips);
+    size_t GetMipOffset(uint32_t mipLevel) const;
+    uint32 GetBlockSizeInBytes(VkFormat format);
 
 public:
     ivec3                 m_textureSize = ivec3(UINT32_MAX, UINT32_MAX, 1);
     uint32                m_mipMapLevels = UINT32_MAX;
+    uint32                m_bytesPerChannel = UINT32_MAX;
 
     VkImage               m_textureImage = VK_NULL_HANDLE;
     Vector<VkImageView>   m_textureViewList;
@@ -106,6 +110,7 @@ public:
     bool                  m_isStencil = false;
     bool                  m_isRenderPassAttachment = false;
     bool                  m_isCubeMap = false;
+    bool                  m_isCompressedFormat = false;
 
     VulkanTexture();
     VulkanTexture(VulkanTextureLoader& textureLoader);

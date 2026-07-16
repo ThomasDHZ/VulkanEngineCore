@@ -157,6 +157,9 @@ void VulkanTexture::UploadTextureDataAndTransition(const Vector<byte>& textureDa
 	if (textureData.empty() || m_isRenderPassAttachment)
 		return;
 
+	VkImageAspectFlags aspectMask = m_isDepthTexture ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+	if (m_isStencil) aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
 	uint32 arrayLayers = m_isCubeMap ? 6u : 1u;
 	VkDeviceSize totalSize = textureData.size();
 
@@ -165,60 +168,60 @@ void VulkanTexture::UploadTextureDataAndTransition(const Vector<byte>& textureDa
 	bufferSystem.CreateStagingBuffer(stagingBuffer, stagingAlloc, totalSize, textureData.data());
 
 	VkCommandBuffer cmd = vulkan.CommandBuffer().BeginSingleUseCommand();
+	VkImageMemoryBarrier barrierToDst{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+		.srcAccessMask = 0,
+		.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+		.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		.image = m_textureImage,
+		.subresourceRange = { aspectMask, 0, m_mipMapLevels, 0, arrayLayers }
+	};
+	vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrierToDst);
 
-	// 1. Initial transition from UNDEFINED → TRANSFER_DST
-	TransitionImageLayout(cmd, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		0, VK_REMAINING_MIP_LEVELS, 0, arrayLayers);
+	Vector<VkBufferImageCopy> copyRegions;
+	copyRegions.reserve(m_mipMapLevels * arrayLayers);
 
-	// 2. Copy
-	VkBufferImageCopy copyRegion{
-		.bufferOffset = 0,
-		.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, arrayLayers },
-		.imageExtent = {
-			static_cast<uint32_t>(m_textureSize.x),
-			static_cast<uint32_t>(m_textureSize.y),
-			static_cast<uint32_t>(m_textureSize.z)
+	for (uint32_t mip = 0; mip < m_mipMapLevels; ++mip)
+	{
+		size_t mipOffset = GetMipOffset(mip);
+		uint32 mipW = std::max(1u, static_cast<uint>(m_textureSize.x) >> mip);
+		uint32 mipH = std::max(1u, static_cast<uint>(m_textureSize.y) >> mip);
+		uint32 mipD = std::max(1u, static_cast<uint>(m_textureSize.z) >> mip);
+		size_t oneLayerSize = static_cast<size_t>(mipW) * mipH * mipD * (m_bytesPerChannel * m_colorChannels);
+
+		for (uint32 layer = 0; layer < arrayLayers; ++layer)
+		{
+			VkBufferImageCopy region = VkBufferImageCopy
+			{
+				.bufferOffset = mipOffset + layer * oneLayerSize,
+				.bufferRowLength = 0,
+				.bufferImageHeight = 0,
+				.imageSubresource =
+				{
+					.aspectMask = aspectMask,
+					.mipLevel = mip,
+					.baseArrayLayer = layer,
+					.layerCount = 1,
+				},
+				.imageOffset = { 0, 0, 0 },
+				.imageExtent = { mipW, mipH, mipD }
+			};
+			copyRegions.emplace_back(region);
 		}
+	}
+
+	vkCmdCopyBufferToImage(cmd, stagingBuffer, m_textureImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32>(copyRegions.size()), copyRegions.data());
+	VkImageMemoryBarrier barrierToFinal{
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+		.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+		.dstAccessMask = static_cast<VkAccessFlags>(m_isDepthTexture ? VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT : VK_ACCESS_SHADER_READ_BIT),
+		.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+		.newLayout = m_textureImageLayout,
+		.image = m_textureImage,
+		.subresourceRange = { aspectMask, 0, m_mipMapLevels, 0, arrayLayers }
 	};
-
-	VkImageMemoryBarrier preCopyBarrier{
-	.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-	.srcAccessMask = 0,                          // No previous access
-	.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-	.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-	.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-	.image = m_textureImage,
-	.subresourceRange = {
-		VK_IMAGE_ASPECT_COLOR_BIT,
-		0, VK_REMAINING_MIP_LEVELS,
-		0, arrayLayers
-	}
-	};
-
-	vkCmdPipelineBarrier(cmd,
-		VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,      // From top
-		VK_PIPELINE_STAGE_TRANSFER_BIT,         // To transfer
-		0,
-		0, nullptr,
-		0, nullptr,
-		1, &preCopyBarrier);
-
-	// Now do the copy
-	vkCmdCopyBufferToImage(cmd, stagingBuffer, m_textureImage,
-		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		1, &copyRegion);
-
-	// 3. Final transition
-	if (m_mipMapLevels > 1)
-	{
-		GenerateMipmaps(cmd);
-	}
-	else
-	{
-		TransitionImageLayout(cmd, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			0, VK_REMAINING_MIP_LEVELS, 0, arrayLayers);
-	}
-
+	vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, m_isDepthTexture ? VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT : VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrierToFinal);
 	vulkan.CommandBuffer().EndSingleUseCommand(cmd);
 
 	vmaDestroyBuffer(bufferSystem.VmaAllocatorHandle(), stagingBuffer, stagingAlloc);
@@ -339,6 +342,26 @@ uint32 VulkanTexture::MaxMipLevels(uint32 mipMapCount, bool usingMips)
 	return 1;
 }
 
+size_t VulkanTexture::GetMipOffset(uint32_t mipLevel) const
+{
+    if (mipLevel >= m_mipMapLevels) return 0;
+
+    size_t offset = 0;
+	uint32 bytesPerPixel = m_bytesPerChannel;
+	uint32 arrayLayers = m_isCubeMap ? 6u : 1u;
+    for (uint32 x = 0; x < mipLevel; ++x)
+    {
+        uint32 mipW = std::max(1u, static_cast<uint>(m_textureSize.x) >> x);
+        uint32 mipH = std::max(1u, static_cast<uint>(m_textureSize.y) >> x);
+        uint32 mipD = std::max(1u, static_cast<uint>(m_textureSize.z) >> x);
+        size_t oneMipSize = static_cast<size_t>(mipW) * mipH * mipD * bytesPerPixel;
+
+        offset += oneMipSize * arrayLayers;
+    }
+
+    return offset;
+}
+
 void VulkanTexture::TransitionImageLayout(VkImageLayout newLayout, uint32 baseMipLevel, uint32 levelCount)
 {
 	VkCommandBuffer commandBuffer = vulkan.CommandBuffer().BeginSingleUseCommand();
@@ -375,7 +398,8 @@ void VulkanTexture::TransitionImageLayout(VkCommandBuffer cmd, VkImageLayout new
 	VkAccessFlags srcAccess = 0;
 	VkAccessFlags dstAccess = 0;
 
-	if (m_textureImageLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+	if (m_textureImageLayout == VK_IMAGE_LAYOUT_UNDEFINED ||
+		m_textureImageLayout == VK_IMAGE_LAYOUT_PREINITIALIZED)
 	{
 		if (newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
 		{
@@ -488,4 +512,37 @@ bool VulkanTexture::IsStencilFormat(VkFormat format)
 	return format == VK_FORMAT_D16_UNORM_S8_UINT ||
 		   format == VK_FORMAT_D24_UNORM_S8_UINT ||
 		   format == VK_FORMAT_D32_SFLOAT_S8_UINT;
+}
+
+uint32 VulkanTexture::GetBlockSizeInBytes(VkFormat format)
+{
+	switch (format)
+	{
+	case VK_FORMAT_BC1_RGB_UNORM_BLOCK:
+	case VK_FORMAT_BC1_RGB_SRGB_BLOCK:
+	case VK_FORMAT_BC1_RGBA_UNORM_BLOCK:
+	case VK_FORMAT_BC1_RGBA_SRGB_BLOCK:
+	case VK_FORMAT_BC4_UNORM_BLOCK:
+	case VK_FORMAT_BC4_SNORM_BLOCK:
+		return 8;
+
+	case VK_FORMAT_BC3_UNORM_BLOCK:
+	case VK_FORMAT_BC3_SRGB_BLOCK:
+	case VK_FORMAT_BC5_UNORM_BLOCK:
+	case VK_FORMAT_BC5_SNORM_BLOCK:
+	case VK_FORMAT_BC7_UNORM_BLOCK:
+	case VK_FORMAT_BC7_SRGB_BLOCK:
+		return 16;
+
+	case VK_FORMAT_ASTC_4x4_UNORM_BLOCK:
+	case VK_FORMAT_ASTC_4x4_SRGB_BLOCK:
+		return 16;
+
+	case VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK:
+	case VK_FORMAT_ETC2_R8G8B8A8_UNORM_BLOCK:
+		return 16;
+
+	default:
+		return m_bytesPerChannel * m_colorChannels;
+	}
 }
