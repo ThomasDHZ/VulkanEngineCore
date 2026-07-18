@@ -394,8 +394,10 @@ void VulkanPipeline::CreatePipeline(VulkanPipelineLoader& pipelineLoader)
     VULKAN_THROW_IF_FAIL(vkCreateGraphicsPipelines(vulkan.LogicalDevice(), m_pipelineCache, 1, &graphicsPipelineCreateInfo, nullptr, &m_pipeline));
 }
 
+VkGuid                        VulkanPipeline::PipelineId()              const { return m_pipelineId; }
 VkPipeline                    VulkanPipeline::Pipeline()                const { return m_pipeline; }
 VkPipelineCache               VulkanPipeline::PipelineCache()           const { return m_pipelineCache; }
 VkPipelineLayout              VulkanPipeline::PipelineLayout()          const { return m_pipelineLayout; }
 Vector<VkDescriptorSetLayout> VulkanPipeline::DescriptorSetLayoutList() const { return m_descriptorSetLayoutList; }
 Vector<VkDescriptorSet>       VulkanPipeline::DescriptorSetList()       const { return m_descriptorSetList; }
+Vector<ShaderPushConstant>    VulkanPipeline::ShaderPushConstantList()  const { return m_pushConstantList; }

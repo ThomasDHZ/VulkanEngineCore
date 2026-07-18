@@ -81,76 +81,49 @@ struct RenderPassLoader
     bool                                 IsCubeMapRenderPass = false;
 };
 
-//class DLL_EXPORT VulkanRenderPass
-//{
-//private:
-//    void                            BuildRenderPass(RenderPassLoader& renderPassLoader);
-//    void                            BuildPipelines(RenderPassLoader& renderPassLoader);
-//    VulkanSubPass                   BuildSubpasses(RenderPassLoader& renderPassLoader, VulkanSubPassLoader& subPassLoader);
-//    void                            BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
-//    void                            BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
-//    void                            BuildFrameBuffer(RenderPassLoader& renderPassLoader);
-//public:
-//     
-//    VkGuid                          m_renderPassId = VkGuid();
-//    ivec2                           m_renderPassResolution = ivec2(INT32_MAX);
-//    VkRenderPass                    m_renderPass = VK_NULL_HANDLE;
-//    Vector<VulkanPipeline>          m_pipelineList;
-//    Vector<VulkanSubPass>           m_subPassList;
-//    Vector<VkFramebuffer>           m_frameBufferList;
-//    Vector<VulkanTexture>           m_attachmentList;
-//    Vector<VkAttachmentDescription> m_attachmentDescriptionList;
-//    VulkanTexture                   m_depthAttachment;
-//    Vector<VkClearValue>            m_clearValueList;
-//    VkSampleCountFlagBits           m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
-//    bool                            m_useCubeMapMultiView = false;
-//    bool                            m_isCubeMapRenderPass = false;
-//
-//
-//    VulkanRenderPass();
-//    ~VulkanRenderPass();
-//
-//    void                            LoadRenderPass(RenderPassLoader& renderPassLoader);
-//};
-
 struct DLL_EXPORT VulkanRenderPass
 {
 private:
-    const VulkanPipeline* FindRenderPipeline(const VkGuid& pipelineId);
+    VkGuid                                      m_renderPassId = VkGuid();
+    ivec2                                       m_renderPassResolution = ivec2(INT32_MAX, INT32_MAX);
+    VkRenderPass                                m_renderPass = VK_NULL_HANDLE;
+    Vector<VulkanPipeline>                      m_pipelineList;
+    Vector<VkFramebuffer>                       m_frameBufferList;
+    Vector<VulkanTexture>                       m_attachmentList;
+    Vector<VkAttachmentDescription>             m_attachmentDescriptionList;
+    Vector<Vector<VulkanSubPass>>               m_subPassList;
+    Vector<VkClearValue>                        m_clearValueList;
+    VkSampleCountFlagBits                       m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
+    VulkanTexture                               m_depthAttachment;
+    Vector<VulkanTexture>                       m_frameBufferAttachments;
+    bool                                        m_useCubeMapMultiView = false;
+    bool                                        m_isCubeMapRenderPass = false;
+
+    void                                        BuildRenderPass(RenderPassLoader& renderPassLoader);
+    void                                        BuildPipeline(VulkanPipelineLoader& pipelineLoader, bool useGlobalBindlessSet);
+    VulkanSubPass                               BuildSubpasses(VulkanSubPassLoader& subPassLoader);
+    void                                        BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
+    void                                        BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
+    void                                        BuildFrameBuffer(RenderPassLoader& renderPassLoader);
 
 public:
+    VulkanRenderPass();
+    ~VulkanRenderPass();
 
-    VkGuid                               RenderPassId = VkGuid();
-    ivec2                                RenderPassResolution = ivec2(INT32_MAX, INT32_MAX);
-    VkRenderPass                         RenderPass = VK_NULL_HANDLE;
-    Vector<VulkanPipeline>               PipelineList;
-    Vector<VkFramebuffer>                FrameBufferList;
-    Vector<VulkanTexture>                AttachmentList;
-    Vector<VkAttachmentDescription>      AttachmentDescriptionList;
-    Vector<Vector<VulkanSubPass>>        SubPassList;
-    Vector<VkClearValue>                 ClearValueList;
-    VkSampleCountFlagBits                SampleCount = VK_SAMPLE_COUNT_1_BIT;
-    VulkanTexture                        m_depthAttachment;
-    Vector<VulkanTexture>                m_frameBufferAttachments;
-    bool                                 UseCubeMapMultiView = false;
-    bool                                 IsCubeMapRenderPass = false;
+    void                                        LoadRenderPass(RenderPassLoader& renderPassLoader);
+    void                                        BeginRenderPass(VkCommandBuffer& commandBuffer, uint mipLevel = 0);
+    void                                        NextSubpass(VkCommandBuffer& commandBuffer);
+    void                                        BindViewPort(VkCommandBuffer& commandBuffer, uint drawMipLevel = 0);
+    void                                        BindRenderPassPipeline(VkCommandBuffer& commandBuffer, const VulkanPipeline& pipeline, uint32 firstSet);
+    void                                        DrawMesh(VkCommandBuffer cmd, MeshDrawMessage& mesh);
+    void                                        EndRenderPass(VkCommandBuffer& commandBuffer);
+    void                                        Destroy();
+    VulkanPipeline                              FindRenderPipeline(const VkGuid& pipelineId);
 
-        VulkanRenderPass();
-        ~VulkanRenderPass();
-    
-        void                            LoadRenderPass(RenderPassLoader& renderPassLoader);
-        void                            BuildRenderPass(RenderPassLoader& renderPassLoader);
-        void                            BuildPipeline(VulkanPipelineLoader& pipelineLoader, bool useGlobalBindlessSet);
-        VulkanSubPass                   BuildSubpasses(RenderPassLoader& renderPassLoader, VulkanSubPassLoader& subPassLoader);
-        void                            BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
-        void                            BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
-        void                            BuildFrameBuffer(RenderPassLoader& renderPassLoader);
-
-        void                            BeginRenderPass(VkCommandBuffer& commandBuffer, uint mipLevel = 0);
-        void                            NextSubpass(VkCommandBuffer& commandBuffer);
-        void                            BindViewPort(VkCommandBuffer& commandBuffer, uint drawMipLevel = 0);
-        void                            BindRenderPassPipeline(VkCommandBuffer& commandBuffer, const VulkanPipeline& pipeline, uint32 firstSet);
-        void                            DrawMesh(VkCommandBuffer cmd, MeshDrawMessage& mesh);
-        void                            EndRenderPass(VkCommandBuffer& commandBuffer);
-        void                            Destroy();
+    [[nodiscard]] VkGuid                        RenderPassId()               const noexcept;
+    [[nodiscard]] ivec2                         RenderPassResolution()       const noexcept;
+    [[nodiscard]] Vector<VulkanTexture>         AttachmentList()             const noexcept;
+    [[nodiscard]] Vector<VulkanPipeline>        PipelineList()               const noexcept;
+    [[nodiscard]] Vector<Vector<VulkanSubPass>> SubPassList()                const noexcept;
+    [[nodiscard]] VkSampleCountFlagBits         SampleCount()                const noexcept;
 };

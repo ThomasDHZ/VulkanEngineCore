@@ -1,15 +1,13 @@
 #include "VulkanRenderPass.h"
 #include <VulkanPipeline.h>
 
-const VulkanPipeline* VulkanRenderPass::FindRenderPipeline(const VkGuid& pipelineId)
+VulkanPipeline VulkanRenderPass::FindRenderPipeline(const VkGuid& pipelineId)
 {
-    auto it = std::find_if(PipelineList.begin(), PipelineList.end(), [&](const VulkanPipeline& pipeline) 
+    auto it = std::find_if(m_pipelineList.begin(), m_pipelineList.end(), [&](const VulkanPipeline& pipeline)
         { 
-            return pipeline.m_pipelineId == pipelineId;
+            return pipeline.PipelineId() == pipelineId;
         });
-
-    if (it != PipelineList.end()) return &(*it);
-    return nullptr;
+    if (it != m_pipelineList.end()) return *it;
 }
 
 VulkanRenderPass::VulkanRenderPass()
@@ -22,27 +20,27 @@ VulkanRenderPass::~VulkanRenderPass()
 
 void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
 {
-    RenderPassId = renderPassLoader.RenderPassId;
-    RenderPassResolution = ivec2(INT32_MAX, INT32_MAX) == renderPassLoader.RenderPassResolution || ivec2(0) == renderPassLoader.RenderPassResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
-    RenderPass = VK_NULL_HANDLE;
-    FrameBufferList = Vector<VkFramebuffer>();
-    ClearValueList = renderPassLoader.ClearValueList;
-    SampleCount = renderPassLoader.SampleCount >= vulkan.MaxSampleCount() ? vulkan.MaxSampleCount() : renderPassLoader.SampleCount;
-    UseCubeMapMultiView = renderPassLoader.UseCubeMapMultiView;
-    IsCubeMapRenderPass = renderPassLoader.IsCubeMapRenderPass;
+    m_renderPassId = renderPassLoader.RenderPassId;
+    m_renderPassResolution = ivec2(INT32_MAX, INT32_MAX) == renderPassLoader.RenderPassResolution || ivec2(0) == renderPassLoader.RenderPassResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
+    m_renderPass = VK_NULL_HANDLE;
+    m_frameBufferList = Vector<VkFramebuffer>();
+    m_clearValueList = renderPassLoader.ClearValueList;
+    m_sampleCount = renderPassLoader.SampleCount >= vulkan.MaxSampleCount() ? vulkan.MaxSampleCount() : renderPassLoader.SampleCount;
+    m_useCubeMapMultiView = renderPassLoader.UseCubeMapMultiView;
+    m_isCubeMapRenderPass = renderPassLoader.IsCubeMapRenderPass;
 
     BuildRenderPass(renderPassLoader);
     for (auto& renderPass : renderPassLoader.SubPassList)
     {
         for (auto& pipeline : renderPassLoader.PipelineList)
         {
-            pipeline.RenderPassId = RenderPassId;
-            pipeline.RenderPass = RenderPass;
-            pipeline.RenderPassResolution = RenderPassResolution;
+            pipeline.RenderPassId = m_renderPassId;
+            pipeline.RenderPass = m_renderPass;
+            pipeline.RenderPassResolution = m_renderPassResolution;
             pipeline.UseGlobalBindlessSet = renderPassLoader.UseGlobalBindlessSet;
 
             Vector<VkDescriptorImageInfo> descriptorSetInfoList;
-            for (auto& attachment : AttachmentList)
+            for (auto& attachment : m_attachmentList)
             {
                 descriptorSetInfoList.emplace_back(VkDescriptorImageInfo
                     {
@@ -54,6 +52,10 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
             pipeline.RenderPassInputTextures = descriptorSetInfoList;
             BuildPipeline(pipeline, renderPassLoader.UseGlobalBindlessSet);
         }
+
+        Vector<VulkanSubPass> subPassList;
+        for (auto& subPass : renderPass) subPassList.emplace_back(BuildSubpasses(subPass));
+        m_subPassList.emplace_back(subPassList);
     }
     BuildFrameBuffer(renderPassLoader);
 }
@@ -133,36 +135,36 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
     {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
         .pNext = renderPassLoader.UseCubeMapMultiView ? &multiviewCreateInfo : nullptr,
-        .attachmentCount = static_cast<uint32>(AttachmentDescriptionList.size()),
-        .pAttachments = AttachmentDescriptionList.data(),
+        .attachmentCount = static_cast<uint32>(m_attachmentDescriptionList.size()),
+        .pAttachments = m_attachmentDescriptionList.data(),
         .subpassCount = static_cast<uint32>(subPassDescriptionList.size()),
         .pSubpasses = subPassDescriptionList.data(),
         .dependencyCount = static_cast<uint32>(subpassDependencies.size()),
         .pDependencies = subpassDependencies.data(),
     };
-    VULKAN_THROW_IF_FAIL(vkCreateRenderPass(vulkan.LogicalDevice(), &renderPassInfo, nullptr, &RenderPass));
+    VULKAN_THROW_IF_FAIL(vkCreateRenderPass(vulkan.LogicalDevice(), &renderPassInfo, nullptr, &m_renderPass));
 }
 
 void VulkanRenderPass::BuildPipeline(VulkanPipelineLoader& pipelineLoader, bool useGlobalBindlessSet)
 {
-    pipelineLoader.PipelineMultisampleStateCreateInfo.rasterizationSamples = SampleCount;
-    pipelineLoader.PipelineMultisampleStateCreateInfo.sampleShadingEnable = (SampleCount > VK_SAMPLE_COUNT_1_BIT);
-    pipelineLoader.RenderPassId = RenderPassId;
-    pipelineLoader.RenderPass = RenderPass;
-    pipelineLoader.RenderPassResolution = RenderPassResolution;
+    pipelineLoader.PipelineMultisampleStateCreateInfo.rasterizationSamples = m_sampleCount;
+    pipelineLoader.PipelineMultisampleStateCreateInfo.sampleShadingEnable = (m_sampleCount > VK_SAMPLE_COUNT_1_BIT);
+    pipelineLoader.RenderPassId = m_renderPassId;
+    pipelineLoader.RenderPass = m_renderPass;
+    pipelineLoader.RenderPassResolution = m_renderPassResolution;
     pipelineLoader.UseGlobalBindlessSet = useGlobalBindlessSet;
 
     VulkanPipeline pipeline;
     pipeline.BuildPipelines(pipelineLoader);
-    PipelineList.emplace_back(pipeline);
+    m_pipelineList.emplace_back(pipeline);
 }
 
-VulkanSubPass VulkanRenderPass::BuildSubpasses(RenderPassLoader& renderPassLoader, VulkanSubPassLoader& subPassLoader)
+VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoader)
 {
     return VulkanSubPass
     {
-        .RenderPassGuid = RenderPassId,
-        .PipelineGuid = renderPassLoader.PipelineList.front().PipelineId,
+        .RenderPassGuid = m_renderPassId,
+        .PipelineGuid = m_pipelineList.front().PipelineId(),
         .MeshType = subPassLoader.MeshType,
         .ShaderPushConstant = subPassLoader.ShaderPushConstant,
         .InputTextureList = subPassLoader.InputTextureList,
@@ -191,10 +193,10 @@ void VulkanRenderPass::BuildAttachmentDescriptors(RenderPassLoader& renderPassLo
             default: throw std::runtime_error("Unknown TextureUsageType");
         }
 
-        AttachmentDescriptionList.emplace_back(VkAttachmentDescription
+        m_attachmentDescriptionList.emplace_back(VkAttachmentDescription
             {
                 .format = renderAttachment.TextureByteFormat,
-                .samples = SampleCount >= vulkan.MaxSampleCount() ? vulkan.MaxSampleCount() : SampleCount,
+                .samples = m_sampleCount >= vulkan.MaxSampleCount() ? vulkan.MaxSampleCount() : m_sampleCount,
                 .loadOp = renderAttachment.LoadOp,
                 .storeOp = renderAttachment.StoreOp,
                 .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -209,8 +211,8 @@ void VulkanRenderPass::BuildAttachments(Vector<RenderPassAttachmentLoader>& atta
 {
     for (auto& attachment : attachmentTextureList)
     {
-        VulkanTexture texture = VulkanTexture(RenderPassResolution, attachment);
-        AttachmentList.emplace_back(texture);
+        VulkanTexture texture = VulkanTexture(m_renderPassResolution, attachment);
+        m_attachmentList.emplace_back(texture);
         m_frameBufferAttachments.emplace_back(texture);
         if (texture.IsDepthTexture()) m_depthAttachment = texture;
     }
@@ -218,11 +220,11 @@ void VulkanRenderPass::BuildAttachments(Vector<RenderPassAttachmentLoader>& atta
 
 void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
 {
-    if (AttachmentList.empty()) return;
+    if (m_attachmentList.empty()) return;
 
     uint32 maxMips = 0;
-    for (const auto& attachment : AttachmentList) maxMips = std::max(maxMips, attachment.MipMapLevels());
-    FrameBufferList.resize(maxMips);
+    for (const auto& attachment : m_attachmentList) maxMips = std::max(maxMips, attachment.MipMapLevels());
+    m_frameBufferList.resize(maxMips);
 
     for (uint32 mip = 0; mip < maxMips; ++mip)
     {
@@ -230,7 +232,7 @@ void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
         uint32 height = 0;
         Vector<VkImageView> attachmentViews;
 
-        for (auto& attachment : AttachmentList)
+        for (auto& attachment : m_attachmentList)
         {
             if (mip < attachment.TextureViews().size())
             {
@@ -247,26 +249,26 @@ void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
         VkFramebufferCreateInfo info
         {
             .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .renderPass = RenderPass,
+            .renderPass = m_renderPass,
             .attachmentCount = static_cast<uint32>(attachmentViews.size()),
             .pAttachments = attachmentViews.data(),
             .width = width,
             .height = height,
-            .layers = info.layers = IsCubeMapRenderPass ? 6u : 1u
+            .layers = info.layers = m_isCubeMapRenderPass ? 6u : 1u
         };
-        VULKAN_THROW_IF_FAIL(vkCreateFramebuffer(vulkan.LogicalDevice(), &info, nullptr, &FrameBufferList[mip]));
+        VULKAN_THROW_IF_FAIL(vkCreateFramebuffer(vulkan.LogicalDevice(), &info, nullptr, &m_frameBufferList[mip]));
     }
 }
 
 void VulkanRenderPass::BeginRenderPass(VkCommandBuffer& commandBuffer, uint mipLevel)
 {
-    const uint32 renderPassWidth = std::max(1, RenderPassResolution.x >> mipLevel);
-    const uint32 renderPassHeight = std::max(1, RenderPassResolution.y >> mipLevel);
+    const uint32 renderPassWidth = std::max(1, m_renderPassResolution.x >> mipLevel);
+    const uint32 renderPassHeight = std::max(1, m_renderPassResolution.y >> mipLevel);
     VkRenderPassBeginInfo renderPassBeginInfo = VkRenderPassBeginInfo
     {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-        .renderPass = RenderPass,
-        .framebuffer = FrameBufferList[mipLevel],
+        .renderPass = m_renderPass,
+        .framebuffer = m_frameBufferList[mipLevel],
         .renderArea = VkRect2D
         {
            .offset = VkOffset2D
@@ -280,8 +282,8 @@ void VulkanRenderPass::BeginRenderPass(VkCommandBuffer& commandBuffer, uint mipL
                 .height = renderPassHeight
             }
         },
-        .clearValueCount = static_cast<uint32>(ClearValueList.size()),
-        .pClearValues = ClearValueList.data()
+        .clearValueCount = static_cast<uint32>(m_clearValueList.size()),
+        .pClearValues = m_clearValueList.data()
     };
     vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
@@ -292,8 +294,8 @@ void VulkanRenderPass::BindViewPort(VkCommandBuffer& commandBuffer, uint drawMip
     {
         .x = 0.0f,
         .y = 0.0f,
-        .width = static_cast<float>(RenderPassResolution.x),
-        .height = static_cast<float>(RenderPassResolution.y),
+        .width = static_cast<float>(m_renderPassResolution.x),
+        .height = static_cast<float>(m_renderPassResolution.y),
         .minDepth = 0.0f,
         .maxDepth = 1.0f
     };
@@ -301,7 +303,7 @@ void VulkanRenderPass::BindViewPort(VkCommandBuffer& commandBuffer, uint drawMip
     VkRect2D rect2D = VkRect2D
     {
        .offset = VkOffset2D {.x = 0, .y = 0 },
-       .extent = VkExtent2D {.width = static_cast<uint32>(RenderPassResolution.x), .height = static_cast<uint32>(RenderPassResolution.y) }
+       .extent = VkExtent2D {.width = static_cast<uint32>(m_renderPassResolution.x), .height = static_cast<uint32>(m_renderPassResolution.y) }
     };
 
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
@@ -346,18 +348,25 @@ void VulkanRenderPass::EndRenderPass(VkCommandBuffer& commandBuffer)
 
 void VulkanRenderPass::Destroy()
 {
-    for (auto& pipeline : PipelineList)
+    for (auto& pipeline : m_pipelineList)
     {
         pipeline.Destroy();
     }
-    for (auto& frameBuffer : FrameBufferList)
+    for (auto& frameBuffer : m_frameBufferList)
     {
         if (!frameBuffer) vkDestroyFramebuffer(vulkan.LogicalDevice(), frameBuffer, nullptr);
         frameBuffer = VK_NULL_HANDLE;
     }
-    if (!RenderPass)
+    if (!m_renderPass)
     {
-        vkDestroyRenderPass(vulkan.LogicalDevice(), RenderPass, nullptr);
-        RenderPass = VK_NULL_HANDLE;
+        vkDestroyRenderPass(vulkan.LogicalDevice(), m_renderPass, nullptr);
+        m_renderPass = VK_NULL_HANDLE;
     }
 }
+
+VkGuid                        VulkanRenderPass::RenderPassId()         const noexcept { return m_renderPassId; }
+ivec2                         VulkanRenderPass::RenderPassResolution() const noexcept { return m_renderPassResolution; }
+Vector<VulkanTexture>         VulkanRenderPass::AttachmentList()       const noexcept { return m_attachmentList; }
+Vector<VulkanPipeline>        VulkanRenderPass::PipelineList()         const noexcept { return m_pipelineList; }
+Vector<Vector<VulkanSubPass>> VulkanRenderPass::SubPassList()          const noexcept { return m_subPassList; }
+VkSampleCountFlagBits         VulkanRenderPass::SampleCount()          const noexcept { return m_sampleCount; }

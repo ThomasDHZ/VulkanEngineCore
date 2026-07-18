@@ -92,11 +92,6 @@ void VulkanTexture::CreateTextureImage(const Vector<byte>& textureData)
 		.preferredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 	};
 	if (m_textureSize.x * m_textureSize.y * m_textureSize.z > 1024 * 1024) vmaAllocationCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
-
-	std::cout << "Texture size: " << m_textureSize.x << "x" << m_textureSize.y
-		<< " Format: " << m_textureByteFormat
-		<< " Expected bytes: " << (m_textureSize.x * m_textureSize.y * 16 * (m_isCubeMap ? 6 : 1))
-		<< " Actual data bytes: " << textureData.size() << std::endl;
 	VULKAN_THROW_IF_FAIL(vmaCreateImage(bufferSystem.VmaAllocatorHandle(), &imageInfo, &vmaAllocationCreateInfo, &m_textureImage, &m_vmaTextureAllocation, nullptr));
 	if (!m_isRenderPassAttachment) UploadTextureDataAndTransition(textureData);
 }
