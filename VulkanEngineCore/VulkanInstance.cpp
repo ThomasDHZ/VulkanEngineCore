@@ -44,15 +44,14 @@ void VulkanInstance::SetUpVulkanInstance()
         VK_VALIDATION_FEATURE_DISABLE_API_PARAMETERS_EXT
     };
 
-    debugInfo =
-    {
-       .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-       .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-                          VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-       .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                      VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                      VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
-       .pfnUserCallback = VulkanDebugger::DebugCallBack
+    debugInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+        .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+        .pfnUserCallback = VulkanDebugger::DebugCallBack
     };
 #endif
 
@@ -101,8 +100,7 @@ void VulkanInstance::SetUpVulkanInstance()
     PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_instance, "vkCreateDebugUtilsMessengerEXT");
     if (func)
     {
-        //auto debug = vulkan.Debug().DebugMessengerHandle();
-        //func(instance, &debugInfo, nullptr, &debug);
+        func(m_instance, &debugInfo, nullptr, vulkan.Debug().DebugMessengerHandle());
     }
 #endif
 }

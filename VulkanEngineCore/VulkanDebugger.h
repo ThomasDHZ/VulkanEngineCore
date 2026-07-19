@@ -11,6 +11,7 @@ extern "C" {
 
 class DLL_EXPORT VulkanDebugger
 {
+	friend class VulkanInstance;
 private:
 	VkDebugUtilsMessengerEXT			   m_DebugMessenger = VK_NULL_HANDLE;
 
@@ -21,6 +22,6 @@ public:
 	static void LogVulkanMessage(const char* message, int severity);
 	static void CreateLogMessageCallback(LogVulkanMessageCallback callback);
 
-	VkDebugUtilsMessengerEXT DebugMessengerHandle()			 { return m_DebugMessenger; }
+	VkDebugUtilsMessengerEXT* DebugMessengerHandle()			 { return &m_DebugMessenger; }
 };
 

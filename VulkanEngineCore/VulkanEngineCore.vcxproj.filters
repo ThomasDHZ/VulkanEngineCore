@@ -99,13 +99,7 @@
     <ClInclude Include="BufferSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="ConfigSystem.h">
-      <Filter>Header Files\Systems</Filter>
-    </ClInclude>
     <ClInclude Include="InputSystem.h">
-      <Filter>Header Files\Systems</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderSystem2.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
     <ClInclude Include="VulkanTexture.h">
@@ -126,16 +120,13 @@
     <ClInclude Include="VulkanShader.h">
       <Filter>Header Files\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanSubPass.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PushConstantRegistry.h">
+    <ClInclude Include="VulkanPipelineLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VulkanRenderPass.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanPipelineLoader.h">
+    <ClInclude Include="VulkanMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -176,20 +167,11 @@
     <ClCompile Include="BufferSystem.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="ConfigSystem.cpp">
-      <Filter>Source Files\Systems</Filter>
-    </ClCompile>
     <ClCompile Include="InputSystem.cpp">
-      <Filter>Source Files\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderSystem2.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
     <ClCompile Include="VulkanSystem.cpp">
       <Filter>Source Files\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="ShaderEnums.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\External\SPIRV-Reflect\spirv_reflect.cpp">
       <Filter>Source Files\External</Filter>
@@ -203,16 +185,13 @@
     <ClCompile Include="VulkanShader.cpp">
       <Filter>Source Files\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanSubPass.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PushConstantRegistry.cpp">
+    <ClCompile Include="VulkanPipelineLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VulkanRenderPass.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanPipelineLoader.cpp">
+    <ClCompile Include="VulkanMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
