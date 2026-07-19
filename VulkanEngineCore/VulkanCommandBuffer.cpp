@@ -76,5 +76,14 @@ void VulkanCommandBuffer::EndSingleUseCommand(VkCommandBuffer commandBuffer)
     vkFreeCommandBuffers(vulkan.LogicalDevice(), m_CommandPool, 1, &commandBuffer);
 }
 
+void VulkanCommandBuffer::Destroy()
+{
+    if (m_CommandPool != VK_NULL_HANDLE)
+    {
+        vkDestroyCommandPool(vulkan.LogicalDevice(), m_CommandPool, NULL);
+        m_CommandPool = VK_NULL_HANDLE;
+    }
+}
+
 VkCommandPool                  VulkanCommandBuffer::CommandPool() const { return m_CommandPool; }
 const Vector<VkCommandBuffer>& VulkanCommandBuffer::CommandBufferList() const { return m_CommandBufferList; }

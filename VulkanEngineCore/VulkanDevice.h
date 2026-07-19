@@ -25,14 +25,15 @@ class DLL_EXPORT VulkanDevice
     public:
         VulkanDevice();
         ~VulkanDevice();
-        void                                   Initialize();
+
+        void                                    Initialize();
         Vector<VkPhysicalDevice>                GetPhysicalDeviceList(VkInstance instance);
         VkPhysicalDeviceProperties              GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice);
         VkPhysicalDeviceFeatures                GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice);
         VkPhysicalDeviceFeatures2               GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice);
         Vector<VkSurfaceFormatKHR>              GetPhysicalDeviceFormats(VkPhysicalDevice physicalDevice);
         Vector<VkPresentModeKHR>                GetPhysicalDevicePresentModes(VkPhysicalDevice physicalDevice);
-        void                                    Shutdown();
+        void                                    Destroy();
 
         [[nodiscard]] VkPhysicalDevice          PhysicalDevice() const;
         [[nodiscard]] VkDevice                  LogicalDevice()  const;

@@ -19,6 +19,7 @@ public:
 	[[nodiscard]] VkCommandBuffer				 GetCurrentCommandBuffer() const;
 	VkCommandBuffer								 BeginSingleUseCommand();
 	void										 EndSingleUseCommand(VkCommandBuffer commandBuffer);
+	void										 Destroy();
 
 	[[nodiscard]] VkCommandPool					 CommandPool()		 const;
 	[[nodiscard]] const Vector<VkCommandBuffer>& CommandBufferList() const;

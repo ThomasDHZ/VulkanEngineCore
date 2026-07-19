@@ -22,6 +22,12 @@ void VulkanSystem::VulkanSetUp(void* windowHandle, ivec2 windowResolution, ivec2
     RendererSetUp(m_windowHandle, renderResolution);
 }
 
+void VulkanSystem::RebuildSwapChain()
+{
+    vkDeviceWaitIdle(vulkan.LogicalDevice());
+    m_swapChain.RebuildSwapChain(m_windowHandle);
+}
+
 void VulkanSystem::RendererSetUp(void* windowHandle, ivec2 renderResolution)
 {
     m_instance.Initialize();
@@ -54,8 +60,12 @@ uint32 VulkanSystem::GetMemoryType(VkPhysicalDevice physicalDevice, uint32 typeF
     return UINT32_MAX;
 }
 
-void VulkanSystem::Shutdown()
+void VulkanSystem::Destroy()
 {
+    vkDeviceWaitIdle(vulkan.LogicalDevice());
+    m_swapChain.Destroy();
+    m_commandBuffer.Destroy();
+    m_device.Destroy();
 }
 
 VulkanInstance			 VulkanSystem::Instance()                     { return m_instance; }

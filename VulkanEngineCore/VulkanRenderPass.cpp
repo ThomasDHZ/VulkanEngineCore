@@ -1,15 +1,6 @@
 #include "VulkanRenderPass.h"
 #include <VulkanPipeline.h>
 
-VulkanPipeline VulkanRenderPass::FindRenderPipeline(const VkGuid& pipelineId)
-{
-    auto it = std::find_if(m_pipelineList.begin(), m_pipelineList.end(), [&](const VulkanPipeline& pipeline)
-        { 
-            return pipeline.PipelineId() == pipelineId;
-        });
-    if (it != m_pipelineList.end()) return *it;
-}
-
 VulkanRenderPass::VulkanRenderPass()
 {
 }
@@ -21,7 +12,7 @@ VulkanRenderPass::~VulkanRenderPass()
 void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
 {
     m_renderPassId = renderPassLoader.RenderPassId;
-    m_renderPassResolution = ivec2(INT32_MAX, INT32_MAX) == renderPassLoader.RenderPassResolution || ivec2(0) == renderPassLoader.RenderPassResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
+    m_renderPassResolution = ivec2(INT32_MAX) == renderPassLoader.RenderPassResolution || ivec2(0) == renderPassLoader.RenderPassResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
     m_renderPass = VK_NULL_HANDLE;
     m_frameBufferList = Vector<VkFramebuffer>();
     m_clearValueList = renderPassLoader.ClearValueList;
@@ -30,34 +21,36 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
     m_isCubeMapRenderPass = renderPassLoader.IsCubeMapRenderPass;
 
     BuildRenderPass(renderPassLoader);
-    for (auto& renderPass : renderPassLoader.SubPassList)
+    for (auto& pipeline : renderPassLoader.PipelineList)
     {
-        for (auto& pipeline : renderPassLoader.PipelineList)
+        pipeline.RenderPassId = m_renderPassId;
+        pipeline.RenderPass = m_renderPass;
+        pipeline.RenderPassResolution = m_renderPassResolution;
+        pipeline.UseGlobalBindlessSet = renderPassLoader.UseGlobalBindlessSet;
+
+        Vector<VkDescriptorImageInfo> descriptorSetInfoList;
+        for (auto& attachment : m_attachmentList)
         {
-            pipeline.RenderPassId = m_renderPassId;
-            pipeline.RenderPass = m_renderPass;
-            pipeline.RenderPassResolution = m_renderPassResolution;
-            pipeline.UseGlobalBindlessSet = renderPassLoader.UseGlobalBindlessSet;
-
-            Vector<VkDescriptorImageInfo> descriptorSetInfoList;
-            for (auto& attachment : m_attachmentList)
-            {
-                descriptorSetInfoList.emplace_back(VkDescriptorImageInfo
-                    {
-                        .sampler = attachment.m_textureSampler,
-                        .imageView = attachment.m_textureViewList.front(),
-                        .imageLayout = attachment.m_textureImageLayout
-                    });
-            }
-            pipeline.RenderPassInputTextures = descriptorSetInfoList;
-            BuildPipeline(pipeline, renderPassLoader.UseGlobalBindlessSet);
+            descriptorSetInfoList.emplace_back(VkDescriptorImageInfo
+                {
+                    .sampler = attachment.m_textureSampler,
+                    .imageView = attachment.m_textureViewList.front(),
+                    .imageLayout = attachment.m_textureImageLayout
+                });
         }
-
-        Vector<VulkanSubPass> subPassList;
-        for (auto& subPass : renderPass) subPassList.emplace_back(BuildSubpasses(subPass));
-        m_subPassList.emplace_back(subPassList);
+        pipeline.RenderPassInputTextures = descriptorSetInfoList;
+        BuildPipeline(pipeline, renderPassLoader.UseGlobalBindlessSet);
     }
     BuildFrameBuffer(renderPassLoader);
+    for (auto& renderPass : renderPassLoader.SubPassList)
+    {
+        Vector<VulkanSubPass> subPassList;
+        for (auto& subPass : renderPass)
+        {
+            subPassList.emplace_back(BuildSubpasses(subPass));
+        }
+        m_subPassList.emplace_back(subPassList);
+    }
 }
 
 void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
@@ -82,7 +75,7 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
             switch (renderAttachment.RenderAttachmentTypes[x])
             {
             case RenderAttachmentTypeEnum::ColorRenderedTexture: colorAttachmentReferenceList[x].emplace_back(VkAttachmentReference{ .attachment = static_cast<uint32>(y), .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL }); break;
-            case RenderAttachmentTypeEnum::InputAttachmentTexture: 
+            case RenderAttachmentTypeEnum::InputAttachmentTexture:
             {
                 bool is_depth = (renderAttachment.TextureByteFormat >= VK_FORMAT_D16_UNORM && renderAttachment.TextureByteFormat <= VK_FORMAT_D32_SFLOAT_S8_UINT);
                 VkImageLayout input_layout = is_depth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -164,7 +157,7 @@ VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoade
     return VulkanSubPass
     {
         .RenderPassGuid = m_renderPassId,
-        .PipelineGuid = m_pipelineList.front().PipelineId(),
+        .PipelineGuid = subPassLoader.PipelineGuid,
         .MeshType = subPassLoader.MeshType,
         .ShaderPushConstant = subPassLoader.ShaderPushConstant,
         .InputTextureList = subPassLoader.InputTextureList,
@@ -177,20 +170,20 @@ void VulkanRenderPass::BuildAttachmentDescriptors(RenderPassLoader& renderPassLo
 {
     for (int x = 0; x < renderPassLoader.AttachmentList.size(); x++)
     {
-        VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         VkImageLayout finalLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         const RenderPassAttachmentLoader& renderAttachment = renderPassLoader.AttachmentList[x];
         switch (renderAttachment.TextureUsageType)
         {
-            case kUsageType_SwapChainTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
-            case kUsageType_OffscreenColorTexture: initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_DepthBufferTexture:    initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
-            case kUsageType_GBufferTexture:        initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_IrradianceTexture:     initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_PrefilterTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_CubeMap:               initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_BRDFTexture:           initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            default: throw std::runtime_error("Unknown TextureUsageType");
+        case kUsageType_SwapChainTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
+        case kUsageType_OffscreenColorTexture: initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_DepthBufferTexture:    initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+        case kUsageType_GBufferTexture:        initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_IrradianceTexture:     initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_PrefilterTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_CubeMap:               initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_BRDFTexture:           initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        default: throw std::runtime_error("Unknown TextureUsageType");
         }
 
         m_attachmentDescriptionList.emplace_back(VkAttachmentDescription
@@ -262,7 +255,7 @@ void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
 
 void VulkanRenderPass::BeginRenderPass(VkCommandBuffer& commandBuffer, uint mipLevel)
 {
-    const uint32 renderPassWidth = std::max(1, m_renderPassResolution.x >> mipLevel);
+    const uint32 renderPassWidth =  std::max(1, m_renderPassResolution.x >> mipLevel);
     const uint32 renderPassHeight = std::max(1, m_renderPassResolution.y >> mipLevel);
     VkRenderPassBeginInfo renderPassBeginInfo = VkRenderPassBeginInfo
     {
@@ -344,6 +337,17 @@ void VulkanRenderPass::NextSubpass(VkCommandBuffer& commandBuffer)
 void VulkanRenderPass::EndRenderPass(VkCommandBuffer& commandBuffer)
 {
     vkCmdEndRenderPass(commandBuffer);
+}
+
+const VulkanPipeline* VulkanRenderPass::FindRenderPipeline(const VkGuid& pipelineId)
+{
+    auto it = std::find_if(m_pipelineList.begin(), m_pipelineList.end(), [&](const VulkanPipeline& pipeline)
+        {
+            return pipeline.PipelineId() == pipelineId;
+        });
+
+    if (it != m_pipelineList.end()) return &(*it);
+    return nullptr;
 }
 
 void VulkanRenderPass::Destroy()

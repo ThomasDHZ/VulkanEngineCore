@@ -7,11 +7,10 @@
 enum MeshTypeEnum
 {
     kMesh_None,
-    kMesh_SpriteMesh,
-    kMesh_LevelMesh,
-    kMesh_SkyBoxMesh,
-    kMesh_LineMesh,
-    kMesh_LevelEditorIconMesh,
+    kMesh_StaticMesh,
+    kMesh_InstanceMesh,
+    kMesh_Skinned,
+    kMesh_Procedural,
     kMesh_FrameBuffer,
     kMesh_Undefined
 };
@@ -56,7 +55,7 @@ struct PushConstantUpdateRule
 
 struct VulkanSubPassLoader
 {
-    String                               Pipeline;
+    VkGuid                               PipelineGuid;
     MeshTypeEnum                         MeshType;
     std::optional<String>                ShaderPushConstant;
     Vector<PushConstantUpdateRule>       PushConstantUpdates;
@@ -84,6 +83,7 @@ struct RenderPassLoader
 struct DLL_EXPORT VulkanRenderPass
 {
 private:
+
     VkGuid                                      m_renderPassId = VkGuid();
     ivec2                                       m_renderPassResolution = ivec2(INT32_MAX, INT32_MAX);
     VkRenderPass                                m_renderPass = VK_NULL_HANDLE;
@@ -105,6 +105,7 @@ private:
     void                                        BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
     void                                        BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
     void                                        BuildFrameBuffer(RenderPassLoader& renderPassLoader);
+    const VulkanPipeline*                       FindRenderPipeline(const VkGuid& pipelineId);
 
 public:
     VulkanRenderPass();
@@ -118,7 +119,6 @@ public:
     void                                        DrawMesh(VkCommandBuffer cmd, MeshDrawMessage& mesh);
     void                                        EndRenderPass(VkCommandBuffer& commandBuffer);
     void                                        Destroy();
-    VulkanPipeline                              FindRenderPipeline(const VkGuid& pipelineId);
 
     [[nodiscard]] VkGuid                        RenderPassId()               const noexcept;
     [[nodiscard]] ivec2                         RenderPassResolution()       const noexcept;

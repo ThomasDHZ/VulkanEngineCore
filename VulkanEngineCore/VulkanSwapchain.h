@@ -36,6 +36,7 @@ class DLL_EXPORT VulkanSwapchain
 		 void									RebuildSwapChain(void* windowHandle);
 		 void									StartFrame();
 		 void									EndFrame(VkCommandBuffer& commandBufferSubmit);
+		 void									Destroy();
 
 		Vector<VkSurfaceFormatKHR>			    GetSurfaceFormats(VkPhysicalDevice physicalDevice);
 		Vector<VkPresentModeKHR>			    GetSurfacePresentModes(VkPhysicalDevice physicalDevice);

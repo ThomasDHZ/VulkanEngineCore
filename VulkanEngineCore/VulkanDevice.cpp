@@ -341,8 +341,13 @@ bool VulkanDevice::GetRayTracingCapability(VkPhysicalDevice gpuDevice, Vector<St
     return false;
 }
 
-void VulkanDevice::Shutdown()
+void VulkanDevice::Destroy()
 {
+    if (m_logicalDevice != VK_NULL_HANDLE)
+    {
+        vkDestroyDevice(m_logicalDevice, nullptr);
+        m_logicalDevice = VK_NULL_HANDLE;
+    }
 }
 
 VkPhysicalDevice          VulkanDevice::PhysicalDevice() const { return m_physicalDevice; }
