@@ -153,6 +153,7 @@
     <ClInclude Include="InputEnum.h" />
     <ClInclude Include="InputSystem.h" />
     <ClInclude Include="Keyboard.h" />
+    <ClInclude Include="MemorySystem.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="ShaderEnums.h" />
@@ -181,6 +182,7 @@
     <ClCompile Include="GameController.cpp" />
     <ClCompile Include="InputSystem.cpp" />
     <ClCompile Include="Keyboard.cpp" />
+    <ClCompile Include="MemorySystem.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="VulkanMesh.cpp" />

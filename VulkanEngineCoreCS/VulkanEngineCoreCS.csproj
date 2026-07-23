@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VulkanCS\VulkanCS.csproj" />
-    <ProjectReference Include="..\VulkanEngineCoreInterlopDLL\VulkanEngineCoreInterlopDLL.vcxproj" />
     <ProjectReference Include="..\VulkanEngineCore\VulkanEngineCore.vcxproj" />
   </ItemGroup>
 

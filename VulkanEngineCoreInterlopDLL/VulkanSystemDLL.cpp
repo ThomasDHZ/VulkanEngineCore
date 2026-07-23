@@ -14,8 +14,8 @@ uint32 VulkanSystem_GetMemoryType(VkPhysicalDevice physicalDevice, uint32 typeFi
 {
     return vulkan.GetMemoryType(physicalDevice, typeFilter, properties);
 }
-
-void VulkanSystem_Shutdown()
-{
-    vulkan.Shutdown();
-}
+//
+//void VulkanSystem_Shutdown()
+//{
+//    vulkan.Destroy();
+//}
