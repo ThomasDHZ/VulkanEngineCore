@@ -12,8 +12,4 @@
     <ProjectReference Include="..\VulkanEngineCore\VulkanEngineCore.vcxproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Vulkan\" />
-  </ItemGroup>
-
 </Project>

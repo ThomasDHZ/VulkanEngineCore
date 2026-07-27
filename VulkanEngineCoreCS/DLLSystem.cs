@@ -10,21 +10,32 @@ namespace VulkanEngineCoreCS
 {
     public static class DLLSystem
     {
-        private static string ExeDirectory => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        private static string EngineRoot => Path.GetFullPath(Path.Combine(ExeDirectory, @"..\..\..\..\"));
-        public static readonly string VulkanEngineCorePath = Path.Combine(EngineRoot, @"x64\Debug\VulkanEngineCoreInterlopDLL.dll");
+        private static string? _dllDirectory;
+        private static bool    _initialized = false;
 
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)] private static extern IntPtr LoadLibrary(string lpFileName);
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)] private static extern bool SetDllDirectory(string lpPathName);
-
-        public static void SetSharedDllDirectory()
+        public static void Initialize(string? customDllFolder = null)
         {
-            string dllDir = Path.GetDirectoryName(VulkanEngineCorePath)!;
-            Directory.SetCurrentDirectory(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..//..//..//..//Assets"));
-            if (!Directory.Exists(dllDir)) throw new DirectoryNotFoundException($"DLL folder missing: {dllDir}");
-            if (!SetDllDirectory(dllDir)) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
-            if (LoadLibrary(VulkanEngineCorePath) == IntPtr.Zero) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+            if (_initialized) return;
+
+            if (!string.IsNullOrEmpty(customDllFolder)) _dllDirectory = Path.GetFullPath(customDllFolder);
+            else _dllDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+            if (!Directory.Exists(_dllDirectory))
+            {
+                throw new DirectoryNotFoundException($"DLL directory not found: {_dllDirectory}");
+            }
+
+            NativeLibrary.SetDllImportResolver(Assembly.GetExecutingAssembly(), DllImportResolver);
+            _initialized = true;
         }
+
+        private static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+        {
+            string fullPath = Path.Combine(_dllDirectory!, libraryName);
+            if (!fullPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) fullPath += ".dll";
+            if (File.Exists(fullPath)) return NativeLibrary.Load(fullPath);
+            return IntPtr.Zero;
+        }
+
 
         public static void CallDLLFunc(Action action)
         {
@@ -61,5 +72,7 @@ namespace VulkanEngineCoreCS
                 return default(TResult);
             }
         }
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)] private static extern IntPtr LoadLibrary(string lpFileName);
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)] private static extern bool SetDllDirectory(string lpPathName);
     }
 }
