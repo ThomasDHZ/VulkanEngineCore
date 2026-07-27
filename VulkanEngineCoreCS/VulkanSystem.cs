@@ -27,8 +27,8 @@ namespace VulkanEngineCoreCS
         }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void LogVulkanMessageDelegate(string message, int severity);
-        [DllImport("VulkanEngineCoreInterlopDLL.dll", CallingConvention = CallingConvention.Cdecl)] public static extern void VulkanSystem_CreateLogMessageCallback(LogVulkanMessageDelegate callback);
-        [DllImport("VulkanEngineCoreInterlopDLL.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_VulkanSetUp(void* renderAreaHandle, ivec2 windowSize, ivec2 renderResolutionSize);
-        [DllImport("VulkanEngineCoreInterlopDLL.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_Shutdown();
+        [DllImport("VulkanEngineCore.dll", CallingConvention = CallingConvention.Cdecl)] public static extern void VulkanSystem_CreateLogMessageCallback(LogVulkanMessageDelegate callback);
+        [DllImport("VulkanEngineCore.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_VulkanSetUp(void* renderAreaHandle, ivec2 windowSize, ivec2 renderResolutionSize);
+        [DllImport("VulkanEngineCore.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_Shutdown();
     }
 }

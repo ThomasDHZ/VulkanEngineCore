@@ -1,29 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace VulkanEngineCoreCS
 {
     public static class DLLSystem
     {
-        private static string? _dllDirectory;
-        private static bool    _initialized = false;
+        private static bool                     _initialized = false;
+        private static string?                  _dllDirectory;
+        private static readonly HashSet<string> _loadedDlls = new(StringComparer.OrdinalIgnoreCase);
 
         public static void Initialize(string? customDllFolder = null)
         {
             if (_initialized) return;
 
-            if (!string.IsNullOrEmpty(customDllFolder)) _dllDirectory = Path.GetFullPath(customDllFolder);
-            else _dllDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-            if (!Directory.Exists(_dllDirectory))
-            {
-                throw new DirectoryNotFoundException($"DLL directory not found: {_dllDirectory}");
-            }
-
+            _dllDirectory = string.IsNullOrEmpty(customDllFolder) ? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)! : Path.GetFullPath(customDllFolder);
+            if (!Directory.Exists(_dllDirectory)) throw new DirectoryNotFoundException($"DLL directory not found: {_dllDirectory}");
             NativeLibrary.SetDllImportResolver(Assembly.GetExecutingAssembly(), DllImportResolver);
             _initialized = true;
         }
@@ -31,11 +22,31 @@ namespace VulkanEngineCoreCS
         private static IntPtr DllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
         {
             string fullPath = Path.Combine(_dllDirectory!, libraryName);
+
             if (!fullPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) fullPath += ".dll";
-            if (File.Exists(fullPath)) return NativeLibrary.Load(fullPath);
+            if (_loadedDlls.Contains(fullPath)) return IntPtr.Zero;
+            if (File.Exists(fullPath))
+            {
+                IntPtr handle = NativeLibrary.Load(fullPath);
+                if (handle != IntPtr.Zero)
+                {
+                    _loadedDlls.Add(fullPath);
+                    return handle;
+                }
+            }
             return IntPtr.Zero;
         }
 
+        public static bool IsDllLoaded(string dllName)
+        {
+            string fullPath = Path.Combine(_dllDirectory ?? "", dllName);
+            if (!fullPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                fullPath += ".dll";
+
+            return _loadedDlls.Contains(fullPath);
+        }
+
+        public static IReadOnlyCollection<string> GetLoadedDlls() => _loadedDlls;
 
         public static void CallDLLFunc(Action action)
         {
@@ -45,34 +56,21 @@ namespace VulkanEngineCoreCS
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine(ex);
             }
         }
 
-        public static TResult CallDLLFunc<TResult>(Func<TResult> func)
+        public static T CallDLLFunc<T>(Func<T> func)
         {
             try
             {
-                TResult result = func();
-                if (typeof(TResult) == typeof(IntPtr))
-                {
-                    IntPtr ptr = (IntPtr)(object)result;
-                    if (ptr == IntPtr.Zero)
-                    {
-                        return default;
-                    }
-                    TResult copyResult = Marshal.PtrToStructure<TResult>(ptr);
-                    return copyResult;
-                }
-                return result;
+                return func();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-                return default(TResult);
+                Console.WriteLine(ex);
+                return default!;
             }
         }
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)] private static extern IntPtr LoadLibrary(string lpFileName);
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)] private static extern bool SetDllDirectory(string lpPathName);
     }
 }
