@@ -46,6 +46,12 @@
     <Filter Include="Header Files\Interop">
       <UniqueIdentifier>{31212577-fb67-44b1-b86e-8371478e38e1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Network">
+      <UniqueIdentifier>{26ab92d2-4c0d-4783-8b2a-59c1555ebdd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Network">
+      <UniqueIdentifier>{2bf9212e-5666-44ba-a83b-a4c1d65f528b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DLL.h">
@@ -135,14 +141,20 @@
     <ClInclude Include="VulkanMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MemorySystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VulkanRenderPassDLL.h">
       <Filter>Header Files\Interop</Filter>
     </ClInclude>
     <ClInclude Include="VulkanSystemDLL.h">
       <Filter>Header Files\Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="MemorySystem.h">
+      <Filter>Header Files\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkSystem.h">
+      <Filter>Header Files\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="NetConnection.h">
+      <Filter>Header Files\Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -209,14 +221,20 @@
     <ClCompile Include="VulkanMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MemorySystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="VulkanRenderPassDLL.cpp">
       <Filter>Source Files\Interop</Filter>
     </ClCompile>
     <ClCompile Include="VulkanSystemDLL.cpp">
       <Filter>Source Files\Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="MemorySystem.cpp">
+      <Filter>Source Files\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="NetConnection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkSystem.cpp">
+      <Filter>Source Files\Network</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

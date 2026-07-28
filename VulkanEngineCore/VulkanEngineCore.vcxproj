@@ -155,6 +155,8 @@
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="MemorySystem.h" />
     <ClInclude Include="Mouse.h" />
+    <ClInclude Include="NetConnection.h" />
+    <ClInclude Include="NetworkSystem.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="ShaderEnums.h" />
     <ClInclude Include="ShaderStructs.h" />
@@ -186,6 +188,8 @@
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="MemorySystem.cpp" />
     <ClCompile Include="Mouse.cpp" />
+    <ClCompile Include="NetConnection.cpp" />
+    <ClCompile Include="NetworkSystem.cpp" />
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="VulkanMesh.cpp" />
     <ClCompile Include="VulkanPipeline.cpp" />
