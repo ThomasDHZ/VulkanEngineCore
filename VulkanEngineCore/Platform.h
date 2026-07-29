@@ -34,12 +34,34 @@
 
 #if defined(_WIN32)
 #define PLATFORM_WINDOWS
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
+// Prevent windows.h from including the old winsock.h
+#ifndef _WINSOCKAPI_
+#define _WINSOCKAPI_
+#endif
+
+#include <winsock2.h>       // must be first
+#include <ws2tcpip.h>
 #include <windows.h>
 #include <direct.h>
 #include <objbase.h>
 #include <combaseapi.h>
 #include <vulkan/vulkan_win32.h>
+
+#pragma comment(lib, "ws2_32.lib")
+
+using SocketHandle = SOCKET;
+constexpr SocketHandle INVALID_SOCKET_HANDLE = INVALID_SOCKET;
 #define SLEEP(ms) Sleep(ms)
+
 inline void GenerateGUID(GUID& guid) { CoCreateGuid(&guid); }
 
 #elif defined(__linux__) && !defined(__ANDROID__)
@@ -48,6 +70,13 @@ inline void GenerateGUID(GUID& guid) { CoCreateGuid(&guid); }
 #include <uuid/uuid.h>
 #include <cctype>
 #include <cstdlib>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+using SocketHandle = int;
+constexpr SocketHandle INVALID_SOCKET_HANDLE = -1;
 #define SLEEP(ms) usleep((ms) * 1000)
 #if defined(__clang__) && defined(__linux__)
 #pragma clang diagnostic ignored "-Wfloat-conversion"
