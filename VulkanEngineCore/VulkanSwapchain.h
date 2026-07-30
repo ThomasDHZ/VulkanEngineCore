@@ -8,6 +8,7 @@ class DLL_EXPORT VulkanSwapchain
 		uint32								    m_ImageIndex = UINT32_MAX;
 		uint32								    m_CommandIndex = UINT32_MAX;
 		uint32								    m_SwapChainImageCount = UINT32_MAX;
+		VkFormat								m_SwapChainImageFormat;
 		ivec2								    m_renderResolution;
 		VkSwapchainKHR						    m_Swapchain = VK_NULL_HANDLE;
 		Vector<VkFence>						    m_InFlightFences = Vector<VkFence>();
@@ -46,6 +47,7 @@ class DLL_EXPORT VulkanSwapchain
 		[[nodiscard]] uint32				    ImageIndex()		   const;
 		[[nodiscard]] uint32				    CommandIndex()		   const;
 		[[nodiscard]] uint32				    SwapChainImageCount()  const;
+		[[nodiscard]] VkFormat				    SwapChainImageFormat() const;
 		[[nodiscard]] VkExtent2D			    SwapChainResolution()  const;
 		[[nodiscard]] ivec2					    RenderPassResolution() const;
 		const [[nodiscard]] Vector<VkImage>	    SwapChainImages()      const;

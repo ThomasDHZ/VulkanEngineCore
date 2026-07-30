@@ -5,20 +5,6 @@
 
 class DLL_EXPORT VulkanWindow
 {
-public:
-    static VulkanWindow& Get();
-
-    bool Create(const char* title, uint32 width, uint32 height);
-    void CreateSurface(VkInstance& instance, VkSurfaceKHR& surface);
-    void PollEvents();
-    bool ShouldClose() const;
-    void Close();
-
-    void* GetHandle() const;
-    ivec2 GetSize() const;
-    ivec2 GetFramebufferSize() const;
-
-    GLFWwindow* m_window = nullptr;
 private:
     VulkanWindow() = default;
     ~VulkanWindow() = default;
@@ -31,6 +17,23 @@ private:
 
     static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
     static void ErrorCallback(int error, const char* description);
+
+public:
+    static VulkanWindow& Get();
+
+    bool Create(const char* title, uint32 width, uint32 height);
+    void CreateSurface(VkInstance& instance, VkSurfaceKHR& surface);
+    void PollEvents();
+    bool ShouldClose() const;
+    void Close();
+
+    void* GetWindowHandle() const;
+    HWND  GetHWND() const;
+    HWND  GetHWND(GLFWwindow* window) const;
+    ivec2 GetSize() const;
+    ivec2 GetFramebufferSize() const;
+
+    GLFWwindow* m_window = nullptr;
 };
 extern DLL_EXPORT VulkanWindow& vulkanWindow;
 inline VulkanWindow& VulkanWindow::Get()

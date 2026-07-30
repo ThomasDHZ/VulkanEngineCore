@@ -1,4 +1,3 @@
-#include <Platform.h>
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
 #endif
@@ -65,9 +64,35 @@ void VulkanWindow::Close()
     glfwTerminate();
 }
 
-void* VulkanWindow::GetHandle() const
+void* VulkanWindow::GetWindowHandle() const
 {
     return m_window;
+}
+
+HWND VulkanWindow::GetHWND() const
+{
+#ifdef _WIN32
+    if (!m_window) return nullptr;
+
+    HWND hwnd = glfwGetWin32Window(m_window);
+    if (!hwnd) throw std::runtime_error("VulkanWindow::GetHWND: Win32 HWND is null");
+    return hwnd;
+#else
+    return nullptr;
+#endif
+}
+
+HWND VulkanWindow::GetHWND(GLFWwindow* window) const
+{
+#ifdef _WIN32
+    if (!window) return nullptr;
+
+    HWND hwnd = glfwGetWin32Window(window);
+    if (!hwnd) throw std::runtime_error("VulkanWindow::GetHWND: Win32 HWND is null");
+    return hwnd;
+#else
+    return nullptr;
+#endif
 }
 
 ivec2 VulkanWindow::GetSize() const

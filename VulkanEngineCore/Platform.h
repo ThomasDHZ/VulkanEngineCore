@@ -1,37 +1,8 @@
 #pragma once
 
-#ifdef PLATFORM_ANDROID
-#define GLFW_INCLUDE_NONE
-#endif
-
-#if defined(__linux__) && !defined(__ANDROID__)
-#define VK_ENABLE_BETA_EXTENSIONS
-#endif
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <assert.h>
-#include <fstream>
-#include <string>
-#include <iostream>
-#include <algorithm>
-#include <iterator>
-#include <sstream>
-#include <iomanip>
-#include <filesystem>
-#include <mutex>
-
-#include "DLL.h"
-#include "VkGuid.h"
-#include "Typedef.h"
-#include "VulkanError.h"
-
+// ============================================================
+// 1. Platform detection + native headers FIRST
+// ============================================================
 #if defined(_WIN32)
 #define PLATFORM_WINDOWS
 
@@ -48,13 +19,12 @@
 #define _WINSOCKAPI_
 #endif
 
-#include <winsock2.h>       // must be first
+#include <winsock2.h>       // must come before windows.h
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <direct.h>
 #include <objbase.h>
 #include <combaseapi.h>
-#include <vulkan/vulkan_win32.h>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -66,6 +36,7 @@ inline void GenerateGUID(GUID& guid) { CoCreateGuid(&guid); }
 
 #elif defined(__linux__) && !defined(__ANDROID__)
 #define PLATFORM_LINUX
+
 #include <unistd.h>
 #include <uuid/uuid.h>
 #include <cctype>
@@ -73,55 +44,116 @@ inline void GenerateGUID(GUID& guid) { CoCreateGuid(&guid); }
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <unistd.h>
 #include <fcntl.h>
+
 using SocketHandle = int;
 constexpr SocketHandle INVALID_SOCKET_HANDLE = -1;
 #define SLEEP(ms) usleep((ms) * 1000)
+
 #if defined(__clang__) && defined(__linux__)
 #pragma clang diagnostic ignored "-Wfloat-conversion"
 #endif
+
 inline void GenerateGUID(uuid_t guid) { uuid_generate(guid); }
 
 #elif defined(__ANDROID__)
 #define PLATFORM_ANDROID
-#include <vulkan/vulkan_android.h>
+
 #include <unistd.h>
 #include <random>
+
 #define SLEEP(ms) usleep((ms) * 1000)
+
 inline void GenerateGUID(uint8_t* guid)
 {
-    std::random_device rd; std::mt19937 gen(rd());
+    std::random_device rd;
+    std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, 255);
-    for (int i = 0; i < 16; ++i) guid[i] = dis(gen);
+    for (int i = 0; i < 16; ++i)
+        guid[i] = static_cast<uint8_t>(dis(gen));
 }
 
 #elif defined(__APPLE__)
 #include <TargetConditionals.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <unistd.h>
+#include <uuid/uuid.h>
 
-#include <Endian.h>
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 #define PLATFORM_IOS
 #else
 #define PLATFORM_MACOS
 #endif
-#include <unistd.h>
-#include <uuid/uuid.h>
+
 #define SLEEP(ms) usleep((ms) * 1000)
+
 inline void GenerateGUID(uuid_t guid) { uuid_generate(guid); }
+
 #endif
 
+// ============================================================
+// 2. Vulkan (now safe – Windows headers already processed)
+// ============================================================
+#ifdef PLATFORM_ANDROID
+#define GLFW_INCLUDE_NONE
+#endif
+
+#if defined(PLATFORM_LINUX)
+#define VK_ENABLE_BETA_EXTENSIONS
+#endif
+
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+
+#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.h>
+
+#ifdef PLATFORM_WINDOWS
+#include <vulkan/vulkan_win32.h>
+#elif defined(PLATFORM_ANDROID)
+#include <vulkan/vulkan_android.h>
+#endif
+
+// ============================================================
+// 3. Standard library headers
+// ============================================================
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdarg.h>
+#include <assert.h>
+
+#include <fstream>
+#include <string>
+#include <iostream>
+#include <algorithm>
+#include <iterator>
+#include <sstream>
+#include <iomanip>
+#include <filesystem>
+#include <mutex>
+
+// ============================================================
+// 4. Project headers
+// ============================================================
+#include "DLL.h"
+#include "VkGuid.h"
+#include "Typedef.h"
+#include "VulkanError.h"
+
+// ============================================================
+// 5. Utility macros
+// ============================================================
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #define IO_READ_CHUNK_SIZE 2097152
 #define IO_READ_ERROR_GENERAL "Error reading file: %s. error: %d\n"
 #define IO_READ_ERROR_MEMORY "Not enough free memory to read file: %s\n"
-#define ERROR_EXIT(...) { fprintf(stderr, __VA_ARGS__); SLEEP(100); exit(1); }
+#define ERROR_EXIT(...)   { fprintf(stderr, __VA_ARGS__); SLEEP(100); exit(1); }
 #define ERROR_RETURN(R, ...) { fprintf(stderr, __VA_ARGS__); SLEEP(100); return (R); }
 
-#if defined(PLATFORM_WINDOWS) && defined(NOMINMAX)
-#elif defined(PLATFORM_WINDOWS)
+// Safety for min/max macros on Windows
+#if defined(PLATFORM_WINDOWS)
 #undef max
 #undef min
-#define NOMINMAX
 #endif

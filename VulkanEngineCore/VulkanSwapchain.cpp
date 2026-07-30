@@ -37,6 +37,7 @@ void VulkanSwapchain::StartUpSwapChain()
     }
     m_SwapChainImageCount = std::max(m_SwapChainImageCount, surfaceCapabilities.minImageCount);
     m_SwapChainResolution = StartUpSwapChainExtent();
+    m_SwapChainImageFormat = swapChainImageFormat.format;
 
     VkSwapchainCreateInfoKHR SwapChainCreateInfo =
     {
@@ -364,6 +365,7 @@ void						VulkanSwapchain::TriggerSwapChainFlag()       { m_RebuildSwapChainFlag
 uint32				        VulkanSwapchain::ImageIndex()		    const { return m_ImageIndex; }
 uint32				        VulkanSwapchain::CommandIndex()		    const { return m_CommandIndex; }
 uint32				        VulkanSwapchain::SwapChainImageCount()  const { return m_SwapChainImageCount; }
+VkFormat                    VulkanSwapchain::SwapChainImageFormat() const { return m_SwapChainImageFormat; }
 VkExtent2D			        VulkanSwapchain::SwapChainResolution()  const { return m_SwapChainResolution; }
 ivec2					    VulkanSwapchain::RenderPassResolution() const { return m_renderResolution; }
 const Vector<VkImage>	    VulkanSwapchain::SwapChainImages()      const { return m_SwapChainImages; }

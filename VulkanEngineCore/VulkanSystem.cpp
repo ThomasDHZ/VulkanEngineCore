@@ -85,7 +85,7 @@ VkDevice				 VulkanSystem::LogicalDevice()		    const { return m_device.LogicalD
 VkQueue                  VulkanSystem::GraphicsQueue()		    const { return m_device.GraphicsQueue(); }
 VkQueue                  VulkanSystem::PresentQueue()			const { return m_device.PresentQueue(); }
 VkSampleCountFlagBits    VulkanSystem::MaxSampleCount()		    const { return m_device.MaxSampleCount(); }
-uint32					 VulkanSystem::SwapChainImageCount()	const { return m_swapChain.ImageIndex(); }
+uint32					 VulkanSystem::SwapChainImageCount()	const { return m_swapChain.SwapChainImageCount(); }
 VkExtent2D				 VulkanSystem::SwapChainResolution()	const { return m_swapChain.SwapChainResolution(); }
 ivec2					 VulkanSystem::RenderPassResolution()	const { return m_swapChain.RenderPassResolution(); }
 VkCommandPool            VulkanSystem::CommandPool()			const { return m_commandBuffer.CommandPool(); }
