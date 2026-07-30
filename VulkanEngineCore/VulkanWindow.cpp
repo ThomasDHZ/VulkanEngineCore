@@ -6,6 +6,8 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 #include <iostream>
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
 
 VulkanWindow& vulkanWindow = VulkanWindow::Get();
 
@@ -30,7 +32,6 @@ bool VulkanWindow::Create(const char* title, uint32 width, uint32 height)
     glfwSetWindowUserPointer(m_window, this);
     glfwSetFramebufferSizeCallback(m_window, FramebufferResizeCallback);
     glfwSetErrorCallback(ErrorCallback);
-
     return true;
 }
 
