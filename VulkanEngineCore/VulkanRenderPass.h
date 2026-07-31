@@ -67,7 +67,7 @@ struct VulkanSubPassLoader
 struct RenderPassLoader
 {
     VkGuid                               RenderPassId = VkGuid();
-    ivec2                                RenderPassResolution = ivec2(INT32_MAX);
+    ivec2                                RenderPassResolution = ivec2(0);
     Vector<RenderPassAttachmentLoader>   AttachmentList;
     Vector<VkSubpassDependency>          SubpassDependencyList;
     Vector<VulkanPipelineLoader>         PipelineList;
@@ -85,7 +85,7 @@ struct DLL_EXPORT VulkanRenderPass
 private:
 
     VkGuid                                      m_renderPassId = VkGuid();
-    ivec2                                       m_renderPassResolution = ivec2(INT32_MAX, INT32_MAX);
+    ivec2                                       m_renderPassResolution = ivec2(0);
     VkRenderPass                                m_renderPass = VK_NULL_HANDLE;
     Vector<VulkanPipeline>                      m_pipelineList;
     Vector<VkFramebuffer>                       m_frameBufferList;

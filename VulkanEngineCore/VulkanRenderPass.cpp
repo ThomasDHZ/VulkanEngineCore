@@ -12,7 +12,7 @@ VulkanRenderPass::~VulkanRenderPass()
 void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
 {
     m_renderPassId = renderPassLoader.RenderPassId;
-    m_renderPassResolution = ivec2(INT32_MAX) == renderPassLoader.RenderPassResolution || ivec2(0) == renderPassLoader.RenderPassResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
+    m_renderPassResolution = ivec2(0) == renderPassLoader.RenderPassResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
     m_renderPass = VK_NULL_HANDLE;
     m_frameBufferList = Vector<VkFramebuffer>();
     m_clearValueList = renderPassLoader.ClearValueList;
@@ -91,7 +91,6 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
 
         depthReferences[x] = depthRefForThisSubpass;
         useDepthReferences[x] = useDepthForThisSubpass;
-
         subPassDescriptionList.emplace_back(VkSubpassDescription{
                 .flags = 0,
                 .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -168,30 +167,28 @@ VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoade
 
 void VulkanRenderPass::BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader)
 {
-    for (int x = 0; x < renderPassLoader.AttachmentList.size(); x++)
+    for(auto& attachment : renderPassLoader.AttachmentList)
     {
         VkImageLayout finalLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        const RenderPassAttachmentLoader& renderAttachment = renderPassLoader.AttachmentList[x];
-        switch (renderAttachment.TextureUsageType)
+        switch (attachment.TextureUsageType)
         {
-        case kUsageType_SwapChainTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
-        case kUsageType_OffscreenColorTexture: initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-        case kUsageType_DepthBufferTexture:    initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
-        case kUsageType_GBufferTexture:        initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-        case kUsageType_IrradianceTexture:     initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-        case kUsageType_PrefilterTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-        case kUsageType_CubeMap:               initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-        case kUsageType_BRDFTexture:           initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-        default: throw std::runtime_error("Unknown TextureUsageType");
+            case kUsageType_SwapChainTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
+            case kUsageType_OffscreenColorTexture: initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_DepthBufferTexture:    initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+            case kUsageType_GBufferTexture:        initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_IrradianceTexture:     initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_PrefilterTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_CubeMap:               initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_BRDFTexture:           initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            default: throw std::runtime_error("Unknown TextureUsageType");
         }
-
         m_attachmentDescriptionList.emplace_back(VkAttachmentDescription
             {
-                .format = renderAttachment.TextureByteFormat,
+                .format = attachment.TextureByteFormat,
                 .samples = m_sampleCount >= vulkan.MaxSampleCount() ? vulkan.MaxSampleCount() : m_sampleCount,
-                .loadOp = renderAttachment.LoadOp,
-                .storeOp = renderAttachment.StoreOp,
+                .loadOp = attachment.LoadOp,
+                .storeOp = attachment.StoreOp,
                 .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
                 .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
                 .initialLayout = initialLayout,
