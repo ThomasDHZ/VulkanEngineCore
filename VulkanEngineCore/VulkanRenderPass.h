@@ -126,4 +126,5 @@ public:
     [[nodiscard]] Vector<VulkanPipeline>        PipelineList()               const noexcept;
     [[nodiscard]] Vector<Vector<VulkanSubPass>> SubPassList()                const noexcept;
     [[nodiscard]] VkSampleCountFlagBits         SampleCount()                const noexcept;
+    [[nodiscard]] bool                          IsCubeMapRenderPass()        const noexcept;
 };

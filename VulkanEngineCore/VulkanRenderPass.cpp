@@ -371,3 +371,4 @@ Vector<VulkanTexture>         VulkanRenderPass::AttachmentList()       const noe
 Vector<VulkanPipeline>        VulkanRenderPass::PipelineList()         const noexcept { return m_pipelineList; }
 Vector<Vector<VulkanSubPass>> VulkanRenderPass::SubPassList()          const noexcept { return m_subPassList; }
 VkSampleCountFlagBits         VulkanRenderPass::SampleCount()          const noexcept { return m_sampleCount; }
+bool                          VulkanRenderPass::IsCubeMapRenderPass()  const noexcept { return m_isCubeMapRenderPass; }
