@@ -174,14 +174,14 @@
     <ClInclude Include="..\External\imgui\imgui_internal.h">
       <Filter>Header Files\External</Filter>
     </ClInclude>
-    <ClInclude Include="ImGuiRenderer.h">
-      <Filter>Header Files\External</Filter>
-    </ClInclude>
     <ClInclude Include="..\External\imgui\imstb_rectpack.h">
       <Filter>Header Files\External</Filter>
     </ClInclude>
     <ClInclude Include="..\External\imgui\imstb_textedit.h">
       <Filter>Header Files\External</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGuiSystem.h">
+      <Filter>Header Files\Systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -287,8 +287,8 @@
     <ClCompile Include="..\External\imgui\backends\imgui_impl_win32.cpp">
       <Filter>Source Files\External</Filter>
     </ClCompile>
-    <ClCompile Include="ImGuiRenderer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ImGuiSystem.cpp">
+      <Filter>Source Files\Systems</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,16 +1,25 @@
 #pragma once
 #include "platform.h"
 #include "NetConnection.h"
-class NetworkSystem
-{
-public:
-    static NetworkSystem& Get();
     enum class NetworkMode 
     {
         None,
         Server,
         Client
     };
+
+    enum class PacketType : byte
+    {
+        Ping        = 0x0,
+        Pong        = 0x1,
+        ChatMessage = 0x2,
+        // add more later
+    };
+
+class DLL_EXPORT NetworkSystem
+{
+public:
+    static NetworkSystem& Get();
     using PacketCallback = std::function<void(const PacketHeader&, const uint8* payload, uint16 size, const IpAddress& ip, uint16 port)>;
 
 private:
@@ -22,10 +31,10 @@ private:
     NetworkSystem& operator=(NetworkSystem&&) = delete;
 
     NetworkMode    m_mode = NetworkMode::None;
-    NetConnection  m_peer;
+    NetConnection  m_connection;
     IpAddress      m_serverIP;
     uint16         m_serverPort = 0;
-    PacketCallback m_packetCallback;
+    PacketCallback m_packetHandler;
     
     void ProcessIncoming();
     void ProcessOutgoing(float deltaTime);
@@ -33,17 +42,22 @@ private:
 public:
     bool StartAsServer(uint16 port);
     bool StartAsClient();
-    bool Connect(const IpAddress& ip, uint16 port);
+    bool ConnectToServer(const IpAddress& ip, uint16 port);
     void Update(float deltaTime);
+    void Stop();
     void Shutdown();
 
+    void SendChatMessage(const String& text);
+    void OnPacketReceived(const PacketHeader& header, const byte* data, uint16 size, IpAddress ip, uint16 port);
+
+    void SetNetworkMode(NetworkMode networkMode);
     bool SendUnreliable(uint8 type, const void* data, uint16 size);
     bool SendReliable(uint8 type, const void* data, uint16 size);
 
-
-    bool IsServer()    const { return m_mode == NetworkMode::Server; }
-    bool IsClient()    const { return m_mode == NetworkMode::Client; }
-    bool IsConnected() const { return m_peer.IsConnected(); }
+    [[nodiscard]] bool IsServer()    const;
+    [[nodiscard]] bool IsClient()    const;
+    [[nodiscard]] bool IsConnected() const;
+    [[nodiscard]] NetworkMode GetNetworkMode() const;
 };
 extern DLL_EXPORT NetworkSystem& networkSystem;
 inline NetworkSystem& NetworkSystem::Get()

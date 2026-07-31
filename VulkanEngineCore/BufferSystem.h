@@ -106,8 +106,8 @@ public:
     VulkanBuffer&                                           FindVulkanBuffer(uint32 id);
     const Vector<VulkanBuffer>&                             VulkanBufferList();
 
-    [[nodiscard]] VmaAllocator			                    VmaAllocatorHandle()	    const;
-    [[nodiscard]] UnorderedMap<uint32, VulkanBuffer>  VulkanBufferMap()         const;
+    [[nodiscard]] VmaAllocator			                    VmaAllocatorHandle()	  const;
+    [[nodiscard]] UnorderedMap<uint32, VulkanBuffer>        VulkanBufferMap()         const;
 };
 extern DLL_EXPORT BufferSystem& bufferSystem;
 inline BufferSystem& BufferSystem::Get()
