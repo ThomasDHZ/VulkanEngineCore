@@ -3,15 +3,7 @@
 #include "Keyboard.h"
 
 #ifndef __ANDROID__
-Keyboard keyboard = Keyboard();
-
-Keyboard::Keyboard()
-{
-}
-
-Keyboard::~Keyboard()
-{
-}
+Keyboard& keyboard = Keyboard::Get();
 
 void Keyboard::KeyboardKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods)
 {

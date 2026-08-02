@@ -8,6 +8,9 @@
 #include <iostream>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
+#include <Mouse.h>
+#include <Keyboard.h>
+#include <GameController.h>
 
 VulkanWindow& vulkanWindow = VulkanWindow::Get();
 
@@ -31,6 +34,11 @@ bool VulkanWindow::Create(const char* title, uint32 width, uint32 height)
 
     glfwSetWindowUserPointer(m_window, this);
     glfwSetFramebufferSizeCallback(m_window, FramebufferResizeCallback);
+    glfwSetCursorPosCallback(m_window, Mouse::MouseMoveEvent);
+    glfwSetMouseButtonCallback(m_window, Mouse::MouseButtonPressedEvent);
+    glfwSetScrollCallback(m_window, Mouse::MouseWheelEvent);
+    glfwSetKeyCallback(m_window, Keyboard::KeyboardKeyPressed);
+    glfwSetJoystickCallback(ControllerConnectCallBack);
     glfwSetErrorCallback(ErrorCallback);
     return true;
 }
@@ -116,6 +124,20 @@ void VulkanWindow::FramebufferResizeCallback(GLFWwindow* window, int width, int 
         self->m_framebufferResized = true;
         self->m_width = width;
         self->m_height = height;
+    }
+}
+
+void VulkanWindow::ControllerConnectCallBack(int jid, int event)
+{
+    if (event == GLFW_CONNECTED && glfwJoystickIsGamepad(jid)) 
+    {
+        printf("Controller connected: %s\n", glfwGetGamepadName(jid));
+        vulkanWindow.m_GameControllerConnected = jid;
+    }
+    else if (event == GLFW_DISCONNECTED) 
+    {
+        printf("Controller disconnected\n");
+        vulkanWindow.m_GameControllerConnected = UINT32_MAX;
     }
 }
 

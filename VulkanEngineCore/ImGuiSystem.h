@@ -36,6 +36,8 @@ public:
 	void				  Destroy();
 
 	void				  FpsDisplay();
+	void				  VulkanDebugger();
+
 	bool				  SliderInt(const char* label, int* v, int v_min, int v_max, const char* format = "%d", ImGuiSliderFlags flags = 0);
 	bool				  SliderInt2(const char* label, int v[2], int v_min, int v_max, const char* format = "%d", ImGuiSliderFlags flags = 0);
 	bool				  SliderInt3(const char* label, int v[3], int v_min, int v_max, const char* format = "%d", ImGuiSliderFlags flags = 0);

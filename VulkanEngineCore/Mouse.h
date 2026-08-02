@@ -5,11 +5,21 @@
 #ifndef __ANDROID__
 #include <GLFW/glfw3.h>
 
-class Mouse
+class DLL_EXPORT Mouse
 {
+public:
+	static Mouse& Get();
+
 private:
+	Mouse() = default;
+	~Mouse() = default;
+	Mouse(const Mouse&) = delete;
+	Mouse& operator=(const Mouse&) = delete;
+	Mouse(Mouse&&) = delete;
+	Mouse& operator=(Mouse&&) = delete;
 
 public:
+
 	float X;
 	float Y;
 	float XOffset;
@@ -20,12 +30,14 @@ public:
 	bool MouseButtonState[MAXMOUSEKEY];
 	bool IsDragging = false;
 
-	Mouse();
-	~Mouse();
 	static void MouseMoveEvent(GLFWwindow* window, double Xoffset, double Yoffset);
 	static void MouseButtonPressedEvent(GLFWwindow* window, int button, int action, int mods);
 	static void MouseWheelEvent(GLFWwindow* window, double xpos, double ypos);
 };
-extern Mouse mouse;
-
+extern DLL_EXPORT Mouse& mouse;
+inline Mouse& Mouse::Get()
+{
+	static Mouse instance;
+	return instance;
+}
 #endif

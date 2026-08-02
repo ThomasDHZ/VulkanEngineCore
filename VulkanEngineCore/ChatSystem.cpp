@@ -40,8 +40,6 @@ void ChatSystem::DrawChatWindow()
     imGuiSystem.End();
 }
 
-
-
 void ChatSystem::AddChatMessage(const char* sender, const char* text)
 {
     m_chatLines.push_back(ChatLine

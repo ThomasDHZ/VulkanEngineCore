@@ -11,6 +11,7 @@ bool NetworkSystem::StartAsServer(uint16 port)
 {
 	Stop();
 	if (!m_connection.StartUp(true, port)) return false;
+
 	m_mode = NetworkMode::Server;
 	return true;
 }
@@ -19,6 +20,7 @@ bool NetworkSystem::StartAsClient()
 {
 	Stop();
 	if (!m_connection.StartUp(false)) return false;
+
 	m_mode = NetworkMode::Client;
 	return true;
 }
@@ -26,6 +28,7 @@ bool NetworkSystem::StartAsClient()
 bool NetworkSystem::ConnectToServer(const IpAddress& ip, uint16 port)
 {
 	if (m_mode != NetworkMode::Client) return false;
+
 	m_serverIP = ip;
 	m_serverPort = port;
 	return true;
@@ -102,18 +105,26 @@ bool NetworkSystem::SendReliable(uint8 type, const void* data, uint16 size)
 	return false;
 }
 
-bool NetworkSystem::BroadcastUnreliable(uint8 type, const void* data, uint16 size)
+bool NetworkSystem::BroadcastUnreliable(uint8 type, const void* data, uint16 size, const IpAddress* excludeIp, uint16 excludePort)
 {
 	if (m_mode != NetworkMode::Server) return false;
 
 	bool success = true;
 	for (auto& client : m_clients)
 	{
+		if (excludeIp != nullptr &&
+			strcmp(client.ip.data(), excludeIp->data()) == 0 &&
+			client.port == excludePort)
+		{
+			continue;
+		}
+
 		if (!m_connection.Send(0, type, data, size, client.ip, client.port))
 		{
 			success = false;
 		}
 	}
+
 	return success;
 }
 
@@ -126,7 +137,6 @@ void NetworkSystem::SetNetworkMode(NetworkMode networkMode)
 {
 }
 
-
 void NetworkSystem::Shutdown()
 {
 	m_connection.Destroy();
@@ -135,32 +145,35 @@ void NetworkSystem::Shutdown()
 
 void NetworkSystem::SendChatMessage(const String& text)
 {
-	if (!IsClient()) return;
-
 	ChatMessagePacket packet{};
 	strncpy(packet.text, text.c_str(), sizeof(packet.text) - 1);
 	packet.text[sizeof(packet.text) - 1] = '\0';
-	SendUnreliable(static_cast<uint8_t>(PacketType::ChatMessage), &packet, sizeof(packet));
+
+	if (IsClient()) SendUnreliable(static_cast<uint8>(PacketType::ChatMessage), &packet, sizeof(packet));
+	else if (IsServer()) BroadcastUnreliable(static_cast<uint8>(PacketType::ChatMessage), &packet, sizeof(packet));
 }
 
 void NetworkSystem::OnPacketReceived(const PacketHeader& header, const byte* data, uint16 size, IpAddress ip, uint16 port)
 {
 	switch (static_cast<PacketType>(header.type))
 	{
-		case PacketType::ChatMessage:
-		{
-			const ChatMessagePacket* chat = reinterpret_cast<const ChatMessagePacket*>(data);
+	case PacketType::ChatMessage:
+	{
+		if (size < sizeof(ChatMessagePacket)) return;
+		const ChatMessagePacket* chat = reinterpret_cast<const ChatMessagePacket*>(data);
 
-			char buffer[128];
-			memcpy(buffer, chat->text, 127);
-			buffer[127] = '\0';
+		char buffer[128]{};
+		memcpy(buffer, chat->text, sizeof(buffer) - 1);
+		buffer[127] = '\0';
 
-			const char* ip_str = nullptr;
-			std::snprintf(ip.data(), ip.size(), "%s", ip_str);
-			chatSystem.AddChatMessage("ip_str", buffer);
-			break;
-		}
-		case PacketType::Ping: break;
+		if(m_serverIP != ip) chatSystem.AddChatMessage(ip.data(), buffer);
+		if (IsServer()) BroadcastUnreliable(static_cast<uint8>(PacketType::ChatMessage), data, size, &ip, port);
+		break;
+	}
+	case PacketType::Ping:
+		// Optional: reply with Pong later
+		break;
+	default: break;
 	}
 }
 

@@ -1,15 +1,7 @@
 #include "GameController.h"
 
 #ifndef __ANDROID__
-GameController gameController = GameController();
-
-GameController::GameController()
-{
-}
-
-GameController::~GameController()
-{
-}
+GameController& gameController = GameController::Get();
 
 bool GameController::ButtonPressed(int controllerId, int button)
 {

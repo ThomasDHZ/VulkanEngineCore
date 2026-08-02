@@ -1,16 +1,7 @@
 #include "Mouse.h"
 
 #ifndef __ANDROID__
-Mouse mouse = Mouse();
-
-Mouse::Mouse()
-{
-
-}
-
-Mouse::~Mouse()
-{
-}
+Mouse& mouse = Mouse::Get();
 
 void Mouse::MouseMoveEvent(GLFWwindow* window, double x, double y)
 {

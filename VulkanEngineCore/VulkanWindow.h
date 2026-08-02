@@ -12,9 +12,11 @@ private:
     VulkanWindow& operator=(const VulkanWindow&) = delete;
 
      bool m_framebufferResized = false;
+     uint32 m_GameControllerConnected = UINT32_MAX;
      uint32 m_width = 0;
      uint32 m_height = 0;
 
+    static void ControllerConnectCallBack(int jid, int event);
     static void FramebufferResizeCallback(GLFWwindow* window, int width, int height);
     static void ErrorCallback(int error, const char* description);
 

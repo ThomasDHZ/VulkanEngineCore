@@ -68,7 +68,7 @@ public:
     void                                    SetNetworkMode(NetworkMode networkMode);
     bool                                    SendUnreliable(uint8 type, const void* data, uint16 size);
     bool                                    SendReliable(uint8 type, const void* data, uint16 size);
-    bool                                    BroadcastUnreliable(uint8 type, const void* data, uint16 size);
+    bool                                    BroadcastUnreliable(uint8 type, const void* data, uint16 size, const IpAddress* excludeIp = nullptr, uint16 excludePort = 0);
     bool                                    BroadcastReliable(uint8 type, const void* data, uint16 size);
 
     [[nodiscard]] bool                      IsServer()       const;

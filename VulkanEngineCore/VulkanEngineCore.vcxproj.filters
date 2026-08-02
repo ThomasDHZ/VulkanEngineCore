@@ -111,9 +111,6 @@
     <ClInclude Include="BufferSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="InputSystem.h">
-      <Filter>Header Files\Systems</Filter>
-    </ClInclude>
     <ClInclude Include="VulkanTexture.h">
       <Filter>Header Files\Vulkan</Filter>
     </ClInclude>
@@ -222,9 +219,6 @@
       <Filter>Source Files\Vulkan</Filter>
     </ClCompile>
     <ClCompile Include="BufferSystem.cpp">
-      <Filter>Source Files\Systems</Filter>
-    </ClCompile>
-    <ClCompile Include="InputSystem.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
     <ClCompile Include="VulkanSystem.cpp">
