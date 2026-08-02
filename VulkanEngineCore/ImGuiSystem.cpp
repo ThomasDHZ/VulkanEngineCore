@@ -329,10 +329,111 @@ bool ImGuiSystem::InputDouble(const char* label, double* v, double step, double 
     return ImGui::InputDouble(label, v, step, step_fast, format, flags);
 }
 
+bool ImGuiSystem::IsKeyDown(ImGuiKey key)
+{
+    return ImGui::IsKeyDown(key);
+}
+
+bool ImGuiSystem::IsKeyPressed(ImGuiKey key, bool repeat)
+{
+    return ImGui::IsKeyPressed(key, repeat);
+}
+
+bool ImGuiSystem::IsKeyReleased(ImGuiKey key)
+{
+    return ImGui::IsKeyReleased(key);
+}
+
+bool ImGuiSystem::IsItemActive()
+{
+    return ImGui::IsItemActive();
+}
+
+bool ImGuiSystem::IsItemFocused()
+{
+    return ImGui::IsItemFocused();
+}
+
 void ImGuiSystem::Text(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
     ImGui::TextV(fmt, args);
     va_end(args);
+}
+
+bool ImGuiSystem::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
+{
+    return ImGui::Begin(name, p_open, flags);
+}
+
+bool ImGuiSystem::BeginChild(const char* str_id, const ImVec2& size, bool border, ImGuiWindowFlags flags)
+{
+    return ImGui::BeginChild(str_id, size, border, flags);
+}
+
+void ImGuiSystem::TextColored(const ImVec4& col, const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    ImGui::TextColoredV(col, fmt, args);
+    va_end(args);
+}
+
+void ImGuiSystem::TextWrapped(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    ImGui::TextWrappedV(fmt, args);
+    va_end(args);
+}
+
+float ImGuiSystem::GetScrollY()
+{
+    return ImGui::GetScrollY();
+}
+
+float ImGuiSystem::GetScrollMaxY()
+{
+    return ImGui::GetScrollMaxY();
+}
+
+void ImGuiSystem::SetScrollHereY(float center_y_ratio)
+{
+    ImGui::SetScrollHereY(center_y_ratio);
+}
+
+void ImGuiSystem::EndChild()
+{
+    ImGui::EndChild();
+}
+
+void ImGuiSystem::PushItemWidth(float item_width)
+{
+    ImGui::PushItemWidth(item_width);
+}
+
+void ImGuiSystem::PopItemWidth()
+{
+    ImGui::PopItemWidth();
+}
+
+bool ImGuiSystem::IsWindowAppearing()
+{
+    return ImGui::IsWindowAppearing();
+}
+
+void ImGuiSystem::SetKeyboardFocusHere(int offset)
+{
+    ImGui::SetKeyboardFocusHere(offset);
+}
+
+void ImGuiSystem::End()
+{
+    ImGui::End();
+}
+
+float ImGuiSystem::GetFrameHeightWithSpacing()
+{
+    return ImGui::GetFrameHeightWithSpacing();
 }

@@ -1,6 +1,9 @@
 #include "NetworkSystem.h"
+#include "ChatSystem.h"
 #include <cstdint>
 #include <cstring>
+#include <chrono>
+#include <ctime>
 
 NetworkSystem& networkSystem = NetworkSystem::Get();
 
@@ -37,6 +40,30 @@ void NetworkSystem::ProcessIncoming()
 
 	while (m_connection.Receive(header, payload, sizeof(payload), ipAddress, &port))
 	{
+		bool found = false;
+		if (m_mode == NetworkMode::Server)
+		{
+			for (auto& client : m_clients)
+			{
+				if (strcmp(client.ip.data(), ipAddress.data()) == 0 &&
+					client.port == port)
+				{
+					client.lastSeenTime = 0;
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+			{
+				m_clients.emplace_back(ClientInfo
+					{
+						.ip = ipAddress,
+						.port = port
+					});
+				printf("New client connected: %s:%u\n", ipAddress.data(), port);
+			}
+		}
+		OnPacketReceived(header, payload, sizeof(payload), ipAddress, port);
 		if (m_packetHandler) m_packetHandler(header, payload, header.payloadSize, ipAddress, port);
 	}
 }
@@ -61,6 +88,13 @@ void NetworkSystem::Stop()
 	m_serverPort = 0;
 }
 
+bool NetworkSystem::SendUnreliable(uint8 type, const void* data, uint16 size)
+{
+	// For now just use channel 1 (we still need to implement actual reliability)
+	if (m_mode == NetworkMode::Client) return m_connection.Send(1, type, data, size, m_serverIP, m_serverPort);
+	return false;
+}
+
 bool NetworkSystem::SendReliable(uint8 type, const void* data, uint16 size)
 {
 	if (m_mode == NetworkMode::Client) return m_connection.Send(0, type, data, size, m_serverIP, m_serverPort);
@@ -68,16 +102,30 @@ bool NetworkSystem::SendReliable(uint8 type, const void* data, uint16 size)
 	return false;
 }
 
+bool NetworkSystem::BroadcastUnreliable(uint8 type, const void* data, uint16 size)
+{
+	if (m_mode != NetworkMode::Server) return false;
+
+	bool success = true;
+	for (auto& client : m_clients)
+	{
+		if (!m_connection.Send(0, type, data, size, client.ip, client.port))
+		{
+			success = false;
+		}
+	}
+	return success;
+}
+
+bool NetworkSystem::BroadcastReliable(uint8 type, const void* data, uint16 size)
+{
+	return false;
+}
+
 void NetworkSystem::SetNetworkMode(NetworkMode networkMode)
 {
 }
 
-bool NetworkSystem::SendUnreliable(uint8 type, const void* data, uint16 size)
-{
-	// For now just use channel 1 (we still need to implement actual reliability)
-	if (m_mode == NetworkMode::Client) return m_connection.Send(1, type, data, size, m_serverIP, m_serverPort);
-	return false;
-}
 
 void NetworkSystem::Shutdown()
 {
@@ -87,8 +135,12 @@ void NetworkSystem::Shutdown()
 
 void NetworkSystem::SendChatMessage(const String& text)
 {
-	if (!IsClient() || !IsConnected()) return;
-	SendUnreliable(static_cast<uint8_t>(PacketType::ChatMessage), text.data(), static_cast<uint16>(text.size()));
+	if (!IsClient()) return;
+
+	ChatMessagePacket packet{};
+	strncpy(packet.text, text.c_str(), sizeof(packet.text) - 1);
+	packet.text[sizeof(packet.text) - 1] = '\0';
+	SendUnreliable(static_cast<uint8_t>(PacketType::ChatMessage), &packet, sizeof(packet));
 }
 
 void NetworkSystem::OnPacketReceived(const PacketHeader& header, const byte* data, uint16 size, IpAddress ip, uint16 port)
@@ -97,18 +149,23 @@ void NetworkSystem::OnPacketReceived(const PacketHeader& header, const byte* dat
 	{
 		case PacketType::ChatMessage:
 		{
-			char buffer[256]{};
-			uint16_t copySize = std::min(size, (uint16_t)(sizeof(buffer) - 1));
-			memcpy(buffer, data, copySize);
+			const ChatMessagePacket* chat = reinterpret_cast<const ChatMessagePacket*>(data);
 
-			printf("Chat from %s: %s\n", ip, buffer);
+			char buffer[128];
+			memcpy(buffer, chat->text, 127);
+			buffer[127] = '\0';
+
+			const char* ip_str = nullptr;
+			std::snprintf(ip.data(), ip.size(), "%s", ip_str);
+			chatSystem.AddChatMessage("ip_str", buffer);
 			break;
 		}
 		case PacketType::Ping: break;
 	}
 }
 
-bool		NetworkSystem::IsServer() const			{ return m_mode == NetworkMode::Server; }
-bool		NetworkSystem::IsClient() const			{ return m_mode == NetworkMode::Client; }
-bool		NetworkSystem::IsConnected() const		{ return m_connection.IsConnected(); }
-NetworkMode NetworkSystem::GetNetworkMode() const   { return m_mode; }
+bool					  NetworkSystem::IsServer()		  const		{ return m_mode == NetworkMode::Server; }
+bool					  NetworkSystem::IsClient()		  const		{ return m_mode == NetworkMode::Client; }
+bool					  NetworkSystem::IsConnected()	  const		{ return m_connection.IsConnected(); }
+NetworkMode				  NetworkSystem::GetNetworkMode() const     { return m_mode; }
+const Vector<ClientInfo>& NetworkSystem::GetClients()	  const		{ return m_clients; }

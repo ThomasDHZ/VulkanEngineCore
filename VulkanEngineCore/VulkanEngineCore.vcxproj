@@ -156,6 +156,7 @@
     <ClInclude Include="..\External\SPIRV-Reflect\spirv_reflect.h" />
     <ClInclude Include="..\External\VulkanMemoryAllocator\include\vk_mem_alloc.h" />
     <ClInclude Include="BufferSystem.h" />
+    <ClInclude Include="ChatSystem.h" />
     <ClInclude Include="DLL.h" />
     <ClInclude Include="GameController.h" />
     <ClInclude Include="ImGuiSystem.h" />
@@ -200,6 +201,7 @@
     <ClCompile Include="..\External\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\External\SPIRV-Reflect\spirv_reflect.cpp" />
     <ClCompile Include="BufferSystem.cpp" />
+    <ClCompile Include="ChatSystem.cpp" />
     <ClCompile Include="GameController.cpp" />
     <ClCompile Include="ImGuiSystem.cpp" />
     <ClCompile Include="InputSystem.cpp" />

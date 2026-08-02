@@ -26,6 +26,7 @@ private:
 	void				  CreateDescriptorPool();
 	void				  CreateRendererFramebuffers();
 	static void			  ImGuiResult(VkResult err);
+
 public:
 	void				  StartUp();
 	void				  StartFrame();
@@ -58,8 +59,25 @@ public:
 	bool				  InputInt3(const char* label, int v[3], ImGuiInputTextFlags flags = 0);
 	bool				  InputInt4(const char* label, int v[4], ImGuiInputTextFlags flags = 0);
 	bool				  InputDouble(const char* label, double* v, double step = 0.0, double step_fast = 0.0, const char* format = "%.6f", ImGuiInputTextFlags flags = 0);
-
-
+	bool				  IsKeyDown(ImGuiKey key);
+	bool				  IsKeyPressed(ImGuiKey key, bool repeat = true);                  
+	bool				  IsKeyReleased(ImGuiKey key);
+	bool				  IsItemActive();
+	bool				  IsItemFocused();
+	bool				  Begin(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0);
+	bool				  BeginChild(const char* str_id, const ImVec2& size, bool border, ImGuiWindowFlags flags);
+	void				  TextColored(const ImVec4& col, const char* fmt, ...);
+	void				  TextWrapped(const char* fmt, ...);
+	float				  GetScrollY();
+	float				  GetScrollMaxY();
+	void				  SetScrollHereY(float center_y_ratio);
+	void				  EndChild();
+	void				  PushItemWidth(float item_width);
+	void				  PopItemWidth();
+	bool				  IsWindowAppearing();
+	void				  SetKeyboardFocusHere(int offset);
+	void				  End();
+	float				  GetFrameHeightWithSpacing();
 };
 extern DLL_EXPORT ImGuiSystem& imGuiSystem;
 inline ImGuiSystem& ImGuiSystem::Get()
