@@ -25,6 +25,7 @@ public:
 	vec2 LeftJoyStickMoved(int controllerId);
 	vec2 RightJoyStickMoved(int controllerId);
 	vec2 R2L2Pressed(int controllerId);
+	GLFWgamepadstate GetGamePadState() { return GamePadState[0]; }
 };
 extern DLL_EXPORT GameController& gameController;
 inline GameController& GameController::Get()

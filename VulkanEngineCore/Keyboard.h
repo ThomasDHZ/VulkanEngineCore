@@ -22,6 +22,9 @@ public:
     KeyState KeyPressed[MAXKEYBOARDKEY];
     static void KeyboardKeyPressed(GLFWwindow* window, int key, int scancode, int action, int mods);
     const KeyState* GetKeyBoardState() const { return KeyPressed; }
+     bool IsKeyDown(int key) const;
+     bool IsKeyPressed(int key) const;
+     bool IsKeyReleased(int key) const;
 };
 extern DLL_EXPORT Keyboard& keyboard;
 inline Keyboard& Keyboard::Get()

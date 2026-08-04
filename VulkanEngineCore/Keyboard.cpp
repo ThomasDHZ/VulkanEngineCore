@@ -14,4 +14,19 @@ void Keyboard::KeyboardKeyPressed(GLFWwindow* window, int key, int scancode, int
         case GLFW_RELEASE: keyboard.KeyPressed[key] = KS_RELEASED; break;
     }
 }
+
+bool Keyboard::IsKeyDown(int key) const
+{
+    return keyboard.KeyPressed[key] == KS_PRESSED;
+}
+
+bool Keyboard::IsKeyPressed(int key) const
+{
+    return keyboard.KeyPressed[key] == KS_PRESSED;
+}
+
+bool Keyboard::IsKeyReleased(int key) const
+{
+    return keyboard.KeyPressed[key] == KS_RELEASED;
+}
 #endif
