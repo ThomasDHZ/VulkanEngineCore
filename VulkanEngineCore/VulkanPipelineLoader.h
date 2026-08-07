@@ -2,6 +2,15 @@
 #include "Platform.h"
 #include "VulkanShader.h"
 
+enum class PipelineType : uint32
+{
+    MainPipeline,
+    DepthPipeline,
+    WireFramePipeline,
+    ReflectionPipeline,
+    CollisionPipeline
+};
+
 struct VulkanPipelineLoader
 {
     VkGuid                                      PipelineId = VkGuid();
@@ -30,3 +39,19 @@ struct VulkanPipelineLoader
     bool                                        UseCubeMapMultiview = false;
 };
 
+struct VulkanPipelinePackageLoader
+{
+    VkGuid                                           PipelinePackageId = VkGuid();
+    VkGuid                                           RenderPassId = VkGuid();
+    //uint32                                           SubPassId = UINT32_MAX;
+    //uint32                                           BindlessDescriptorSetIndex = UINT32_MAX;
+    ivec2                                            RenderPassResolution = ivec2();
+    VkRenderPass                                     RenderPass = VK_NULL_HANDLE;
+    VkDescriptorPool					             GlobalBindlessPool = VK_NULL_HANDLE;
+    VkDescriptorSet						             GlobalBindlessDescriptorSet = VK_NULL_HANDLE;
+    VkDescriptorSetLayout				             GlobalBindlessDescriptorSetLayout = VK_NULL_HANDLE;
+    Vector<VkDescriptorImageInfo>                    RenderPassInputTextures;
+    UnorderedMap<PipelineType, VulkanPipelineLoader> PipelineMap;
+    bool                                             UseGlobalBindlessSet = false;
+    bool                                             UseCubeMapMultiview = false;
+};

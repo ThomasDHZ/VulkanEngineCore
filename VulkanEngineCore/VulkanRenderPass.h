@@ -36,7 +36,7 @@ struct MeshDrawMessage
 struct VulkanSubPass
 {
     VkGuid                               RenderPassGuid;
-    VkGuid                               PipelineGuid;
+    VkGuid                               PipelinePackageGuid;
     MeshTypeEnum                         MeshType;
     std::optional<String>                ShaderPushConstant;
     Vector<VkGuid>                       InputTextureList;
@@ -55,7 +55,7 @@ struct PushConstantUpdateRule
 
 struct VulkanSubPassLoader
 {
-    VkGuid                               PipelineGuid;
+    VkGuid                               PipelinePackageGuid;
     MeshTypeEnum                         MeshType;
     std::optional<String>                ShaderPushConstant;
     Vector<PushConstantUpdateRule>       PushConstantUpdates;
@@ -70,7 +70,7 @@ struct RenderPassLoader
     ivec2                                RenderPassResolution = ivec2(0);
     Vector<RenderPassAttachmentLoader>   AttachmentList;
     Vector<VkSubpassDependency>          SubpassDependencyList;
-    Vector<VulkanPipelineLoader>         PipelineList;
+    Vector<VulkanPipelinePackageLoader>  PipelinePackageList;
     Vector<Vector<VulkanSubPassLoader>>  SubPassList;
     Vector<VulkanShader>                 ShaderList;
     Vector<VkClearValue>                 ClearValueList;
@@ -78,6 +78,12 @@ struct RenderPassLoader
     bool                                 UseGlobalBindlessSet = false;
     bool                                 UseCubeMapMultiView = false;
     bool                                 IsCubeMapRenderPass = false;
+};
+
+struct VulkanPipelinePackage
+{
+    VkGuid                              PipelinePackageId;
+    UnorderedMap<PipelineType, VkGuid>  PipelineMap;
 };
 
 struct DLL_EXPORT VulkanRenderPass
@@ -88,6 +94,7 @@ private:
     ivec2                                       m_renderPassResolution = ivec2(0);
     VkRenderPass                                m_renderPass = VK_NULL_HANDLE;
     Vector<VulkanPipeline>                      m_pipelineList;
+    Vector<VulkanPipelinePackage>               m_pipelinePackageList;
     Vector<VkFramebuffer>                       m_frameBufferList;
     Vector<VulkanTexture>                       m_attachmentList;
     Vector<VkAttachmentDescription>             m_attachmentDescriptionList;
@@ -96,15 +103,18 @@ private:
     VkSampleCountFlagBits                       m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
     VulkanTexture                               m_depthAttachment;
     Vector<VulkanTexture>                       m_frameBufferAttachments;
+    VkGuid                                      m_currentBoundPipeline;
     bool                                        m_useCubeMapMultiView = false;
     bool                                        m_isCubeMapRenderPass = false;
 
     void                                        BuildRenderPass(RenderPassLoader& renderPassLoader);
-    void                                        BuildPipeline(VulkanPipelineLoader& pipelineLoader, bool useGlobalBindlessSet);
+    void                                        BuildPipelinePackages(Vector<VulkanPipelinePackageLoader>& pipelinePackageLoaderList, bool useGlobalBindlessSet);
     VulkanSubPass                               BuildSubpasses(VulkanSubPassLoader& subPassLoader);
     void                                        BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
     void                                        BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
     void                                        BuildFrameBuffer(RenderPassLoader& renderPassLoader);
+
+    const VulkanPipelinePackage*                FindPipelinePackage(VkGuid& pipelinePackage);
     const VulkanPipeline*                       FindRenderPipeline(const VkGuid& pipelineId);
 
 public:
@@ -124,6 +134,7 @@ public:
     [[nodiscard]] ivec2                         RenderPassResolution()       const noexcept;
     [[nodiscard]] Vector<VulkanTexture>         AttachmentList()             const noexcept;
     [[nodiscard]] Vector<VulkanPipeline>        PipelineList()               const noexcept;
+    [[nodiscard]] Vector<VulkanPipelinePackage> PipelinePackageList()        const noexcept;
     [[nodiscard]] Vector<Vector<VulkanSubPass>> SubPassList()                const noexcept;
     [[nodiscard]] VkSampleCountFlagBits         SampleCount()                const noexcept;
     [[nodiscard]] bool                          IsCubeMapRenderPass()        const noexcept;

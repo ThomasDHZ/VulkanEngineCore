@@ -10,22 +10,24 @@ VulkanPipeline::~VulkanPipeline()
 {
 }
 
-void VulkanPipeline::BuildPipelines(VulkanPipelineLoader& pipelineLoader)
+VkGuid VulkanPipeline::BuildPipelines(VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
 {
     m_pipelineId = pipelineLoader.PipelineId;
-    ShaderToPipelineBindings(pipelineLoader.VulkanShaderList);
-    if (pipelineLoader.UseGlobalBindlessSet)
+    m_polygonMode = pipelineLoader.PipelineRasterizationStateCreateInfo.polygonMode;
+    ShaderToPipelineBindings(pipelinePackage, pipelineLoader.VulkanShaderList);
+    if (pipelinePackage.UseGlobalBindlessSet)
     {
-        CreateMemoryPoolDescriptorSets(pipelineLoader);
+        CreateMemoryPoolDescriptorSets(pipelinePackage, pipelineLoader);
     }
     else
     {
-        CreatePipelineDescriptorSetLayout(pipelineLoader);
-        AllocatePipelineDescriptorSets(pipelineLoader);
-        UpdatePipelineDescriptorSets(pipelineLoader);
+        CreatePipelineDescriptorSetLayout(pipelinePackage, pipelineLoader);
+        AllocatePipelineDescriptorSets(pipelinePackage, pipelineLoader);
+        UpdatePipelineDescriptorSets(pipelinePackage, pipelineLoader);
     }
-    CreatePipelineLayout(pipelineLoader);
-    CreatePipeline(pipelineLoader);
+    CreatePipelineLayout(pipelinePackage, pipelineLoader);
+    CreatePipeline(pipelinePackage, pipelineLoader);
+    return pipelineLoader.PipelineId;
 }
 
 void VulkanPipeline::Destroy()
@@ -59,7 +61,7 @@ void VulkanPipeline::Destroy()
     }
 }
 
-void VulkanPipeline::ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShaderList)
+void VulkanPipeline::ShaderToPipelineBindings(const VulkanPipelinePackageLoader& pipelinePackage, Vector<VulkanShader>& pipelineShaderList)
 {
     std::unordered_set<uint32> uniqueSets;
     for (auto& shader : pipelineShaderList)
@@ -70,7 +72,7 @@ void VulkanPipeline::ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShad
             if (it != m_pushConstantList.end()) it->ShaderStageFlags |= shader.PushConstant().ShaderStageFlags;
             else m_pushConstantList.push_back(shader.PushConstant());
         }
-        
+
         if (shader.ShaderStages() == VK_SHADER_STAGE_VERTEX_BIT)
         {
             m_vertexInputBindingList = shader.VertexInputBindingList();
@@ -95,13 +97,13 @@ void VulkanPipeline::ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShad
     }
 }
 
-void VulkanPipeline::CreateMemoryPoolDescriptorSets(VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::CreateMemoryPoolDescriptorSets(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
 {
     Vector<VkDescriptorSet>       descriptorSetList;
     Vector<VkDescriptorSetLayout> descriptorSetLayoutList;
 
-    m_descriptorSetList.emplace_back(pipelineLoader.GlobalBindlessDescriptorSet);
-    m_descriptorSetLayoutList.emplace_back(pipelineLoader.GlobalBindlessDescriptorSetLayout);
+    m_descriptorSetList.emplace_back(pipelinePackage.GlobalBindlessDescriptorSet);
+    m_descriptorSetLayoutList.emplace_back(pipelinePackage.GlobalBindlessDescriptorSetLayout);
 
     std::unordered_set<uint32> uniqueSets;
     for (const auto& descriptorSet : m_descriptorBindingList)
@@ -151,13 +153,13 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(VulkanPipelineLoader& pipeli
             {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
                 .pNext = nullptr,
-                .descriptorPool = pipelineLoader.GlobalBindlessPool,
+                .descriptorPool = pipelinePackage.GlobalBindlessPool,
                 .descriptorSetCount = 1,
                 .pSetLayouts = &descriptorSetLayout
             };
             VULKAN_THROW_IF_FAIL(vkAllocateDescriptorSets(vulkan.LogicalDevice(), &allocInfo, &descriptorSet));
 
-            Vector<VkDescriptorImageInfo> subpassInputInfo = pipelineLoader.RenderPassInputTextures;
+            Vector<VkDescriptorImageInfo> subpassInputInfo = pipelinePackage.RenderPassInputTextures;
             if (subpassInputInfo.size() > descriptorSetBindingList.size()) subpassInputInfo.resize(descriptorSetBindingList.size());
 
             Vector<VkWriteDescriptorSet> writeDescriptorSetList;
@@ -184,7 +186,7 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(VulkanPipelineLoader& pipeli
     }
 }
 
-void VulkanPipeline::CreatePipelineDescriptorSetLayout(VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::CreatePipelineDescriptorSetLayout(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
 {
     std::unordered_set<int> uniqueValues;
     std::for_each(m_descriptorBindingList.begin(), m_descriptorBindingList.end(), [&](const ShaderDescriptorBinding& binding) { uniqueValues.insert(binding.DescriptorSet); });
@@ -223,7 +225,7 @@ void VulkanPipeline::CreatePipelineDescriptorSetLayout(VulkanPipelineLoader& pip
     }
 }
 
-void VulkanPipeline::AllocatePipelineDescriptorSets(VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::AllocatePipelineDescriptorSets(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
 {
     for (int x = 0; x < m_descriptorSetLayoutList.size(); x++)
     {
@@ -249,11 +251,11 @@ void VulkanPipeline::AllocatePipelineDescriptorSets(VulkanPipelineLoader& pipeli
     }
 }
 
-void VulkanPipeline::UpdatePipelineDescriptorSets(VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::UpdatePipelineDescriptorSets(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
 {
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     Vector<VkPushConstantRange> pushConstantRangeList = Vector<VkPushConstantRange>();
-    for(auto& pushConstant : m_pushConstantList)
+    for (auto& pushConstant : m_pushConstantList)
     {
         pushConstantRangeList.emplace_back(VkPushConstantRange
             {
@@ -276,7 +278,7 @@ void VulkanPipeline::UpdatePipelineDescriptorSets(VulkanPipelineLoader& pipeline
     VULKAN_THROW_IF_FAIL(vkCreatePipelineLayout(vulkan.LogicalDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout));
 }
 
-void VulkanPipeline::CreatePipelineLayout(VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::CreatePipelineLayout(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
 {
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     Vector<VkPushConstantRange> pushConstantRangeList = Vector<VkPushConstantRange>();
@@ -303,7 +305,7 @@ void VulkanPipeline::CreatePipelineLayout(VulkanPipelineLoader& pipelineLoader)
     VULKAN_THROW_IF_FAIL(vkCreatePipelineLayout(vulkan.LogicalDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout));
 }
 
-void VulkanPipeline::CreatePipeline(VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::CreatePipeline(VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
 {
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = VkPipelineVertexInputStateCreateInfo
     {
@@ -318,17 +320,17 @@ void VulkanPipeline::CreatePipeline(VulkanPipelineLoader& pipelineLoader)
 
     for (auto& viewPort : pipelineLoader.ViewportList)
     {
-        viewPort.width = static_cast<float>(pipelineLoader.RenderPassResolution.x);
-        viewPort.height = static_cast<float>(pipelineLoader.RenderPassResolution.y);
+        viewPort.width = static_cast<float>(pipelinePackage.RenderPassResolution.x);
+        viewPort.height = static_cast<float>(pipelinePackage.RenderPassResolution.y);
     }
 
     for (auto& scissor : pipelineLoader.ScissorList)
     {
-        scissor.extent.width = static_cast<float>(pipelineLoader.RenderPassResolution.x);
-        scissor.extent.height = static_cast<float>(pipelineLoader.RenderPassResolution.y);
+        scissor.extent.width = static_cast<float>(pipelinePackage.RenderPassResolution.x);
+        scissor.extent.height = static_cast<float>(pipelinePackage.RenderPassResolution.y);
     }
 
-    VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo = 
+    VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo =
     {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .pNext = nullptr,
@@ -386,7 +388,7 @@ void VulkanPipeline::CreatePipeline(VulkanPipelineLoader& pipelineLoader)
         .pColorBlendState = &pipelineColorBlendStateCreateInfoModel,
         .pDynamicState = &pipelineDynamicStateCreateInfo,
         .layout = m_pipelineLayout,
-        .renderPass = pipelineLoader.RenderPass,
+        .renderPass = pipelinePackage.RenderPass,
         .subpass = pipelineLoader.SubPassId,
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0
