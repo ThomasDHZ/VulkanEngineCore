@@ -279,6 +279,11 @@ bool ImGuiSystem::Button(const char* label, const ImVec2& size)
     return ImGui::Button(label, size);
 }
 
+bool ImGuiSystem::Checkbox(const char* label, bool* v)
+{
+    return ImGui::Checkbox(label, v);
+}
+
 bool ImGuiSystem::InputText(const char* label, char* buf, size_t buf_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
 {
     return ImGui::InputText(label, buf, buf_size, flags, callback, user_data);

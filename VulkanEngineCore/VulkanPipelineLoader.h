@@ -4,7 +4,7 @@
 
 enum class PipelineType : uint32
 {
-    MainPipeline,
+    DefaultPipeline,
     DepthPipeline,
     WireFramePipeline,
     ReflectionPipeline,

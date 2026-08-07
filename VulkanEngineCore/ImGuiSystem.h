@@ -51,6 +51,7 @@ public:
 	void				  SameLine(float offset_from_start_x = 0.0f, float spacing = -1.0f);
 	void				  NewLine();
 	bool				  Button(const char* label, const ImVec2& size = ImVec2(0, 0));
+	bool				  Checkbox(const char* label, bool* v);
 	bool				  InputText(const char* label, char* buf, size_t buf_size, ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = NULL, void* user_data = NULL);
 	bool				  InputFloat(const char* label, float* v, float step = 0.0f, float step_fast = 0.0f, const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
 	bool				  InputFloat2(const char* label, float v[2], const char* format = "%.3f", ImGuiInputTextFlags flags = 0);
