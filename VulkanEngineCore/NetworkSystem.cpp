@@ -182,3 +182,4 @@ bool					  NetworkSystem::IsClient()		  const		{ return m_mode == NetworkMode::C
 bool					  NetworkSystem::IsConnected()	  const		{ return m_connection.IsConnected(); }
 NetworkMode				  NetworkSystem::GetNetworkMode() const     { return m_mode; }
 const Vector<ClientInfo>& NetworkSystem::GetClients()	  const		{ return m_clients; }
+

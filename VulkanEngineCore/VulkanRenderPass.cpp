@@ -21,26 +21,7 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
     m_isCubeMapRenderPass = renderPassLoader.IsCubeMapRenderPass;
 
     BuildRenderPass(renderPassLoader);
-    for (auto& pipeline : renderPassLoader.PipelineList)
-    {
-        pipeline.RenderPassId = m_renderPassId;
-        pipeline.RenderPass = m_renderPass;
-        pipeline.RenderPassResolution = m_renderPassResolution;
-        pipeline.UseGlobalBindlessSet = renderPassLoader.UseGlobalBindlessSet;
-
-        Vector<VkDescriptorImageInfo> descriptorSetInfoList;
-        for (auto& attachment : m_attachmentList)
-        {
-            descriptorSetInfoList.emplace_back(VkDescriptorImageInfo
-                {
-                    .sampler = attachment.m_textureSampler,
-                    .imageView = attachment.m_textureViewList.front(),
-                    .imageLayout = attachment.m_textureImageLayout
-                });
-        }
-        pipeline.RenderPassInputTextures = descriptorSetInfoList;
-        BuildPipeline(pipeline, renderPassLoader.UseGlobalBindlessSet);
-    }
+    BuildPipelinePackages(renderPassLoader.PipelinePackageList, renderPassLoader.UseGlobalBindlessSet);
     BuildFrameBuffer(renderPassLoader);
     for (auto& renderPass : renderPassLoader.SubPassList)
     {
@@ -137,18 +118,49 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
     VULKAN_THROW_IF_FAIL(vkCreateRenderPass(vulkan.LogicalDevice(), &renderPassInfo, nullptr, &m_renderPass));
 }
 
-void VulkanRenderPass::BuildPipeline(VulkanPipelineLoader& pipelineLoader, bool useGlobalBindlessSet)
+void VulkanRenderPass::BuildPipelinePackages(Vector<VulkanPipelinePackageLoader>& pipelinePackageLoaderList, bool useGlobalBindlessSet)
 {
-    pipelineLoader.PipelineMultisampleStateCreateInfo.rasterizationSamples = m_sampleCount;
-    pipelineLoader.PipelineMultisampleStateCreateInfo.sampleShadingEnable = (m_sampleCount > VK_SAMPLE_COUNT_1_BIT);
-    pipelineLoader.RenderPassId = m_renderPassId;
-    pipelineLoader.RenderPass = m_renderPass;
-    pipelineLoader.RenderPassResolution = m_renderPassResolution;
-    pipelineLoader.UseGlobalBindlessSet = useGlobalBindlessSet;
+    auto BuildPipeline = [&](VulkanPipelinePackageLoader& pipelinePackageLoader, VulkanPipelineLoader& pipelineLoader)
+        {
+            VulkanPipeline pipeline;
+            pipelineLoader.PipelineMultisampleStateCreateInfo.rasterizationSamples = m_sampleCount;
+            pipelineLoader.PipelineMultisampleStateCreateInfo.sampleShadingEnable = (m_sampleCount > VK_SAMPLE_COUNT_1_BIT);
+            pipeline.BuildPipelines(pipelinePackageLoader, pipelineLoader);
+            m_pipelineList.emplace_back(pipeline);
+            return pipeline.PipelineId();
+        };
 
-    VulkanPipeline pipeline;
-    pipeline.BuildPipelines(pipelineLoader);
-    m_pipelineList.emplace_back(pipeline);
+    for (auto& pipelinePackageLoader : pipelinePackageLoaderList)
+    {
+        Vector<VkDescriptorImageInfo> descriptorSetInfoList;
+        for (auto& attachment : m_attachmentList)
+        {
+            descriptorSetInfoList.emplace_back(VkDescriptorImageInfo
+                {
+                    .sampler = attachment.m_textureSampler,
+                    .imageView = attachment.m_textureViewList.front(),
+                    .imageLayout = attachment.m_textureImageLayout
+                });
+        }
+
+        pipelinePackageLoader.RenderPassId = m_renderPassId;
+        pipelinePackageLoader.RenderPass = m_renderPass;
+        pipelinePackageLoader.RenderPassResolution = m_renderPassResolution;
+        pipelinePackageLoader.UseGlobalBindlessSet = useGlobalBindlessSet;
+        pipelinePackageLoader.RenderPassInputTextures = descriptorSetInfoList;
+        pipelinePackageLoader.RenderPassId = m_renderPassId;
+        pipelinePackageLoader.RenderPass = m_renderPass;
+        pipelinePackageLoader.RenderPassResolution = m_renderPassResolution;
+        pipelinePackageLoader.UseGlobalBindlessSet = useGlobalBindlessSet;
+
+        VulkanPipelinePackage pipelinePackage;
+        pipelinePackage.DefaultPipeline = BuildPipeline(pipelinePackageLoader, pipelinePackageLoader.DefaultPipeline);
+        if (pipelinePackageLoader.DepthPipeline.has_value())       pipelinePackage.DefaultPipeline = BuildPipeline(pipelinePackageLoader, pipelinePackageLoader.DepthPipeline.value());
+        if (pipelinePackageLoader.ReflectionPipeline.has_value())  pipelinePackage.ReflectionPipeline = BuildPipeline(pipelinePackageLoader, pipelinePackageLoader.ReflectionPipeline.value());
+        if (pipelinePackageLoader.WireFramePipeline.has_value())   pipelinePackage.WireFramePipeline = BuildPipeline(pipelinePackageLoader, pipelinePackageLoader.WireFramePipeline.value());
+        if (pipelinePackageLoader.CollisionPipeline.has_value())   pipelinePackage.CollisionPipeline = BuildPipeline(pipelinePackageLoader, pipelinePackageLoader.WireFramePipeline.value());
+        m_pipelinePackageList.emplace_back(pipelinePackage);
+    }
 }
 
 VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoader)
@@ -156,7 +168,7 @@ VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoade
     return VulkanSubPass
     {
         .RenderPassGuid = m_renderPassId,
-        .PipelineGuid = subPassLoader.PipelineGuid,
+        .PipelinePackageGuid = subPassLoader.PipelinePackageGuid,
         .MeshType = subPassLoader.MeshType,
         .ShaderPushConstant = subPassLoader.ShaderPushConstant,
         .InputTextureList = subPassLoader.InputTextureList,
@@ -302,14 +314,16 @@ void VulkanRenderPass::BindViewPort(VkCommandBuffer& commandBuffer, uint drawMip
 
 void VulkanRenderPass::BindRenderPassPipeline(VkCommandBuffer& commandBuffer, const VulkanPipeline& pipeline, uint32 firstSet)
 {
-    if (pipeline.Pipeline() == nullptr)
+    if (!FindRenderPipeline(pipeline.PipelineId()))
     {
-        std::cout << "Pipeline not set" << std::endl;
+        std::cerr << "[VulkanRenderPass] Pipeline not registered with this render pass. " << "PipelineId: " << pipeline.PipelineId().ToString() << "\n";
         return;
     }
 
+    if (m_currentBoundPipeline == pipeline.PipelineId()) return;
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.Pipeline());
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.PipelineLayout(), firstSet, pipeline.DescriptorSetList().size(), pipeline.DescriptorSetList().data(), 0, nullptr);
+    m_currentBoundPipeline = pipeline.PipelineId();
 }
 
 void VulkanRenderPass::DrawMesh(VkCommandBuffer cmd, MeshDrawMessage& mesh)
@@ -347,6 +361,17 @@ const VulkanPipeline* VulkanRenderPass::FindRenderPipeline(const VkGuid& pipelin
     return nullptr;
 }
 
+const VulkanPipelinePackage* VulkanRenderPass::FindPipelinePackage(const VkGuid& pipelinePackageId)
+{
+    auto it = std::find_if(m_pipelinePackageList.begin(), m_pipelinePackageList.end(), [&](const VulkanPipelinePackage& pipelinePackage)
+        {
+            return pipelinePackage.PipelinePackageId == pipelinePackageId;
+        });
+
+    if (it != m_pipelinePackageList.end()) return &(*it);
+    return nullptr;
+}
+
 void VulkanRenderPass::Destroy()
 {
     for (auto& pipeline : m_pipelineList)
@@ -368,6 +393,7 @@ void VulkanRenderPass::Destroy()
 VkGuid                        VulkanRenderPass::RenderPassId()         const noexcept { return m_renderPassId; }
 ivec2                         VulkanRenderPass::RenderPassResolution() const noexcept { return m_renderPassResolution; }
 Vector<VulkanTexture>         VulkanRenderPass::AttachmentList()       const noexcept { return m_attachmentList; }
+Vector<VulkanPipelinePackage> VulkanRenderPass::PipelinePackageList()  const noexcept { return m_pipelinePackageList; }
 Vector<VulkanPipeline>        VulkanRenderPass::PipelineList()         const noexcept { return m_pipelineList; }
 Vector<Vector<VulkanSubPass>> VulkanRenderPass::SubPassList()          const noexcept { return m_subPassList; }
 VkSampleCountFlagBits         VulkanRenderPass::SampleCount()          const noexcept { return m_sampleCount; }

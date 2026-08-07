@@ -59,7 +59,6 @@ void MemorySystem::ReportLeaks()
         std::string fileBase = info.File.substr(info.File.find_last_of("\\/") + 1);
         maxFile = std::max(maxFile, fileBase.length());
 
-        maxLine = std::max(maxLine, static_cast<size_t>(info.Line));
         maxFunc = std::max(maxFunc, info.Function.length());
         maxNotes = std::max(maxNotes, info.Notes.length());
     }
