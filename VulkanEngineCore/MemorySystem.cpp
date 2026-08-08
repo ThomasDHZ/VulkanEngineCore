@@ -59,7 +59,6 @@ void MemorySystem::ReportLeaks()
         std::string fileBase = info.File.substr(info.File.find_last_of("\\/") + 1);
         maxFile = std::max(maxFile, fileBase.length());
 
-        maxLine = std::max(maxLine, static_cast<size_t>(info.Line));
         maxFunc = std::max(maxFunc, info.Function.length());
         maxNotes = std::max(maxNotes, info.Notes.length());
     }
@@ -67,7 +66,7 @@ void MemorySystem::ReportLeaks()
     std::cout << "\nMEMORY LEAKS DETECTED: " << m_ptrAddressMap.size() << "\n";
     std::cout << String(119, '-') << "\n";
 
-    for (const auto& [addr, info] : m_ptrAddressMap) 
+    for (const auto& [addr, info] : m_ptrAddressMap)
     {
         std::ostringstream addrStream;
         addrStream << "0x" << std::hex << std::uppercase << addr;
