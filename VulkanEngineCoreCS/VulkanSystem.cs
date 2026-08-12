@@ -20,7 +20,7 @@ namespace VulkanEngineCoreCS
             DLLSystem.CallDLLFunc(() => VulkanSystem_VulkanSetUp(renderAreaHandle, windowSize, renderResolutionSize));
         }
 
-        public static void hutdown()
+        public static void Shutdown()
         {
             DLLSystem.CallDLLFunc(() => VulkanSystem_Shutdown());
         }
