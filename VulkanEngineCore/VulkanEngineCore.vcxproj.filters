@@ -183,6 +183,12 @@
     <ClInclude Include="ChatSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
+    <ClInclude Include="BufferSystemDLL.h">
+      <Filter>Header Files\Interop</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkSystemDLL.h">
+      <Filter>Header Files\Interop</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanCommandBuffer.cpp">
@@ -289,6 +295,12 @@
     </ClCompile>
     <ClCompile Include="ChatSystem.cpp">
       <Filter>Source Files\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="BufferSystemDLL.cpp">
+      <Filter>Source Files\Interop</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkSystemDLL.cpp">
+      <Filter>Source Files\Interop</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

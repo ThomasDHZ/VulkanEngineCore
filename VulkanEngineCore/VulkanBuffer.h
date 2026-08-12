@@ -41,7 +41,7 @@ private:
 	VkDeviceSize        m_size = 0;
 	VkBufferUsageFlags  m_usage = 0;
 
-	void* m_mappedData = nullptr;
+	void*				m_mappedData = nullptr;
 	bool                m_usingStagingBuffer = false;
 	bool				m_isPersistentlyMapped = false;
 

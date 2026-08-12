@@ -156,6 +156,7 @@
     <ClInclude Include="..\External\SPIRV-Reflect\spirv_reflect.h" />
     <ClInclude Include="..\External\VulkanMemoryAllocator\include\vk_mem_alloc.h" />
     <ClInclude Include="BufferSystem.h" />
+    <ClInclude Include="BufferSystemDLL.h" />
     <ClInclude Include="ChatSystem.h" />
     <ClInclude Include="DLL.h" />
     <ClInclude Include="GameController.h" />
@@ -166,6 +167,7 @@
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="NetConnection.h" />
     <ClInclude Include="NetworkSystem.h" />
+    <ClInclude Include="NetworkSystemDLL.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="ShaderEnums.h" />
     <ClInclude Include="ShaderStructs.h" />
@@ -200,6 +202,7 @@
     <ClCompile Include="..\External\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\External\SPIRV-Reflect\spirv_reflect.cpp" />
     <ClCompile Include="BufferSystem.cpp" />
+    <ClCompile Include="BufferSystemDLL.cpp" />
     <ClCompile Include="ChatSystem.cpp" />
     <ClCompile Include="GameController.cpp" />
     <ClCompile Include="ImGuiSystem.cpp" />
@@ -208,6 +211,7 @@
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="NetConnection.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
+    <ClCompile Include="NetworkSystemDLL.cpp" />
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="VulkanMesh.cpp" />
     <ClCompile Include="VulkanPipeline.cpp" />
