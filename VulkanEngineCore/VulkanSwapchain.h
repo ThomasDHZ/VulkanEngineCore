@@ -1,7 +1,8 @@
 #pragma once
+
 #include <Platform.h>
 
-class DLL_EXPORT VulkanSwapchain
+class VulkanSwapchain
 {
 	private:
 		VkExtent2D							    m_SwapChainResolution{};

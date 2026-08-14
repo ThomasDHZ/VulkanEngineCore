@@ -1,9 +1,10 @@
 #pragma once
+
 #include <Platform.h>
 #include <VulkanSystem.h>
 #include "VulkanBuffer.h"
 
-class DLL_EXPORT BufferSystem
+class BufferSystem
 {
 public:
     static BufferSystem& Get();
@@ -109,7 +110,7 @@ public:
     [[nodiscard]] VmaAllocator			                    VmaAllocatorHandle()	  const;
     [[nodiscard]] UnorderedMap<uint32, VulkanBuffer>        VulkanBufferMap()         const;
 };
-extern DLL_EXPORT BufferSystem& bufferSystem;
+extern BufferSystem& bufferSystem;
 inline BufferSystem& BufferSystem::Get()
 {
     static BufferSystem instance;

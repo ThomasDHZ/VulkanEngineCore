@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Platform.h"
 
 struct MemoryLeakPtr {
@@ -106,10 +107,10 @@ class MemorySystem
             return ptr;
         }
 
-        DLL_EXPORT void DeletePtr(void* ptr);
-        DLL_EXPORT void ReportLeaks();
+        void DeletePtr(void* ptr);
+        void ReportLeaks();
 };
-extern DLL_EXPORT MemorySystem& memorySystem;
+extern MemorySystem& memorySystem;
 inline MemorySystem& MemorySystem::Get()
 {
 #ifdef _DEBUG

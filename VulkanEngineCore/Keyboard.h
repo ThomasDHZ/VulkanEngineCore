@@ -1,10 +1,11 @@
 #pragma once
+
 #include "InputEnum.h"
 #include "VulkanWindow.h"
 
 #ifndef __ANDROID__
 #include <GLFW/glfw3.h>
-class DLL_EXPORT Keyboard
+class Keyboard
 {
 public:
     static Keyboard& Get();
@@ -26,7 +27,7 @@ public:
      bool IsKeyPressed(int key) const;
      bool IsKeyReleased(int key) const;
 };
-extern DLL_EXPORT Keyboard& keyboard;
+extern Keyboard& keyboard;
 inline Keyboard& Keyboard::Get()
 {
     static Keyboard instance;

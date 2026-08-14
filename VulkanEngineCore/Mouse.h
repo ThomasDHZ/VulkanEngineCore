@@ -1,11 +1,12 @@
 #pragma once
+
 #include "InputEnum.h"
 #include "VulkanWindow.h"
 
 #ifndef __ANDROID__
 #include <GLFW/glfw3.h>
 
-class DLL_EXPORT Mouse
+class Mouse
 {
 public:
 	static Mouse& Get();
@@ -34,7 +35,7 @@ public:
 	static void MouseButtonPressedEvent(GLFWwindow* window, int button, int action, int mods);
 	static void MouseWheelEvent(GLFWwindow* window, double xpos, double ypos);
 };
-extern DLL_EXPORT Mouse& mouse;
+extern Mouse& mouse;
 inline Mouse& Mouse::Get()
 {
 	static Mouse instance;

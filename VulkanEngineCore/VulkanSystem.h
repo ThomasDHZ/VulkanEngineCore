@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Platform.h>
 #include "VulkanInstance.h"
 #include "VulkanDevice.h"
@@ -6,7 +7,7 @@
 #include "VulkanSwapchain.h"
 #include "VulkanCommandBuffer.h"
 
-class DLL_EXPORT VulkanSystem
+class VulkanSystem
 {
 public:
 	static VulkanSystem& Get();
@@ -63,7 +64,7 @@ public:
 	[[nodiscard]] Vector<VkCommandBuffer> CommandBufferList()		const;
 
 };
-extern DLL_EXPORT VulkanSystem& vulkan;
+extern VulkanSystem& vulkan;
 inline VulkanSystem& VulkanSystem::Get()
 {
 	static VulkanSystem instance;

@@ -40,7 +40,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -145,6 +145,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\External\VulkanMemoryAllocator\src\VmaUsage.h" />
     <ClInclude Include="..\External\imgui\backends\imgui_impl_vulkan.h" />
     <ClInclude Include="..\External\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="..\External\imgui\imconfig.h" />
@@ -156,9 +157,7 @@
     <ClInclude Include="..\External\SPIRV-Reflect\spirv_reflect.h" />
     <ClInclude Include="..\External\VulkanMemoryAllocator\include\vk_mem_alloc.h" />
     <ClInclude Include="BufferSystem.h" />
-    <ClInclude Include="BufferSystemDLL.h" />
     <ClInclude Include="ChatSystem.h" />
-    <ClInclude Include="DLL.h" />
     <ClInclude Include="GameController.h" />
     <ClInclude Include="ImGuiSystem.h" />
     <ClInclude Include="InputEnum.h" />
@@ -167,7 +166,6 @@
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="NetConnection.h" />
     <ClInclude Include="NetworkSystem.h" />
-    <ClInclude Include="NetworkSystemDLL.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="ShaderEnums.h" />
     <ClInclude Include="ShaderStructs.h" />
@@ -175,9 +173,7 @@
     <ClInclude Include="VulkanPipeline.h" />
     <ClInclude Include="VulkanPipelineLoader.h" />
     <ClInclude Include="VulkanRenderPass.h" />
-    <ClInclude Include="VulkanRenderPassDLL.h" />
     <ClInclude Include="VulkanShader.h" />
-    <ClInclude Include="VulkanSystemDLL.h" />
     <ClInclude Include="VulkanTexture.h" />
     <ClInclude Include="TypeDef.h" />
     <ClInclude Include="VkGuid.h" />
@@ -192,6 +188,7 @@
     <ClInclude Include="VulkanWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\External\VulkanMemoryAllocator\src\VmaUsage.cpp" />
     <ClCompile Include="..\External\imgui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="..\External\imgui\backends\imgui_impl_vulkan.cpp" />
     <ClCompile Include="..\External\imgui\backends\imgui_impl_win32.cpp" />
@@ -202,7 +199,6 @@
     <ClCompile Include="..\External\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\External\SPIRV-Reflect\spirv_reflect.cpp" />
     <ClCompile Include="BufferSystem.cpp" />
-    <ClCompile Include="BufferSystemDLL.cpp" />
     <ClCompile Include="ChatSystem.cpp" />
     <ClCompile Include="GameController.cpp" />
     <ClCompile Include="ImGuiSystem.cpp" />
@@ -211,15 +207,12 @@
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="NetConnection.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
-    <ClCompile Include="NetworkSystemDLL.cpp" />
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="VulkanMesh.cpp" />
     <ClCompile Include="VulkanPipeline.cpp" />
     <ClCompile Include="VulkanPipelineLoader.cpp" />
     <ClCompile Include="VulkanRenderPass.cpp" />
-    <ClCompile Include="VulkanRenderPassDLL.cpp" />
     <ClCompile Include="VulkanShader.cpp" />
-    <ClCompile Include="VulkanSystemDLL.cpp" />
     <ClCompile Include="VulkanTexture.cpp" />
     <ClCompile Include="VulkanBuffer.cpp" />
     <ClCompile Include="VulkanCommandBuffer.cpp" />

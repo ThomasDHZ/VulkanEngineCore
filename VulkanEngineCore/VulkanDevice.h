@@ -1,7 +1,8 @@
 #pragma once
+
 #include <Platform.h>
 
-class DLL_EXPORT VulkanDevice
+class VulkanDevice
 {
     friend class VulkanSwapchain;
     private:

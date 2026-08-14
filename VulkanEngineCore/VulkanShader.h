@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Platform.h"
 #include "VulkanSystem.h"
 #include "ShaderStructs.h"
@@ -11,7 +12,7 @@ struct ShaderLoader
     Vector<byte>          ShaderCode;
 };
 
-class DLL_EXPORT VulkanShader
+class VulkanShader
 {
 private:
 	VkShaderModule                                             m_shaderModule = VK_NULL_HANDLE;

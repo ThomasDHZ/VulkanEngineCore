@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Platform.h>
 #include <vk_mem_alloc.h>
 
@@ -30,7 +31,7 @@ namespace std
 	};
 }
 
-class DLL_EXPORT VulkanBuffer
+class VulkanBuffer
 {
 	friend class BufferSystem;
 

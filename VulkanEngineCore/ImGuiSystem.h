@@ -1,11 +1,12 @@
 #pragma once
+
 #include "Platform.h"
 #include "VulkanWindow.h"
 #include <imgui_impl_glfw.h>
 #include <imgui.h>
 #include <imgui_impl_vulkan.h>
 
-class DLL_EXPORT ImGuiSystem
+class ImGuiSystem
 {
 public:
 	static ImGuiSystem& Get();
@@ -82,7 +83,7 @@ public:
 	void				  End();
 	float				  GetFrameHeightWithSpacing();
 };
-extern DLL_EXPORT ImGuiSystem& imGuiSystem;
+extern ImGuiSystem& imGuiSystem;
 inline ImGuiSystem& ImGuiSystem::Get()
 {
 	static ImGuiSystem instance;

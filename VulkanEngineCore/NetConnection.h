@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Platform.h"
 
 constexpr uint32 PacketMagicCode = 0x474E4554;

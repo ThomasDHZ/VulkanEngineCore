@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Platform.h"
 #include "ImGuiSystem.h"
 
@@ -8,7 +9,7 @@ struct ChatLine
 	String text;
 };
 
-class DLL_EXPORT ChatSystem
+class ChatSystem
 {
 	friend class NetworkSystem;
 
@@ -31,7 +32,7 @@ private:
 public:
 	void DrawChatWindow();
 };
-extern DLL_EXPORT ChatSystem& chatSystem;
+extern ChatSystem& chatSystem;
 inline ChatSystem& ChatSystem::Get()
 {
 	static ChatSystem instance;

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <Platform.h>
 
 #ifdef __cplusplus
@@ -9,7 +10,7 @@ extern "C" {
 }
 #endif
 
-class DLL_EXPORT VulkanDebugger
+class VulkanDebugger
 {
 	friend class VulkanInstance;
 private:

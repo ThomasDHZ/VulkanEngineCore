@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Platform.h"
 #include "VulkanPipeline.h"
 #include "VulkanPipelineLoader.h"
@@ -86,7 +87,7 @@ struct VulkanPipelinePackage
     UnorderedMap<PipelineType, VkGuid>  PipelineMap;
 };
 
-struct DLL_EXPORT VulkanRenderPass
+struct VulkanRenderPass
 {
 private:
 

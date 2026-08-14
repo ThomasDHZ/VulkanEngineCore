@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Platform.h"
 #include "BufferSystem.h"
 
@@ -77,7 +78,7 @@ struct VulkanTextureLoader
     bool                  UseMipMaps;
 };
 
-class DLL_EXPORT VulkanTexture
+class VulkanTexture
 {
 private:
 

@@ -1,10 +1,11 @@
 #pragma once
+
 #include "Platform.h"
 #include "VulkanShader.h"
 #include "VulkanTexture.h"
 #include "VulkanPipelineLoader.h"
 
-class DLL_EXPORT VulkanPipeline
+class VulkanPipeline
 {
 private:
     VkGuid                                      m_pipelineId;

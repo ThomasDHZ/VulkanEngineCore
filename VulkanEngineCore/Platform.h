@@ -137,7 +137,6 @@ inline void GenerateGUID(uuid_t guid) { uuid_generate(guid); }
 // ============================================================
 // 4. Project headers
 // ============================================================
-#include "DLL.h"
 #include "VkGuid.h"
 #include "Typedef.h"
 #include "VulkanError.h"

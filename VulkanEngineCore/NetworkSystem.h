@@ -1,4 +1,5 @@
 #pragma once
+
 #include "platform.h"
 #include "NetConnection.h"
     enum class NetworkMode 
@@ -30,7 +31,7 @@
     };
 #pragma pack(pop)
 
-class DLL_EXPORT NetworkSystem
+class NetworkSystem
 {
 public:
     static NetworkSystem& Get();
@@ -77,7 +78,7 @@ public:
     [[nodiscard]] NetworkMode               GetNetworkMode() const;
     [[nodiscard]] const Vector<ClientInfo>& GetClients()     const;
 };
-extern DLL_EXPORT NetworkSystem& networkSystem;
+extern NetworkSystem& networkSystem;
 inline NetworkSystem& NetworkSystem::Get()
 {
     static NetworkSystem instance;

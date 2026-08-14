@@ -40,12 +40,6 @@
     <Filter Include="Source Files\External">
       <UniqueIdentifier>{9938fb84-53cf-49f0-80ee-e46034513d91}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Interop">
-      <UniqueIdentifier>{b5b9da76-83e6-4a45-a57a-b00f1b9366be}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Interop">
-      <UniqueIdentifier>{31212577-fb67-44b1-b86e-8371478e38e1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Network">
       <UniqueIdentifier>{26ab92d2-4c0d-4783-8b2a-59c1555ebdd5}</UniqueIdentifier>
     </Filter>
@@ -54,9 +48,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DLL.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="VkGuid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -138,12 +129,6 @@
     <ClInclude Include="VulkanMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanRenderPassDLL.h">
-      <Filter>Header Files\Interop</Filter>
-    </ClInclude>
-    <ClInclude Include="VulkanSystemDLL.h">
-      <Filter>Header Files\Interop</Filter>
-    </ClInclude>
     <ClInclude Include="MemorySystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
@@ -183,11 +168,8 @@
     <ClInclude Include="ChatSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="BufferSystemDLL.h">
-      <Filter>Header Files\Interop</Filter>
-    </ClInclude>
-    <ClInclude Include="NetworkSystemDLL.h">
-      <Filter>Header Files\Interop</Filter>
+    <ClInclude Include="..\..\External\VulkanMemoryAllocator\src\VmaUsage.h">
+      <Filter>Header Files\External</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -251,12 +233,6 @@
     <ClCompile Include="VulkanMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VulkanRenderPassDLL.cpp">
-      <Filter>Source Files\Interop</Filter>
-    </ClCompile>
-    <ClCompile Include="VulkanSystemDLL.cpp">
-      <Filter>Source Files\Interop</Filter>
-    </ClCompile>
     <ClCompile Include="MemorySystem.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
@@ -296,11 +272,8 @@
     <ClCompile Include="ChatSystem.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="BufferSystemDLL.cpp">
-      <Filter>Source Files\Interop</Filter>
-    </ClCompile>
-    <ClCompile Include="NetworkSystemDLL.cpp">
-      <Filter>Source Files\Interop</Filter>
+    <ClCompile Include="..\..\External\VulkanMemoryAllocator\src\VmaUsage.cpp">
+      <Filter>Header Files\External</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

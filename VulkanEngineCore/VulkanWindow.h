@@ -1,9 +1,10 @@
 #pragma once
+
 #include <Platform.h>
 #include "Typedef.h"
 #include <GLFW/glfw3.h>
 
-class DLL_EXPORT VulkanWindow
+class VulkanWindow
 {
 private:
     VulkanWindow() = default;
@@ -37,7 +38,7 @@ public:
 
     GLFWwindow* m_window = nullptr;
 };
-extern DLL_EXPORT VulkanWindow& vulkanWindow;
+extern VulkanWindow& vulkanWindow;
 inline VulkanWindow& VulkanWindow::Get()
 {
     static VulkanWindow instance;

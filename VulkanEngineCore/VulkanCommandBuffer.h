@@ -1,7 +1,8 @@
 #pragma once
+
 #include <Platform.h>
 
-class DLL_EXPORT VulkanCommandBuffer
+class VulkanCommandBuffer
 {
 	friend class VulkanDevice;
 private:

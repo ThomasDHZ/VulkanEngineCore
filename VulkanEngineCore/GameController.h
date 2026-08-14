@@ -1,9 +1,10 @@
 #pragma once
+
 #include "InputEnum.h"
 #include "VulkanWindow.h"
 
 #ifndef __ANDROID__
-class DLL_EXPORT GameController
+class GameController
 {
 public:
     static GameController& Get();
@@ -27,7 +28,7 @@ public:
 	vec2 R2L2Pressed(int controllerId);
 	GLFWgamepadstate GetGamePadState() { return GamePadState[0]; }
 };
-extern DLL_EXPORT GameController& gameController;
+extern GameController& gameController;
 inline GameController& GameController::Get()
 {
     static GameController instance;
