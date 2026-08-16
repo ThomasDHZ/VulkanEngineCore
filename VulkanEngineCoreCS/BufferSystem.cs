@@ -14,6 +14,6 @@ namespace VulkanEngineCoreCS
         {
             DLLSystem.CallDLLFunc(() => BufferSystem_SetUpVmaAllocation());
         }
-        [DllImport("VulkanEngineCore.dll", CallingConvention = CallingConvention.Cdecl)] private static extern void BufferSystem_SetUpVmaAllocation();
+        [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.Cdecl)] private static extern void BufferSystem_SetUpVmaAllocation();
     }
 }

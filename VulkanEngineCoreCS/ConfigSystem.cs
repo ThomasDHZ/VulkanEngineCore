@@ -15,6 +15,6 @@ namespace VulkanEngineCoreCS
             DLLSystem.CallDLLFunc(() => ConfigSystem_SetRootDirectory(engineRoot));
         }
 
-        [DllImport("VulkanEngineCoreInterlopDLL.dll", CallingConvention = CallingConvention.Cdecl)] public static extern void ConfigSystem_SetRootDirectory([MarshalAs(UnmanagedType.LPStr)] string engineRoot);
+        [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.Cdecl)] public static extern void ConfigSystem_SetRootDirectory([MarshalAs(UnmanagedType.LPStr)] string engineRoot);
     }
 }

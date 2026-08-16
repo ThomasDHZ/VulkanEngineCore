@@ -9,9 +9,10 @@ namespace VulkanEngineCoreCS
 {
     public sealed class NativeExport
     {
-        public string Name { get; init; } = String.Empty;
+        public string Name { get; init; } = "";
         public uint Ordinal { get; init; }
         public uint FunctionRva { get; init; }
+        public string RvaHex => $"0x{FunctionRva:X8}";
     }
 
 
@@ -41,7 +42,6 @@ namespace VulkanEngineCoreCS
             if (!dllPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)) dllPath += ".dll";
             if (File.Exists(dllPath))
             {
-                List<NativeExport> dllList = ListDllExport(dllPath);
                 if (NativeLibrary.TryLoad(dllPath, out IntPtr handle))
                 {
                     _loadedDlls.Add(dllPath);
