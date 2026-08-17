@@ -8,6 +8,7 @@
 	<OutputPath>$(SolutionDir)x64\$(Configuration)\</OutputPath>
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	<LangVersion>latestMajor</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
