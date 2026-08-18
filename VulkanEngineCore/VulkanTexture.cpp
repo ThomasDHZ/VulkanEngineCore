@@ -83,9 +83,10 @@ void VulkanTexture::CreateTextureImage(const Vector<byte>& textureData)
 	};
 	if (m_isCubeMap) imageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 	if (m_isRenderPassAttachment) imageInfo.usage |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
-	if (m_isRenderPassAttachment) imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	if (m_isRenderPassAttachment && !IsDepthFormat(m_textureByteFormat)) imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	if (m_mipMapLevels > 1 || m_isRenderPassAttachment) imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 	if (IsDepthFormat(m_textureByteFormat)) imageInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
 	VmaAllocationCreateInfo vmaAllocationCreateInfo =
 	{
 		.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,

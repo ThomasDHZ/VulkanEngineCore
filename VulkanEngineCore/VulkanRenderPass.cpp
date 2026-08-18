@@ -88,6 +88,7 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
 
     BuildAttachmentDescriptors(renderPassLoader);
     BuildAttachments(renderPassAttachmentTextureInfoMap);
+    TransitionRenderPassAttachmentsToFinalLayout();
 
     VkRenderPassMultiviewCreateInfo multiviewCreateInfo{};
     if (renderPassLoader.UseCubeMapMultiView)
@@ -103,7 +104,59 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
         };
     }
 
-    Vector<VkSubpassDependency> subpassDependencies = renderPassLoader.SubpassDependencyList;
+    Vector<VkSubpassDependency> subpassDependencies;
+    if (VkGuid("d5b5ad49-d004-4d5e-8260-4ba9e248f863") != renderPassLoader.RenderPassId)
+    {
+        subpassDependencies = renderPassLoader.SubpassDependencyList;
+    }
+    else
+    {
+        subpassDependencies = {
+            // EXTERNAL → 0
+            {
+                .srcSubpass = VK_SUBPASS_EXTERNAL,
+                .dstSubpass = 0,
+                .srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                .srcAccessMask = 0,
+                .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
+            },
+            // 0 → 1
+            {
+                .srcSubpass = 0,
+                .dstSubpass = 1,
+                .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
+            },
+            // 1 → EXTERNAL
+            {
+                .srcSubpass = 1,
+                .dstSubpass = VK_SUBPASS_EXTERNAL,
+                .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
+                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                .dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                .dstAccessMask = 0,
+                .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
+            }
+        };
+    }
+
     VkRenderPassCreateInfo renderPassInfo =
     {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -185,14 +238,20 @@ void VulkanRenderPass::BuildAttachmentDescriptors(RenderPassLoader& renderPassLo
         VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         switch (attachment.TextureUsageType)
         {
-            case kUsageType_SwapChainTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
-            case kUsageType_OffscreenColorTexture: initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_DepthBufferTexture:    initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
-            case kUsageType_GBufferTexture:        initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_IrradianceTexture:     initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_PrefilterTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_CubeMap:               initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_BRDFTexture:           initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                        finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_SwapChainTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
+        case kUsageType_GBufferTexture:
+        case kUsageType_OffscreenColorTexture:
+        case kUsageType_CubeMap:
+        case kUsageType_IrradianceTexture:
+        case kUsageType_BRDFTexture:
+            initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            break;
+        case kUsageType_PrefilterTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_DepthBufferTexture:
+            initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;  
+            finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+            break;
             default: throw std::runtime_error("Unknown TextureUsageType");
         }
         m_attachmentDescriptionList.emplace_back(VkAttachmentDescription
@@ -256,10 +315,46 @@ void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
             .pAttachments = attachmentViews.data(),
             .width = width,
             .height = height,
-            .layers = info.layers = m_isCubeMapRenderPass ? 6u : 1u
+            .layers = (renderPassLoader.UseCubeMapMultiView) ? 1u : (m_isCubeMapRenderPass ? 6u : 1u)
         };
         VULKAN_THROW_IF_FAIL(vkCreateFramebuffer(vulkan.LogicalDevice(), &info, nullptr, &m_frameBufferList[mip]));
     }
+}
+
+void VulkanRenderPass::TransitionRenderPassAttachmentsToFinalLayout()
+{
+    VkCommandBuffer commandBuffer = vulkan.CommandBuffer().BeginSingleUseCommand();
+    for (auto& texture : m_attachmentList)
+    {
+        VkImageAspectFlags aspect = texture.IsDepthTexture() ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+        if (texture.IsStencil()) aspect |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+        VkImageMemoryBarrier barrier = {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+            .srcAccessMask = 0,
+            .dstAccessMask = static_cast<VkAccessFlags>(
+                                       texture.IsDepthTexture()
+                                           ? VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+                                           : VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+                                   ),
+            .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+            .newLayout = texture.IsDepthTexture()
+                                   ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                                   : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = texture.TextureImage(),
+            .subresourceRange = {
+                .aspectMask = aspect,
+                .baseMipLevel = 0,
+                .levelCount = texture.MipMapLevels(),
+                .baseArrayLayer = 0,
+                .layerCount = texture.IsCubeMap() ? 6u : 1u
+            }
+        };
+        vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, texture.IsDepthTexture() ? VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT : VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+    }
+    vulkan.CommandBuffer().EndSingleUseCommand(commandBuffer);
 }
 
 const VulkanPipeline* VulkanRenderPass::FindRenderPipeline(const VkGuid& pipelineId)
@@ -342,10 +437,10 @@ void VulkanRenderPass::BindRenderPassPipeline(VkCommandBuffer& commandBuffer, co
         return;
     }
 
-    if (m_currentBoundPipeline == pipeline.PipelineId()) return;
+   // if (m_currentBoundPipeline == pipeline.PipelineId()) return;
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.Pipeline());
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.PipelineLayout(), firstSet, static_cast<uint32>(pipeline.DescriptorSetList().size()), pipeline.DescriptorSetList().data(), 0, nullptr);
-    m_currentBoundPipeline = pipeline.PipelineId();
+   // m_currentBoundPipeline = pipeline.PipelineId();
 }
 
 void VulkanRenderPass::DrawMesh(VkCommandBuffer cmd, MeshDrawMessage& mesh)
@@ -374,14 +469,18 @@ void VulkanRenderPass::EndRenderPass(VkCommandBuffer& commandBuffer)
 
 void VulkanRenderPass::Destroy()
 {
-    for (auto& pipeline : m_pipelineList)
-    {
-        pipeline.Destroy();
-    }
     for (auto& frameBuffer : m_frameBufferList)
     {
-        if (!frameBuffer) vkDestroyFramebuffer(vulkan.LogicalDevice(), frameBuffer, nullptr);
-        frameBuffer = VK_NULL_HANDLE;
+        if (frameBuffer != VK_NULL_HANDLE)
+        {
+            vkDestroyFramebuffer(vulkan.LogicalDevice(), frameBuffer, nullptr);
+            frameBuffer = VK_NULL_HANDLE;
+        }
+    }
+    if (m_renderPass != VK_NULL_HANDLE)
+    {
+        vkDestroyRenderPass(vulkan.LogicalDevice(), m_renderPass, nullptr);
+        m_renderPass = VK_NULL_HANDLE;
     }
     if (!m_renderPass)
     {

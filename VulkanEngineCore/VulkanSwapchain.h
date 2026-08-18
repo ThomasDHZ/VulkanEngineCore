@@ -13,6 +13,7 @@ class VulkanSwapchain
 		ivec2								    m_renderResolution;
 		VkSwapchainKHR						    m_Swapchain = VK_NULL_HANDLE;
 		Vector<VkFence>						    m_InFlightFences = Vector<VkFence>();
+		Vector<VkFence>							m_ImagesInFlight = Vector<VkFence>();
 		Vector<VkImage>						    m_SwapChainImages = Vector<VkImage>();
 		Vector<VkImageView>					    m_SwapChainImageViews = Vector<VkImageView>();
 		Vector<VkSemaphore>					    m_AcquireImageSemaphores = Vector<VkSemaphore>();

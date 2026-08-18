@@ -43,7 +43,7 @@ public:
 	VulkanInstance						  Instance();
 	VulkanDebugger						  Debug();
 	VulkanDevice						  Device();
-	VulkanSwapchain						  Swapchain();
+	VulkanSwapchain&					  Swapchain();
 	VulkanCommandBuffer					  CommandBuffer();
 
 	[[nodiscard]] bool					  CustomSurface()			const;

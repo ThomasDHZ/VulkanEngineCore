@@ -81,7 +81,7 @@ void VulkanSystem::Destroy()
 VulkanInstance			 VulkanSystem::Instance()                     { return m_instance; }
 VulkanDebugger			 VulkanSystem::Debug()                        { return m_debug; }
 VulkanDevice			 VulkanSystem::Device()                       { return m_device; }
-VulkanSwapchain			 VulkanSystem::Swapchain()                    { return m_swapChain; }
+VulkanSwapchain&		 VulkanSystem::Swapchain()                    { return m_swapChain; }
 VulkanCommandBuffer		 VulkanSystem::CommandBuffer()                { return m_commandBuffer; }
 
 bool					 VulkanSystem::CustomSurface()		    const { return m_usingCustomSurface; }

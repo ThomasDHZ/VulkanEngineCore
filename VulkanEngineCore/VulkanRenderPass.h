@@ -114,7 +114,7 @@ private:
     void                                        BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
     void                                        BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
     void                                        BuildFrameBuffer(RenderPassLoader& renderPassLoader);
-
+    void                                        TransitionRenderPassAttachmentsToFinalLayout();
     const VulkanPipelinePackage*                FindPipelinePackage(VkGuid& pipelinePackage);
     const VulkanPipeline*                       FindRenderPipeline(const VkGuid& pipelineId);
 
