@@ -75,7 +75,7 @@ void VulkanSwapchain::StartUpSwapChain()
     VULKAN_THROW_IF_FAIL(vkCreateSwapchainKHR(vulkan.Device().LogicalDevice(), &SwapChainCreateInfo, nullptr, &m_Swapchain));
 }
 
-void VulkanSwapchain::StartFrame()
+VkCommandBuffer VulkanSwapchain::StartFrame()
 {
     VULKAN_THROW_IF_FAIL(vkWaitForFences(vulkan.LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex], VK_TRUE, UINT64_MAX));
     VULKAN_THROW_IF_FAIL(vkResetFences(vulkan.LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex]));
@@ -84,7 +84,7 @@ void VulkanSwapchain::StartFrame()
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
         m_RebuildSwapChainFlag = true;
-        return;
+        return VkCommandBuffer();
     }
     VkCommandBuffer cmd = vulkan.CommandBuffer().GetCurrentCommandBuffer();
     vkResetCommandBuffer(cmd, 0);
@@ -93,6 +93,8 @@ void VulkanSwapchain::StartFrame()
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VULKAN_THROW_IF_FAIL(vkBeginCommandBuffer(cmd, &beginInfo));
+
+    return vulkan.CommandBufferList()[vulkan.Swapchain().CommandIndex()];
 }
 
 void VulkanSwapchain::EndFrame(VkCommandBuffer& commandBufferSubmit)

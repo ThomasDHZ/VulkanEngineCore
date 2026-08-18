@@ -60,9 +60,9 @@ uint32 VulkanSystem::GetMemoryType(VkPhysicalDevice physicalDevice, uint32 typeF
     return UINT32_MAX;
 }
 
-void VulkanSystem::StartFrame()
+VkCommandBuffer VulkanSystem::StartFrame()
 {
-    Swapchain().StartFrame();
+    return Swapchain().StartFrame();
 }
 
 void VulkanSystem::EndFrame(VkCommandBuffer& commandBuffer)

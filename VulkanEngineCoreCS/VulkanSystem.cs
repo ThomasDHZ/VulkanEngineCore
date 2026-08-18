@@ -20,9 +20,9 @@ namespace VulkanEngineCoreCS
             DLLSystem.CallDLLFunc(() => VulkanSystem_VulkanSetUp(renderAreaHandle, windowSize, renderResolutionSize));
         }
 
-        public static void StartFrame()
+        public static VkCommandBuffer StartFrame()
         {
-            DLLSystem.CallDLLFunc(() => VulkanSystem_StartFrame());
+            return DLLSystem.CallDLLFunc(() => VulkanSystem_StartFrame());
         }
 
         public static void EndFrame(VkCommandBuffer commandBuffer)
@@ -38,7 +38,7 @@ namespace VulkanEngineCoreCS
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void LogVulkanMessageDelegate(string message, int severity);
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.Cdecl)]   public  static extern void VulkanSystem_CreateLogMessageCallback(LogVulkanMessageDelegate callback);
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_VulkanSetUp(void* renderAreaHandle, ivec2 windowSize, ivec2 renderResolutionSize);
-        [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_StartFrame();
+        [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern VkCommandBuffer VulkanSystem_StartFrame();
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_EndFrame(ref VkCommandBuffer commandBuffer);
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_Shutdown();
     }

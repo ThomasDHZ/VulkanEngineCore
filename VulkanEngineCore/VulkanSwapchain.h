@@ -36,7 +36,7 @@ class VulkanSwapchain
 
 		 void									Initialize(ivec2 renderResolution);
 		 void									RebuildSwapChain(void* windowHandle);
-		 void									StartFrame();
+		 VkCommandBuffer						StartFrame();
 		 void									EndFrame(VkCommandBuffer& commandBufferSubmit);
 		 void									Destroy();
 

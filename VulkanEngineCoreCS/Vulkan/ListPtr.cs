@@ -45,9 +45,9 @@ namespace VulkanEngineCoreCS.Vulkan
 
         public IEnumerator<T> GetEnumerator()
         {
-            for (size_t i = 0; i < _count; i++)
+            for (size_t x = 0; x < _count; x++)
             {
-                yield return this[i];
+                yield return this[x];
             }
         }
 
@@ -56,9 +56,9 @@ namespace VulkanEngineCoreCS.Vulkan
         public List<T> ToList()
         {
             var list = new List<T>((int)_count);
-            for (size_t i = 0; i < _count; i++)
+            for (size_t x = 0; x < _count; x++)
             {
-                list.Add(_ptr[i]);
+                list.Add(_ptr[x]);
             }
             return list;
         }

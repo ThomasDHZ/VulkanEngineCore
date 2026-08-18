@@ -107,6 +107,15 @@ class MemorySystem
             return ptr;
         }
 
+        template<typename T>
+        void DeletePtr(T* ptr)
+        {
+            if (!ptr) return;
+
+            ptr->~T();
+            DeletePtr(static_cast<void*>(ptr));
+        }
+
         void DeletePtr(void* ptr);
         void ReportLeaks();
 };

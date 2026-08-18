@@ -12,8 +12,8 @@ namespace VulkanEngineCoreCS.Models
     {
         public Guid RenderPassGuid { get; set; }
         public VulkanDrawMessageDLL** SubPassDrawMessage { get; set; }
-        public nuint SubPassDrawMessage_RenderPassCount { get; set; }
-        public nuint* SubPassDrawMessage_SubPassCounts { get; set; }
+        public size_t SubPassDrawMessage_RenderPassCount { get; set; }
+        public size_t* SubPassDrawMessage_SubPassCounts { get; set; }
         public IntPtr PreRenderPassCmd { get; set; }
         public IntPtr PostRenderPassCmd { get; set; }
         public uint MipCount { get; set; }
