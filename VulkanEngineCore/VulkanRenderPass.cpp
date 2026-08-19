@@ -104,59 +104,7 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
         };
     }
 
-    Vector<VkSubpassDependency> subpassDependencies;
-    if (VkGuid("d5b5ad49-d004-4d5e-8260-4ba9e248f863") != renderPassLoader.RenderPassId)
-    {
-        subpassDependencies = renderPassLoader.SubpassDependencyList;
-    }
-    else
-    {
-        subpassDependencies = {
-            // EXTERNAL → 0
-            {
-                .srcSubpass = VK_SUBPASS_EXTERNAL,
-                .dstSubpass = 0,
-                .srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-                .srcAccessMask = 0,
-                .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-                                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-            },
-            // 0 → 1
-            {
-                .srcSubpass = 0,
-                .dstSubpass = 1,
-                .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-                .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-                .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-                                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-                                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-            },
-            // 1 → EXTERNAL
-            {
-                .srcSubpass = 1,
-                .dstSubpass = VK_SUBPASS_EXTERNAL,
-                .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
-                                   VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT |
-                                   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
-                .dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-                .srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
-                                   VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-                .dstAccessMask = 0,
-                .dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT
-            }
-        };
-    }
-
+    Vector<VkSubpassDependency> subpassDependencies = renderPassLoader.SubpassDependencyList;
     VkRenderPassCreateInfo renderPassInfo =
     {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -238,21 +186,15 @@ void VulkanRenderPass::BuildAttachmentDescriptors(RenderPassLoader& renderPassLo
         VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         switch (attachment.TextureUsageType)
         {
-        case kUsageType_SwapChainTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
-        case kUsageType_GBufferTexture:
-        case kUsageType_OffscreenColorTexture:
-        case kUsageType_CubeMap:
-        case kUsageType_IrradianceTexture:
-        case kUsageType_BRDFTexture:
-            initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            break;
-        case kUsageType_PrefilterTexture:      initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-        case kUsageType_DepthBufferTexture:
-            initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;  
-            finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-            break;
-            default: throw std::runtime_error("Unknown TextureUsageType");
+        case kUsageType_SwapChainTexture:       initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;   finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
+        case kUsageType_GBufferTexture:         initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_OffscreenColorTexture:  initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_CubeMap:                initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_IrradianceTexture:      initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_BRDFTexture:            initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_PrefilterTexture:       initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;   finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+        case kUsageType_DepthBufferTexture:     initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+        default: throw std::runtime_error("Unknown TextureUsageType");
         }
         m_attachmentDescriptionList.emplace_back(VkAttachmentDescription
             {
@@ -332,15 +274,9 @@ void VulkanRenderPass::TransitionRenderPassAttachmentsToFinalLayout()
         VkImageMemoryBarrier barrier = {
             .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
             .srcAccessMask = 0,
-            .dstAccessMask = static_cast<VkAccessFlags>(
-                                       texture.IsDepthTexture()
-                                           ? VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
-                                           : VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
-                                   ),
+            .dstAccessMask = static_cast<VkAccessFlags>(texture.IsDepthTexture() ? VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT : VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT),
             .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-            .newLayout = texture.IsDepthTexture()
-                                   ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-                                   : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            .newLayout = texture.IsDepthTexture()  ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .image = texture.TextureImage(),
