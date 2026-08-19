@@ -80,7 +80,7 @@ VkCommandBuffer VulkanSwapchain::StartFrame()
     VULKAN_THROW_IF_FAIL(vkWaitForFences(vulkan.LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex], VK_TRUE, UINT64_MAX));
     VULKAN_THROW_IF_FAIL(vkResetFences(vulkan.LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex]));
 
-    VkResult result = vkAcquireNextImageKHR( vulkan.LogicalDevice(), m_Swapchain, UINT64_MAX, m_AcquireImageSemaphores[m_CommandIndex], VK_NULL_HANDLE, &m_ImageIndex);
+    VkResult result = vkAcquireNextImageKHR(vulkan.LogicalDevice(), m_Swapchain, UINT64_MAX, m_AcquireImageSemaphores[m_CommandIndex], VK_NULL_HANDLE, &m_ImageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
         m_RebuildSwapChainFlag = true;
@@ -88,13 +88,13 @@ VkCommandBuffer VulkanSwapchain::StartFrame()
     }
     VULKAN_THROW_IF_FAIL(result);
 
-    uint32_t prevIndex = (m_CommandIndex + m_SwapChainImageCount - 1) % m_SwapChainImageCount;
-    if (m_InFlightFences[prevIndex] != VK_NULL_HANDLE)
+    if (m_ImagesInFlight[m_ImageIndex] != VK_NULL_HANDLE)
     {
-        VULKAN_THROW_IF_FAIL(vkWaitForFences(vulkan.LogicalDevice(), 1, &m_InFlightFences[prevIndex], VK_TRUE, UINT64_MAX));
+        VULKAN_THROW_IF_FAIL(vkWaitForFences(vulkan.LogicalDevice(), 1, &m_ImagesInFlight[m_ImageIndex], VK_TRUE, UINT64_MAX));
     }
     m_ImagesInFlight[m_ImageIndex] = m_InFlightFences[m_CommandIndex];
-    VkCommandBuffer cmd = vulkan.CommandBuffer().GetCurrentCommandBuffer(); 
+
+    VkCommandBuffer cmd = vulkan.CommandBuffer().GetCurrentCommandBuffer();
     vkResetCommandBuffer(cmd, 0);
 
     VkCommandBufferBeginInfo beginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
@@ -108,7 +108,7 @@ void VulkanSwapchain::EndFrame(VkCommandBuffer& cmd)
 {
     VULKAN_THROW_IF_FAIL(vkEndCommandBuffer(cmd));
     VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    VkSubmitInfo submitInfo = VkSubmitInfo
+    VkSubmitInfo submitInfo
     {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .waitSemaphoreCount = 1,
@@ -121,8 +121,8 @@ void VulkanSwapchain::EndFrame(VkCommandBuffer& cmd)
     };
     VULKAN_THROW_IF_FAIL(vkQueueSubmit(vulkan.Device().GraphicsQueue(), 1, &submitInfo, m_InFlightFences[m_CommandIndex]));
 
-    VkPresentInfoKHR presentInfo = VkPresentInfoKHR
-    { 
+    VkPresentInfoKHR presentInfo
+    {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .waitSemaphoreCount = 1,
         .pWaitSemaphores = &m_PresentImageSemaphores[m_ImageIndex],
@@ -134,7 +134,7 @@ void VulkanSwapchain::EndFrame(VkCommandBuffer& cmd)
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) m_RebuildSwapChainFlag = true;
     else VULKAN_THROW_IF_FAIL(result);
 
-    m_CommandIndex = (m_CommandIndex + 1) % m_SwapChainImageCount;
+    m_CommandIndex = (m_CommandIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void VulkanSwapchain::Destroy()
@@ -286,14 +286,15 @@ void VulkanSwapchain::StartUpSemaphores()
         .flags = VK_FENCE_CREATE_SIGNALED_BIT
     };
 
-    m_InFlightFences.resize(m_SwapChainImageCount, VK_NULL_HANDLE);
     m_ImagesInFlight.resize(m_SwapChainImageCount, VK_NULL_HANDLE);
-    m_AcquireImageSemaphores.resize(m_SwapChainImageCount, VK_NULL_HANDLE);
     m_PresentImageSemaphores.resize(m_SwapChainImageCount, VK_NULL_HANDLE);
-    for (int x = 0; x < m_SwapChainImageCount; x++)
+    for (int x = 0; x < MAX_FRAMES_IN_FLIGHT; x++)
     {
         VULKAN_THROW_IF_FAIL(vkCreateFence(vulkan.Device().LogicalDevice(), &fenceInfo, nullptr, &m_InFlightFences[x]));
         VULKAN_THROW_IF_FAIL(vkCreateSemaphore(vulkan.Device().LogicalDevice(), &semaphoreCreateInfo, nullptr, &m_AcquireImageSemaphores[x]));
+    }
+    for (int x = 0; x < m_SwapChainImageCount; x++)
+    {
         VULKAN_THROW_IF_FAIL(vkCreateSemaphore(vulkan.Device().LogicalDevice(), &semaphoreCreateInfo, nullptr, &m_PresentImageSemaphores[x]));
     }
 }
