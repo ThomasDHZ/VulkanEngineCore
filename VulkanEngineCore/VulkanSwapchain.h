@@ -4,7 +4,9 @@
 
 class VulkanSwapchain
 {
-	static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+	public:
+		static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+
 	private:
 		VkExtent2D									  m_SwapChainResolution{};
 		uint32										  m_ImageIndex = UINT32_MAX;
