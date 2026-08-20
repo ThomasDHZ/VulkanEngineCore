@@ -84,7 +84,7 @@ struct RenderPassLoader
 struct VulkanPipelinePackage
 {
     VkGuid                              PipelinePackageId;
-    UnorderedMap<PipelineType, VkGuid>  PipelineMap;
+    UnorderedMap<PipelineTypeEnum, VkGuid>  PipelineMap;
 };
 
 struct VulkanRenderPass
