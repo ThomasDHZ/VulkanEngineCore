@@ -17,8 +17,8 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
     //m_frameBufferList = Vector<VkFramebuffer>();
     m_clearValueList = renderPassLoader.ClearValueList;
     m_sampleCount = renderPassLoader.SampleCount >= vulkan.MaxSampleCount() ? vulkan.MaxSampleCount() : renderPassLoader.SampleCount;
-    m_useCubeMapMultiView = renderPassLoader.UseCubeMapMultiView;
-    m_isCubeMapRenderPass = renderPassLoader.IsCubeMapRenderPass;
+    m_useVkMultiview = renderPassLoader.UseVkMultiview;
+    m_renderAsCubemap = renderPassLoader.RenderAsCubemap;
 
     BuildRenderPass(renderPassLoader);
     BuildPipelinePackages(renderPassLoader.PipelinePackageList, renderPassLoader.UseGlobalBindlessSet);
@@ -91,7 +91,7 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
     TransitionRenderPassAttachmentsToFinalLayout();
 
     VkRenderPassMultiviewCreateInfo multiviewCreateInfo{};
-    if (renderPassLoader.UseCubeMapMultiView)
+    if (renderPassLoader.UseVkMultiview)
     {
         const uint32 viewMask = 0b0000111111;
         multiviewCreateInfo = VkRenderPassMultiviewCreateInfo
@@ -108,7 +108,7 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
     VkRenderPassCreateInfo renderPassInfo =
     {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-        .pNext = renderPassLoader.UseCubeMapMultiView ? &multiviewCreateInfo : nullptr,
+        .pNext = renderPassLoader.UseVkMultiview ? &multiviewCreateInfo : nullptr,
         .attachmentCount = static_cast<uint32>(attachmentDescriptionList.size()),
         .pAttachments = attachmentDescriptionList.data(),
         .subpassCount = static_cast<uint32>(subPassDescriptionList.size()),
@@ -263,7 +263,7 @@ void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
                 .pAttachments = views.data(),
                 .width = width,
                 .height = height,
-                .layers = renderPassLoader.UseCubeMapMultiView ? 1u : (m_isCubeMapRenderPass ? 6u : 1u)
+                .layers = renderPassLoader.UseVkMultiview ? 1u : (m_renderAsCubemap ? 6u : 1u)
             };
             VULKAN_THROW_IF_FAIL(vkCreateFramebuffer(vulkan.LogicalDevice(), &info, nullptr, &m_frameBufferList[f][mip]));
         }
@@ -442,4 +442,4 @@ Vector<VulkanPipeline>        VulkanRenderPass::PipelineList()         const noe
 Vector<VulkanPipelinePackage> VulkanRenderPass::PipelinePackageList()  const noexcept { return m_pipelinePackageList; }
 Vector<Vector<VulkanSubPass>> VulkanRenderPass::SubPassList()          const noexcept { return m_subPassList; }
 VkSampleCountFlagBits         VulkanRenderPass::SampleCount()          const noexcept { return m_sampleCount; }
-bool                          VulkanRenderPass::IsCubeMapRenderPass()  const noexcept { return m_isCubeMapRenderPass; }
+bool                          VulkanRenderPass::RenderAsCubemap()      const noexcept { return m_renderAsCubemap; }

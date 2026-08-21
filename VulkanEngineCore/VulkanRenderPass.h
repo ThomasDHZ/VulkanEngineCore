@@ -77,8 +77,8 @@ struct RenderPassLoader
     Vector<VkClearValue>                 ClearValueList;
     VkSampleCountFlagBits                SampleCount = VK_SAMPLE_COUNT_1_BIT;
     bool                                 UseGlobalBindlessSet = false;
-    bool                                 UseCubeMapMultiView = false;
-    bool                                 IsCubeMapRenderPass = false;
+    bool                                 UseVkMultiview = false;
+    bool                                 RenderAsCubemap = false;
 };
 
 struct VulkanPipelinePackage
@@ -105,8 +105,8 @@ private:
     Vector<VkClearValue>                                    m_clearValueList;
     VkSampleCountFlagBits                                   m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
     VkGuid                                                  m_currentBoundPipeline;
-    bool                                                    m_useCubeMapMultiView = false;
-    bool                                                    m_isCubeMapRenderPass = false;
+    bool                                                    m_useVkMultiview = false;
+    bool                                                    m_renderAsCubemap = false;
 
     void                                                    BuildRenderPass(RenderPassLoader& renderPassLoader);
     void                                                    BuildPipelinePackages(Vector<VulkanPipelinePackageLoader>& pipelinePackageLoaderList, bool useGlobalBindlessSet);
@@ -138,5 +138,5 @@ public:
     [[nodiscard]] Vector<VulkanPipelinePackage>             PipelinePackageList()        const noexcept;
     [[nodiscard]] Vector<Vector<VulkanSubPass>>             SubPassList()                const noexcept;
     [[nodiscard]] VkSampleCountFlagBits                     SampleCount()                const noexcept;
-    [[nodiscard]] bool                                      IsCubeMapRenderPass()        const noexcept;
+    [[nodiscard]] bool                                      RenderAsCubemap()            const noexcept;
 };
