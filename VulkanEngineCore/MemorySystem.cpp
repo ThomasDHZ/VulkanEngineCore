@@ -18,6 +18,11 @@ void MemorySystem::DeletePtr(void* ptr)
     m_ptrAddressMap.erase(it);
 }
 
+const char* MemorySystem::AddStringPtrBuffer(const String& stringInfo, const char* file, int line, const char* func, const char* notes)
+{
+    return memorySystem.AddPtrBuffer<char>(stringInfo.c_str(), stringInfo.size() + 1, file, line, func, notes);
+}
+
 void MemorySystem::ReportLeaks()
 {
     std::lock_guard<std::mutex> lock(m_mutex);

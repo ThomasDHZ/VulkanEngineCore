@@ -103,7 +103,7 @@ class MemorySystem
         {
             if (count == 0) return nullptr;
             T* ptr = AddPtrBuffer<T>(count, file, line, func, notes);
-            if (ptr && src)  memcpy(ptr, src, count * sizeof(T));
+            if (ptr && src) memcpy(ptr, src, count * sizeof(T));
             return ptr;
         }
 
@@ -116,6 +116,7 @@ class MemorySystem
             DeletePtr(static_cast<void*>(ptr));
         }
 
+        const char* AddStringPtrBuffer(const String& stringInfo, const char* file, int line, const char* func, const char* notes = "");
         void DeletePtr(void* ptr);
         void ReportLeaks();
 };
