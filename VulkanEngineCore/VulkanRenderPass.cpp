@@ -12,7 +12,7 @@ VulkanRenderPass::~VulkanRenderPass()
 void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
 {
     m_renderPassId = renderPassLoader.RenderPassId;
-    m_renderPassResolution = ivec2(0) == renderPassLoader.RenderPassResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
+    m_renderPassResolution = renderPassLoader.UseDefaultRenderResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
     m_renderPass = VK_NULL_HANDLE;
     //m_frameBufferList = Vector<VkFramebuffer>();
     m_clearValueList = renderPassLoader.ClearValueList;

@@ -76,6 +76,8 @@ struct RenderPassLoader
     Vector<VulkanShader>                 ShaderList;
     Vector<VkClearValue>                 ClearValueList;
     VkSampleCountFlagBits                SampleCount = VK_SAMPLE_COUNT_1_BIT;
+ 
+    bool                                 UseDefaultRenderResolution = true;
     bool                                 UseGlobalBindlessSet = false;
     bool                                 UseVkMultiview = false;
     bool                                 RenderAsCubemap = false;
