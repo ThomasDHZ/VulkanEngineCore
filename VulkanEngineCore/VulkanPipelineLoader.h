@@ -23,11 +23,11 @@ struct VulkanPipelineLoader
     VkDescriptorPool							GlobalBindlessPool = VK_NULL_HANDLE;
     VkDescriptorSet								GlobalBindlessDescriptorSet = VK_NULL_HANDLE;
     VkDescriptorSetLayout						GlobalBindlessDescriptorSetLayout = VK_NULL_HANDLE;
+    Vector<VkGuid>                              ShaderIdList;
     Vector<VulkanShader>                        VulkanShaderList;
     Vector<VkDescriptorImageInfo>               RenderPassInputTextures;
     Vector<VkViewport>                          ViewportList;
     Vector<VkRect2D>                            ScissorList;
-    Vector<ShaderLoader>                        ShaderLoaderList;
     Vector<VkPipelineColorBlendAttachmentState> PipelineColorBlendAttachmentStateList;
     VkPipelineInputAssemblyStateCreateInfo      PipelineInputAssemblyStateCreateInfo = VkPipelineInputAssemblyStateCreateInfo();
     VkPipelineRasterizationStateCreateInfo      PipelineRasterizationStateCreateInfo = VkPipelineRasterizationStateCreateInfo();
@@ -35,21 +35,5 @@ struct VulkanPipelineLoader
     VkPipelineDepthStencilStateCreateInfo       PipelineDepthStencilStateCreateInfo = VkPipelineDepthStencilStateCreateInfo();
     VkPipelineColorBlendStateCreateInfo         PipelineColorBlendStateCreateInfoModel = VkPipelineColorBlendStateCreateInfo();
     bool                                        UseGlobalBindlessSet = false;
-    bool                                        UseDynamicColorWrite = false;
     bool                                        UseCubeMapMultiview = false;
-};
-
-struct VulkanPipelinePackageLoader
-{
-    VkGuid                                           PipelinePackageId = VkGuid();
-    VkGuid                                           RenderPassId = VkGuid();
-    ivec2                                            RenderPassResolution = ivec2();
-    VkRenderPass                                     RenderPass = VK_NULL_HANDLE;
-    VkDescriptorPool					             GlobalBindlessPool = VK_NULL_HANDLE;
-    VkDescriptorSet						             GlobalBindlessDescriptorSet = VK_NULL_HANDLE;
-    VkDescriptorSetLayout				             GlobalBindlessDescriptorSetLayout = VK_NULL_HANDLE;
-    Vector<VkDescriptorImageInfo>                    RenderPassInputTextures;
-    UnorderedMap<PipelineTypeEnum, VulkanPipelineLoader> PipelineMap;
-    bool                                             UseGlobalBindlessSet = false;
-    bool                                             UseCubeMapMultiview = false;
 };

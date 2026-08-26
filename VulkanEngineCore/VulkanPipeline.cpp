@@ -6,62 +6,31 @@ VulkanPipeline::VulkanPipeline()
 {
 }
 
+VulkanPipeline::VulkanPipeline(VulkanPipelineLoader& pipelineLoader)
+{
+    m_pipelineId = pipelineLoader.PipelineId;
+    m_polygonMode = pipelineLoader.PipelineRasterizationStateCreateInfo.polygonMode;
+    ShaderToPipelineBindings(pipelineLoader.VulkanShaderList);
+    if (pipelineLoader.UseGlobalBindlessSet)
+    {
+        CreateMemoryPoolDescriptorSets(pipelineLoader);
+    }
+    else
+    {
+        CreatePipelineDescriptorSetLayout(pipelineLoader);
+        AllocatePipelineDescriptorSets(pipelineLoader);
+        UpdatePipelineDescriptorSets(pipelineLoader);
+    }
+    CreatePipelineLayout(pipelineLoader);
+    CreatePipeline(pipelineLoader);
+}
+
 VulkanPipeline::~VulkanPipeline()
 {
 }
 
-VkGuid VulkanPipeline::BuildPipelines(VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
-{
-    m_pipelineId = pipelineLoader.PipelineId;
-    m_polygonMode = pipelineLoader.PipelineRasterizationStateCreateInfo.polygonMode;
-    ShaderToPipelineBindings(pipelinePackage, pipelineLoader.VulkanShaderList);
-    if (pipelinePackage.UseGlobalBindlessSet)
-    {
-        CreateMemoryPoolDescriptorSets(pipelinePackage, pipelineLoader);
-    }
-    else
-    {
-        CreatePipelineDescriptorSetLayout(pipelinePackage, pipelineLoader);
-        AllocatePipelineDescriptorSets(pipelinePackage, pipelineLoader);
-        UpdatePipelineDescriptorSets(pipelinePackage, pipelineLoader);
-    }
-    CreatePipelineLayout(pipelinePackage, pipelineLoader);
-    CreatePipeline(pipelinePackage, pipelineLoader);
-    return pipelineLoader.PipelineId;
-}
 
-void VulkanPipeline::Destroy()
-{
-    for (auto& shader : m_shaderList)
-    {
-        shader.Destroy();
-    }
-    for (auto& descriptorSet : m_descriptorSetLayoutList)
-    {
-        if (!descriptorSet)
-        {
-            vkDestroyDescriptorSetLayout(vulkan.LogicalDevice(), descriptorSet, NULL);
-            descriptorSet = VK_NULL_HANDLE;
-        }
-    }
-    if (!m_pipelineCache)
-    {
-        vkDestroyPipelineCache(vulkan.LogicalDevice(), m_pipelineCache, NULL);
-        m_pipelineCache = VK_NULL_HANDLE;
-    }
-    if (!m_pipelineLayout)
-    {
-        vkDestroyPipelineLayout(vulkan.LogicalDevice(), m_pipelineLayout, NULL);
-        m_pipelineLayout = VK_NULL_HANDLE;
-    }
-    if (!m_pipeline)
-    {
-        vkDestroyPipeline(vulkan.LogicalDevice(), m_pipeline, NULL);
-        m_pipeline = VK_NULL_HANDLE;
-    }
-}
-
-void VulkanPipeline::ShaderToPipelineBindings(const VulkanPipelinePackageLoader& pipelinePackage, Vector<VulkanShader>& pipelineShaderList)
+void VulkanPipeline::ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShaderList)
 {
     std::unordered_set<uint32> uniqueSets;
     for (auto& shader : pipelineShaderList)
@@ -97,13 +66,13 @@ void VulkanPipeline::ShaderToPipelineBindings(const VulkanPipelinePackageLoader&
     }
 }
 
-void VulkanPipeline::CreateMemoryPoolDescriptorSets(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::CreateMemoryPoolDescriptorSets(VulkanPipelineLoader& pipelineLoader)
 {
     Vector<VkDescriptorSet>       descriptorSetList;
     Vector<VkDescriptorSetLayout> descriptorSetLayoutList;
 
-    m_descriptorSetList.emplace_back(pipelinePackage.GlobalBindlessDescriptorSet);
-    m_descriptorSetLayoutList.emplace_back(pipelinePackage.GlobalBindlessDescriptorSetLayout);
+    m_descriptorSetList.emplace_back(pipelineLoader.GlobalBindlessDescriptorSet);
+    m_descriptorSetLayoutList.emplace_back(pipelineLoader.GlobalBindlessDescriptorSetLayout);
 
     std::unordered_set<uint32> uniqueSets;
     for (const auto& descriptorSet : m_descriptorBindingList)
@@ -153,13 +122,13 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(const VulkanPipelinePackageL
             {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
                 .pNext = nullptr,
-                .descriptorPool = pipelinePackage.GlobalBindlessPool,
+                .descriptorPool = pipelineLoader.GlobalBindlessPool,
                 .descriptorSetCount = 1,
                 .pSetLayouts = &descriptorSetLayout
             };
             VULKAN_THROW_IF_FAIL(vkAllocateDescriptorSets(vulkan.LogicalDevice(), &allocInfo, &descriptorSet));
 
-            Vector<VkDescriptorImageInfo> subpassInputInfo = pipelinePackage.RenderPassInputTextures;
+            Vector<VkDescriptorImageInfo> subpassInputInfo = pipelineLoader.RenderPassInputTextures;
             if (subpassInputInfo.size() > descriptorSetBindingList.size()) subpassInputInfo.resize(descriptorSetBindingList.size());
 
             Vector<VkWriteDescriptorSet> writeDescriptorSetList;
@@ -186,7 +155,7 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(const VulkanPipelinePackageL
     }
 }
 
-void VulkanPipeline::CreatePipelineDescriptorSetLayout(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::CreatePipelineDescriptorSetLayout(VulkanPipelineLoader& pipelineLoader)
 {
     std::unordered_set<int> uniqueValues;
     std::for_each(m_descriptorBindingList.begin(), m_descriptorBindingList.end(), [&](const ShaderDescriptorBinding& binding) { uniqueValues.insert(binding.DescriptorSet); });
@@ -225,7 +194,7 @@ void VulkanPipeline::CreatePipelineDescriptorSetLayout(const VulkanPipelinePacka
     }
 }
 
-void VulkanPipeline::AllocatePipelineDescriptorSets(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::AllocatePipelineDescriptorSets(VulkanPipelineLoader& pipelineLoader)
 {
     for (int x = 0; x < m_descriptorSetLayoutList.size(); x++)
     {
@@ -251,7 +220,7 @@ void VulkanPipeline::AllocatePipelineDescriptorSets(const VulkanPipelinePackageL
     }
 }
 
-void VulkanPipeline::UpdatePipelineDescriptorSets(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::UpdatePipelineDescriptorSets(VulkanPipelineLoader& pipelineLoader)
 {
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     Vector<VkPushConstantRange> pushConstantRangeList = Vector<VkPushConstantRange>();
@@ -278,7 +247,7 @@ void VulkanPipeline::UpdatePipelineDescriptorSets(const VulkanPipelinePackageLoa
     VULKAN_THROW_IF_FAIL(vkCreatePipelineLayout(vulkan.LogicalDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout));
 }
 
-void VulkanPipeline::CreatePipelineLayout(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::CreatePipelineLayout(VulkanPipelineLoader& pipelineLoader)
 {
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     Vector<VkPushConstantRange> pushConstantRangeList = Vector<VkPushConstantRange>();
@@ -305,7 +274,7 @@ void VulkanPipeline::CreatePipelineLayout(const VulkanPipelinePackageLoader& pip
     VULKAN_THROW_IF_FAIL(vkCreatePipelineLayout(vulkan.LogicalDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout));
 }
 
-void VulkanPipeline::CreatePipeline(VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader)
+void VulkanPipeline::CreatePipeline(VulkanPipelineLoader& pipelineLoader)
 {
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = VkPipelineVertexInputStateCreateInfo
     {
@@ -320,14 +289,14 @@ void VulkanPipeline::CreatePipeline(VulkanPipelinePackageLoader& pipelinePackage
 
     for (auto& viewPort : pipelineLoader.ViewportList)
     {
-        viewPort.width = static_cast<float>(pipelinePackage.RenderPassResolution.x);
-        viewPort.height = static_cast<float>(pipelinePackage.RenderPassResolution.y);
+        viewPort.width = static_cast<float>(pipelineLoader.RenderPassResolution.x);
+        viewPort.height = static_cast<float>(pipelineLoader.RenderPassResolution.y);
     }
 
     for (auto& scissor : pipelineLoader.ScissorList)
     {
-        scissor.extent.width = static_cast<float>(pipelinePackage.RenderPassResolution.x);
-        scissor.extent.height = static_cast<float>(pipelinePackage.RenderPassResolution.y);
+        scissor.extent.width = static_cast<float>(pipelineLoader.RenderPassResolution.x);
+        scissor.extent.height = static_cast<float>(pipelineLoader.RenderPassResolution.y);
     }
 
     VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo =
@@ -388,12 +357,43 @@ void VulkanPipeline::CreatePipeline(VulkanPipelinePackageLoader& pipelinePackage
         .pColorBlendState = &pipelineColorBlendStateCreateInfoModel,
         .pDynamicState = &pipelineDynamicStateCreateInfo,
         .layout = m_pipelineLayout,
-        .renderPass = pipelinePackage.RenderPass,
+        .renderPass = pipelineLoader.RenderPass,
         .subpass = pipelineLoader.SubPassId,
         .basePipelineHandle = VK_NULL_HANDLE,
         .basePipelineIndex = 0
     };
     VULKAN_THROW_IF_FAIL(vkCreateGraphicsPipelines(vulkan.LogicalDevice(), m_pipelineCache, 1, &graphicsPipelineCreateInfo, nullptr, &m_pipeline));
+}
+
+void VulkanPipeline::Destroy()
+{
+    for (auto& shader : m_shaderList)
+    {
+        shader.Destroy();
+    }
+    for (auto& descriptorSet : m_descriptorSetLayoutList)
+    {
+        if (!descriptorSet)
+        {
+            vkDestroyDescriptorSetLayout(vulkan.LogicalDevice(), descriptorSet, NULL);
+            descriptorSet = VK_NULL_HANDLE;
+        }
+    }
+    if (!m_pipelineCache)
+    {
+        vkDestroyPipelineCache(vulkan.LogicalDevice(), m_pipelineCache, NULL);
+        m_pipelineCache = VK_NULL_HANDLE;
+    }
+    if (!m_pipelineLayout)
+    {
+        vkDestroyPipelineLayout(vulkan.LogicalDevice(), m_pipelineLayout, NULL);
+        m_pipelineLayout = VK_NULL_HANDLE;
+    }
+    if (!m_pipeline)
+    {
+        vkDestroyPipeline(vulkan.LogicalDevice(), m_pipeline, NULL);
+        m_pipeline = VK_NULL_HANDLE;
+    }
 }
 
 VkGuid                        VulkanPipeline::PipelineId()              const { return m_pipelineId; }

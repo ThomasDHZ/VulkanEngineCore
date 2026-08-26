@@ -22,20 +22,21 @@ private:
     Vector<VkVertexInputBindingDescription>     m_vertexInputBindingList;
     Vector<ShaderDescriptorBinding>             m_descriptorBindingList;
     VkPolygonMode                               m_polygonMode = VK_POLYGON_MODE_FILL;
+    PipelineTypeEnum                            m_pipelineType;
 
-    void                                        ShaderToPipelineBindings(const VulkanPipelinePackageLoader& pipelinePackage, Vector<VulkanShader>& pipelineShaderList);
-    void                                        CreateMemoryPoolDescriptorSets(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader);
-    void                                        CreatePipelineDescriptorSetLayout(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader);
-    void                                        AllocatePipelineDescriptorSets(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader);
-    void                                        UpdatePipelineDescriptorSets(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader);
-    void                                        CreatePipelineLayout(const VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader);
-    void                                        CreatePipeline(VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader);
+    void                                        ShaderToPipelineBindings(Vector<VulkanShader>& pipelineShaderList);
+    void                                        CreateMemoryPoolDescriptorSets(VulkanPipelineLoader& pipelineLoader);
+    void                                        CreatePipelineDescriptorSetLayout(VulkanPipelineLoader& pipelineLoader);
+    void                                        AllocatePipelineDescriptorSets(VulkanPipelineLoader& pipelineLoader);
+    void                                        UpdatePipelineDescriptorSets(VulkanPipelineLoader& pipelineLoader);
+    void                                        CreatePipelineLayout(VulkanPipelineLoader& pipelineLoader);
+    void                                        CreatePipeline(VulkanPipelineLoader& pipelineLoader);
 
 public:
     VulkanPipeline();
+    VulkanPipeline(VulkanPipelineLoader& pipelineLoader);
     ~VulkanPipeline();
 
-    VkGuid                                      BuildPipelines(VulkanPipelinePackageLoader& pipelinePackage, VulkanPipelineLoader& pipelineLoader);
     void                                        Destroy();
 
     [[nodiscard]] VkGuid                        PipelineId()               const;

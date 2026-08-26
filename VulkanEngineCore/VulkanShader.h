@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Platform.h"
 #include "VulkanSystem.h"
 #include "ShaderStructs.h"
@@ -15,6 +14,7 @@ struct ShaderLoader
 class VulkanShader
 {
 private:
+    VkGuid                                                     m_shaderId;
 	VkShaderModule                                             m_shaderModule = VK_NULL_HANDLE;
     VkShaderStageFlagBits                                      m_shaderStages;
     ShaderPushConstant                                         m_pushConstant;
@@ -37,7 +37,7 @@ private:
 
 public:
 	VulkanShader();
-	VulkanShader(const Vector<byte>& shadeCode);
+	VulkanShader(VkGuid& shaderId, const Vector<byte>& shadeCode);
 	~VulkanShader();
 
 	VkPipelineShaderStageCreateInfo                            GetShader();
@@ -50,6 +50,7 @@ public:
 
     Vector<SpvReflectSpecializationConstant>                   SearchShaderSpecialConstants(const String& searchString);
 
+    [[nodiscard]] VkGuid                                       ShaderId()                   const;
     [[nodiscard]] VkShaderModule                               ShaderModule()               const;
     [[nodiscard]] VkShaderStageFlagBits                        ShaderStages()               const;
     [[nodiscard]] ShaderPushConstant                           PushConstant()               const;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Platform.h"
+#include "VulkanShader.h"
 #include "VulkanPipeline.h"
 #include "VulkanPipelineLoader.h"
 #include "VulkanTexture.h"
@@ -37,7 +38,7 @@ struct MeshDrawMessage
 struct VulkanSubPass
 {
     VkGuid                               RenderPassGuid;
-    VkGuid                               PipelinePackageGuid;
+    VkGuid                               PipelinePackageId;
     MeshTypeEnum                         MeshType;
     std::optional<String>                ShaderPushConstant;
     Vector<VkGuid>                       InputTextureList;
@@ -56,7 +57,7 @@ struct PushConstantUpdateRule
 
 struct VulkanSubPassLoader
 {
-    VkGuid                               PipelinePackageGuid;
+    VkGuid                               PipelinePackageId;
     MeshTypeEnum                         MeshType;
     std::optional<String>                ShaderPushConstant;
     Vector<PushConstantUpdateRule>       PushConstantUpdates;
@@ -65,28 +66,29 @@ struct VulkanSubPassLoader
     bool                                 OffScreenRenderPass = false;
 };
 
+struct VulkanPipelinePackage
+{
+    VkGuid                                  PipelinePackageId;
+    UnorderedMap<PipelineTypeEnum, VkGuid>  PipelineMap;
+};
+
 struct RenderPassLoader
 {
     VkGuid                               RenderPassId = VkGuid();
     ivec2                                RenderPassResolution = ivec2(0);
     Vector<RenderPassAttachmentLoader>   AttachmentList;
     Vector<VkSubpassDependency>          SubpassDependencyList;
-    Vector<VulkanPipelinePackageLoader>  PipelinePackageList;
+    Vector<String>                       PipelineList;
+    Vector<VulkanPipelinePackage>        PipelinePackageList;
     Vector<Vector<VulkanSubPassLoader>>  SubPassList;
-    Vector<VulkanShader>                 ShaderList;
+    Vector<ShaderLoader>                 ShaderList;
     Vector<VkClearValue>                 ClearValueList;
     VkSampleCountFlagBits                SampleCount = VK_SAMPLE_COUNT_1_BIT;
- 
+
     bool                                 UseDefaultRenderResolution = true;
     bool                                 UseGlobalBindlessSet = false;
     bool                                 UseVkMultiview = false;
     bool                                 RenderAsCubemap = false;
-};
-
-struct VulkanPipelinePackage
-{
-    VkGuid                              PipelinePackageId;
-    UnorderedMap<PipelineTypeEnum, VkGuid>  PipelineMap;
 };
 
 struct VulkanRenderPass
@@ -99,8 +101,7 @@ private:
     VkGuid                                                  m_renderPassId = VkGuid();
     ivec2                                                   m_renderPassResolution = ivec2(0);
     VkRenderPass                                            m_renderPass = VK_NULL_HANDLE;
-    Vector<VulkanPipeline>                                  m_pipelineList;
-    Vector<VulkanPipelinePackage>                           m_pipelinePackageList;
+    Vector<VkGuid>                                          m_pipelineList;
     std::array<Vector<VkFramebuffer>, MAX_FRAMES_IN_FLIGHT> m_frameBufferList;
     std::array<Vector<VulkanTexture>, MAX_FRAMES_IN_FLIGHT> m_attachmentList;
     Vector<Vector<VulkanSubPass>>                           m_subPassList;
@@ -111,20 +112,19 @@ private:
     bool                                                    m_renderAsCubemap = false;
 
     void                                                    BuildRenderPass(RenderPassLoader& renderPassLoader);
-    void                                                    BuildPipelinePackages(Vector<VulkanPipelinePackageLoader>& pipelinePackageLoaderList, bool useGlobalBindlessSet);
     VulkanSubPass                                           BuildSubpasses(VulkanSubPassLoader& subPassLoader);
     Vector<VkAttachmentDescription>                         BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
     void                                                    BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
     void                                                    BuildFrameBuffer(RenderPassLoader& renderPassLoader);
     void                                                    TransitionRenderPassAttachmentsToFinalLayout();
-    const VulkanPipelinePackage*                            FindPipelinePackage(VkGuid& pipelinePackage);
-    const VulkanPipeline*                                   FindRenderPipeline(const VkGuid& pipelineId);
+    bool                                                    RenderPipelineExists(const VkGuid& pipelineId);
 
 public:
     VulkanRenderPass();
     ~VulkanRenderPass();
 
     void                                                    LoadRenderPass(RenderPassLoader& renderPassLoader);
+    void                                                    AddRenderPipeline(const VkGuid& pipelineId);
     void                                                    BeginRenderPass(VkCommandBuffer& commandBuffer, uint mipLevel = 0);
     void                                                    NextSubpass(VkCommandBuffer& commandBuffer);
     void                                                    BindViewPort(VkCommandBuffer& commandBuffer, uint drawMipLevel = 0);
@@ -134,10 +134,10 @@ public:
     void                                                    Destroy();
 
     [[nodiscard]] VkGuid                                    RenderPassId()               const noexcept;
+    [[nodiscard]] VkRenderPass                              RenderPassHandle()           const noexcept;
     [[nodiscard]] ivec2                                     RenderPassResolution()       const noexcept;
     [[nodiscard]] Vector<VulkanTexture>                     AttachmentList()             const noexcept;
-    [[nodiscard]] Vector<VulkanPipeline>                    PipelineList()               const noexcept;
-    [[nodiscard]] Vector<VulkanPipelinePackage>             PipelinePackageList()        const noexcept;
+    [[nodiscard]] Vector<VkGuid>                            PipelineList()               const noexcept;
     [[nodiscard]] Vector<Vector<VulkanSubPass>>             SubPassList()                const noexcept;
     [[nodiscard]] VkSampleCountFlagBits                     SampleCount()                const noexcept;
     [[nodiscard]] bool                                      RenderAsCubemap()            const noexcept;

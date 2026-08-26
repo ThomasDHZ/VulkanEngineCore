@@ -4,8 +4,9 @@ VulkanShader::VulkanShader()
 {
 }
 
-VulkanShader::VulkanShader(const Vector<byte>& shaderCode)
+VulkanShader::VulkanShader(VkGuid& shaderId, const Vector<byte>& shaderCode)
 {
+    m_shaderId = shaderId;
     SpvReflectShaderModule spvReflectModule;
     SPV_VULKAN_RESULT(spvReflectCreateShaderModule(shaderCode.size(), shaderCode.data(), &spvReflectModule));
     m_shaderStages = static_cast<VkShaderStageFlagBits>(spvReflectModule.shader_stage);
@@ -424,6 +425,7 @@ Vector<SpvReflectSpecializationConstant> VulkanShader::SearchShaderSpecialConsta
     return results;
 }
 
+VkGuid         VulkanShader::ShaderId()                                         const { return m_shaderId; }
 VkShaderModule VulkanShader::ShaderModule()                                         const { return m_shaderModule; }
 VkShaderStageFlagBits VulkanShader::ShaderStages()                                  const { return m_shaderStages; }
 ShaderPushConstant VulkanShader::PushConstant()                                     const { return m_pushConstant; }
