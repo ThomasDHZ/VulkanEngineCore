@@ -22,6 +22,11 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
     m_renderAsCubemap = renderPassLoader.RenderAsCubemap;
     m_useDefaultRenderResolution = renderPassLoader.UseDefaultRenderResolution;
    
+    for (auto& attachment : renderPassLoader.AttachmentList)
+    {
+        m_attachmentIdList.emplace_back(attachment.RenderedTextureId);
+    }
+
     m_renderPassReloaderList.reserve(renderPassLoader.AttachmentList.size());
     for (auto& attachment : renderPassLoader.AttachmentList)
     {
@@ -207,6 +212,24 @@ void VulkanRenderPass::RebuildRenderPass()
     BuildAttachments(loaders);
     TransitionRenderPassAttachmentsToFinalLayout();
     BuildFrameBuffer();
+}
+
+VulkanTexture VulkanRenderPass::FindRenderPassAttachment(const VkGuid& attachmentId)
+{
+    auto it = std::find(m_attachmentIdList.begin(), m_attachmentIdList.end(), attachmentId);
+    if (it != m_attachmentIdList.end())
+    {
+        size_t index = std::distance(m_attachmentIdList.begin(), it);
+        auto& texture = m_attachmentList[vulkan.Swapchain().CommandIndex()][index];
+        return texture;
+    }
+    else std::cerr << "[VulkanRenderPass] Failed to find attachment: " << attachmentId.ToString() << " in renderPass: " << m_renderPassId.ToString() << std::endl;
+}
+
+bool VulkanRenderPass::RenderPassAttachmentExists(const VkGuid& attachmentId)
+{
+    auto it = std::find(m_attachmentIdList.begin(), m_attachmentIdList.end(), attachmentId);
+    return it != m_attachmentIdList.end();
 }
 
 VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoader)

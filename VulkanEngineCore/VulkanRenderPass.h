@@ -102,6 +102,7 @@ private:
     ivec2                                                   m_renderPassResolution = ivec2(0);
     VkRenderPass                                            m_renderPass = VK_NULL_HANDLE;
     Vector<VkGuid>                                          m_pipelineList;
+    Vector<VkGuid>                                          m_attachmentIdList;
     std::array<Vector<VkFramebuffer>, MAX_FRAMES_IN_FLIGHT> m_frameBufferList;
     std::array<Vector<VulkanTexture>, MAX_FRAMES_IN_FLIGHT> m_attachmentList;
     Vector<RenderPassAttachmentReloader>                    m_renderPassReloaderList;
@@ -128,6 +129,8 @@ public:
     void                                                    LoadRenderPass(RenderPassLoader& renderPassLoader);
     void                                                    AddRenderPipeline(const VkGuid& pipelineId);
     void                                                    RebuildRenderPass();
+    VulkanTexture                                           FindRenderPassAttachment(const VkGuid& attachmentId);
+    bool                                                    RenderPassAttachmentExists(const VkGuid& attachmentId);
     void                                                    BeginRenderPass(VkCommandBuffer& commandBuffer, uint mipLevel = 0);
     void                                                    NextSubpass(VkCommandBuffer& commandBuffer);
     void                                                    BindViewPort(VkCommandBuffer& commandBuffer, uint drawMipLevel = 0);
