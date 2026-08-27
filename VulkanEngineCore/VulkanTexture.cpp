@@ -445,6 +445,8 @@ void VulkanTexture::TransitionImageLayout(VkCommandBuffer cmd, VkImageLayout new
 
 void VulkanTexture::DestroyTexture()
 {
+	if (m_textureImage == VK_NULL_HANDLE && m_vmaTextureAllocation == VK_NULL_HANDLE) return;
+
 	if (m_textureSampler != VK_NULL_HANDLE)
 	{
 		vkDestroySampler(vulkan.LogicalDevice(), m_textureSampler, nullptr);
@@ -454,9 +456,7 @@ void VulkanTexture::DestroyTexture()
 	for (VkImageView view : m_textureViewList)
 	{
 		if (view != VK_NULL_HANDLE)
-		{
 			vkDestroyImageView(vulkan.LogicalDevice(), view, nullptr);
-		}
 	}
 	m_textureViewList.clear();
 
@@ -478,7 +478,7 @@ void VulkanTexture::DestroyTexture()
 VkImage				VulkanTexture::TextureImage()			const noexcept { return m_textureImage; }
 Vector<VkImageView> VulkanTexture::TextureViews()			const noexcept { return m_textureViewList; }
 VkSampler			VulkanTexture::TextureSampler()			const noexcept { return m_textureSampler; }
-ivec3				VulkanTexture::TextureSize()			{ return m_textureSize; }
+ivec3				VulkanTexture::TextureSize()						   { return m_textureSize; }
 VkImageLayout       VulkanTexture::TextureImageLayout()		const noexcept { return m_textureImageLayout; }
 uint32				VulkanTexture::MipMapLevels()			const noexcept { return m_mipMapLevels; }
 bool				VulkanTexture::IsDepthTexture()			const noexcept { return m_isDepthTexture; }

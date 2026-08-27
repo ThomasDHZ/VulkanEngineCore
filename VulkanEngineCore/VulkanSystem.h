@@ -34,7 +34,6 @@ private:
 public:
 	void								  VulkanSetUp(ivec2 windowResolution, ivec2 renderResolution);
 	void								  VulkanSetUp(void* windowHandle, ivec2 windowResolution, ivec2 renderResolution);
-	void								  RebuildSwapChain();
 	uint32								  GetMemoryType(VkPhysicalDevice physicalDevice, uint32 typeFilter, VkMemoryPropertyFlags properties);
 	VkCommandBuffer						  StartFrame();
 	void								  EndFrame(VkCommandBuffer& commandBuffer);

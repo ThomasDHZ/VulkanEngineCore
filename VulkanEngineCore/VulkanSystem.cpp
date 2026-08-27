@@ -22,12 +22,6 @@ void VulkanSystem::VulkanSetUp(void* windowHandle, ivec2 windowResolution, ivec2
     RendererSetUp(m_windowHandle, renderResolution);
 }
 
-void VulkanSystem::RebuildSwapChain()
-{
-    vkDeviceWaitIdle(vulkan.LogicalDevice());
-    m_swapChain.RebuildSwapChain(m_windowHandle);
-}
-
 void VulkanSystem::RendererSetUp(void* windowHandle, ivec2 renderResolution)
 {
     m_instance.Initialize();

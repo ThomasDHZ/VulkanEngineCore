@@ -62,6 +62,19 @@ struct RenderPassAttachmentLoader
     bool                                 IsSkyBox = false;
 };
 
+struct RenderPassAttachmentReloader
+{
+    uint32                               MipMapCount = UINT32_MAX;
+    TextureTypeEnum                      TextureType = TextureTypeEnum::kTextureType_Undefined;
+    TextureUsageTypeEnum                 TextureUsageType = kUsageType_Undefined;
+    VkFormat                             TextureByteFormat = VK_FORMAT_R8G8B8A8_UNORM;
+    VkAttachmentLoadOp                   LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    VkAttachmentStoreOp                  StoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+    VkImageLayout                        FinalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    VkSampleCountFlagBits                SampleCount = VK_SAMPLE_COUNT_1_BIT;
+    bool                                 UseMipMaps = false;
+};
+
 struct VulkanTextureLoader
 {
     Vector<byte>          TextureData;

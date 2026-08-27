@@ -23,7 +23,7 @@ class VulkanSwapchain
 		std::array<VkSemaphore, MAX_FRAMES_IN_FLIGHT> m_AcquireImageSemaphores{};
 		bool										  m_RebuildSwapChainFlag = false;
 
-		void										  StartUpSwapChain();
+		void										  StartUpSwapChain(VkSwapchainKHR oldSwapChain = VK_NULL_HANDLE);
 		void										  StartUpSwapChainImages();
 		VkSurfaceKHR								  StartUpVulkanSurface(void* windowHandle, VkInstance instance);
 		void										  StartUpSwapChainImageViews();

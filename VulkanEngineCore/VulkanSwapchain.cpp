@@ -2,6 +2,7 @@
 #include "VulkanDevice.h"
 #include "VulkanSystem.h"
 #include <GLFW/glfw3.h>
+#include <VulkanWindow.h>
 
 VulkanSwapchain::VulkanSwapchain()
 {
@@ -22,7 +23,7 @@ void VulkanSwapchain::Initialize(ivec2 renderResolution)
     StartUpSemaphores();
 }
 
-void VulkanSwapchain::StartUpSwapChain()
+void VulkanSwapchain::StartUpSwapChain(VkSwapchainKHR oldSwapChain)
 {
     VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities(vulkan.PhysicalDevice());
     Vector<VkSurfaceFormatKHR> compatibleSwapChainFormatList = vulkan.Device().GetPhysicalDeviceFormats(vulkan.PhysicalDevice());
@@ -53,7 +54,7 @@ void VulkanSwapchain::StartUpSwapChain()
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = swapChainPresentMode,
         .clipped = VK_TRUE,
-        .oldSwapchain = m_Swapchain
+        .oldSwapchain = oldSwapChain != VK_NULL_HANDLE ? oldSwapChain : VK_NULL_HANDLE
     };
 
     if (vulkan.Device().GraphicsFamily() != vulkan.Device().PresentFamily())
@@ -73,25 +74,31 @@ void VulkanSwapchain::StartUpSwapChain()
         SwapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     }
     VULKAN_THROW_IF_FAIL(vkCreateSwapchainKHR(vulkan.Device().LogicalDevice(), &SwapChainCreateInfo, nullptr, &m_Swapchain));
+    if (oldSwapChain != VK_NULL_HANDLE) vkDestroySwapchainKHR(vulkan.LogicalDevice(), oldSwapChain, nullptr);
 }
 
 VkCommandBuffer VulkanSwapchain::StartFrame()
 {
-    VULKAN_THROW_IF_FAIL(vkWaitForFences(vulkan.LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex], VK_TRUE, UINT64_MAX));
-    VULKAN_THROW_IF_FAIL(vkResetFences(vulkan.LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex]));
+    if (vulkanWindow.WasFramebufferResized()) return VK_NULL_HANDLE;
+
+    VULKAN_THROW_IF_FAIL(vkWaitForFences(
+        vulkan.LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex], VK_TRUE, UINT64_MAX));
 
     VkResult result = vkAcquireNextImageKHR(vulkan.LogicalDevice(), m_Swapchain, UINT64_MAX, m_AcquireImageSemaphores[m_CommandIndex], VK_NULL_HANDLE, &m_ImageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
-        m_RebuildSwapChainFlag = true;
+        vulkanWindow.TriggerFrameBufferResized();
         return VK_NULL_HANDLE;
     }
     VULKAN_THROW_IF_FAIL(result);
 
-    if (m_ImagesInFlight[m_ImageIndex] != VK_NULL_HANDLE)
+    if (m_ImagesInFlight[m_ImageIndex] != VK_NULL_HANDLE &&
+        m_ImagesInFlight[m_ImageIndex] != m_InFlightFences[m_CommandIndex])
     {
         VULKAN_THROW_IF_FAIL(vkWaitForFences(vulkan.LogicalDevice(), 1, &m_ImagesInFlight[m_ImageIndex], VK_TRUE, UINT64_MAX));
     }
+    VULKAN_THROW_IF_FAIL(vkResetFences(vulkan.LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex]));
+
     m_ImagesInFlight[m_ImageIndex] = m_InFlightFences[m_CommandIndex];
 
     VkCommandBuffer cmd = vulkan.CommandBuffer().GetCurrentCommandBuffer();
@@ -100,7 +107,6 @@ VkCommandBuffer VulkanSwapchain::StartFrame()
     VkCommandBufferBeginInfo beginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     VULKAN_THROW_IF_FAIL(vkBeginCommandBuffer(cmd, &beginInfo));
-
     return cmd;
 }
 
@@ -164,14 +170,18 @@ void VulkanSwapchain::Destroy()
 
 void VulkanSwapchain::RebuildSwapChain(void* windowHandle)
 {
-    if (m_RebuildSwapChainFlag)
-    {
-        vkDeviceWaitIdle(vulkan.LogicalDevice());
-        DestroySwapChainImageViews();
-        DestroySwapChain();
-        StartUpSwapChain();
-        m_RebuildSwapChainFlag = false;
-    }
+    DestroySwapChainImageViews();
+
+    VkSwapchainKHR oldSwapChain = m_Swapchain;
+    m_Swapchain = VK_NULL_HANDLE;
+
+    StartUpSwapChain(oldSwapChain);
+    StartUpSwapChainImages();
+    StartUpSwapChainImageViews();
+
+    m_ImagesInFlight.assign(m_SwapChainImageCount, VK_NULL_HANDLE);
+    m_ImageIndex = 0;
+    m_CommandIndex = 0;
 }
 
 void VulkanSwapchain::StartUpSwapChainImages()
@@ -260,10 +270,32 @@ void VulkanSwapchain::StartUpSwapChainImageViews()
 
 VkExtent2D VulkanSwapchain::StartUpSwapChainExtent()
 {
+    VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities(vulkan.PhysicalDevice());
+
     VkExtent2D extent;
-    VkSurfaceCapabilitiesKHR surfaceCapabilities = GetSurfaceCapabilities(vulkan.Device().PhysicalDevice());
-    extent.width = std::max(surfaceCapabilities.minImageExtent.width, std::min(surfaceCapabilities.maxImageExtent.width, extent.width));
-    extent.height = std::max(surfaceCapabilities.minImageExtent.height, std::min(surfaceCapabilities.maxImageExtent.height, extent.height));
+    if (surfaceCapabilities.currentExtent.width != UINT32_MAX) extent = surfaceCapabilities.currentExtent;
+    else
+    {
+        ivec2 frameBuffer = vulkanWindow.GetFramebufferSize();
+        extent = { (uint32)std::max(0, frameBuffer.x), (uint32)std::max(0, frameBuffer.y) };
+    }
+
+    extent.width = std::clamp(extent.width, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
+    extent.height = std::clamp(extent.height, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
+
+    while (extent.width == 0 || extent.height == 0)
+    {
+        glfwWaitEvents();
+        surfaceCapabilities = GetSurfaceCapabilities(vulkan.PhysicalDevice());
+        if (surfaceCapabilities.currentExtent.width != UINT32_MAX) extent = surfaceCapabilities.currentExtent;
+        else
+        {
+            ivec2 frameBuffer = vulkanWindow.GetFramebufferSize();
+            extent = { (uint32)std::max(0, frameBuffer.x), (uint32)std::max(0, frameBuffer.y) };
+        }
+        extent.width = std::clamp(extent.width, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
+        extent.height = std::clamp(extent.height, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
+    }
     return extent;
 }
 

@@ -20,9 +20,27 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
     m_sampleCount = renderPassLoader.SampleCount >= vulkan.MaxSampleCount() ? vulkan.MaxSampleCount() : renderPassLoader.SampleCount;
     m_useVkMultiview = renderPassLoader.UseVkMultiview;
     m_renderAsCubemap = renderPassLoader.RenderAsCubemap;
+    m_useDefaultRenderResolution = renderPassLoader.UseDefaultRenderResolution;
+   
+    m_renderPassReloaderList.reserve(renderPassLoader.AttachmentList.size());
+    for (auto& attachment : renderPassLoader.AttachmentList)
+    {
+        m_renderPassReloaderList.emplace_back(RenderPassAttachmentReloader
+            {
+               .MipMapCount = attachment.MipMapCount,
+               .TextureType = attachment.TextureType,
+               .TextureUsageType = attachment.TextureUsageType,
+               .TextureByteFormat = attachment.TextureByteFormat,
+               .LoadOp = attachment.LoadOp,
+               .StoreOp = attachment.StoreOp,
+               .FinalLayout = attachment.FinalLayout,
+               .SampleCount = attachment.SampleCount,
+               .UseMipMaps = attachment.UseMipMaps
+            });
+    }
 
     BuildRenderPass(renderPassLoader);
-    BuildFrameBuffer(renderPassLoader);
+    BuildFrameBuffer();
     for (auto& renderPass : renderPassLoader.SubPassList)
     {
         Vector<VulkanSubPass> subPassList;
@@ -120,9 +138,75 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
         .subpassCount = static_cast<uint32>(subPassDescriptionList.size()),
         .pSubpasses = subPassDescriptionList.data(),
         .dependencyCount = static_cast<uint32>(subpassDependencies.size()),
-        .pDependencies = subpassDependencies.data(),
+        .pDependencies = subpassDependencies.data()
     };
     VULKAN_THROW_IF_FAIL(vkCreateRenderPass(vulkan.LogicalDevice(), &renderPassInfo, nullptr, &m_renderPass));
+}
+
+void VulkanRenderPass::RebuildRenderPass()
+{
+    if (m_useDefaultRenderResolution) m_renderPassResolution = vulkan.RenderPassResolution();
+
+    for (auto& frameBufferList : m_frameBufferList)
+    {
+        for (auto frameBuffer : frameBufferList)
+        {
+            if (frameBuffer != VK_NULL_HANDLE)
+            {
+                vkDestroyFramebuffer(vulkan.LogicalDevice(), frameBuffer, nullptr);
+            }
+        }
+        frameBufferList.clear();
+    }
+
+    for (auto& attList : m_attachmentList)
+    {
+        for (auto& tex : attList)
+        {
+            for (VkImageView view : tex.m_textureViewList)
+            {
+                if (view != VK_NULL_HANDLE)
+                    vkDestroyImageView(vulkan.LogicalDevice(), view, nullptr);
+            }
+            tex.m_textureViewList.clear();
+
+            if (tex.m_textureImage != VK_NULL_HANDLE)
+            {
+                if (tex.m_vmaTextureAllocation != VK_NULL_HANDLE)
+                {
+                    vmaDestroyImage(bufferSystem.VmaAllocatorHandle(), tex.m_textureImage, tex.m_vmaTextureAllocation);
+                    tex.m_vmaTextureAllocation = VK_NULL_HANDLE;
+                }
+                else
+                {
+                    vkDestroyImage(vulkan.LogicalDevice(), tex.m_textureImage, nullptr);
+                }
+                tex.m_textureImage = VK_NULL_HANDLE;
+            }
+        }
+        attList.clear();
+    }
+
+    Vector<RenderPassAttachmentLoader> loaders;
+    loaders.reserve(m_renderPassReloaderList.size());
+    for (const auto& src : m_renderPassReloaderList)
+    {
+        loaders.emplace_back(RenderPassAttachmentLoader{
+                .MipMapCount = src.MipMapCount,
+                .TextureType = src.TextureType,
+                .TextureUsageType = src.TextureUsageType,
+                .TextureByteFormat = src.TextureByteFormat,
+                .LoadOp = src.LoadOp,
+                .StoreOp = src.StoreOp,
+                .FinalLayout = src.FinalLayout,
+                .SampleCount = src.SampleCount,
+                .UseMipMaps = src.UseMipMaps
+            });
+    }
+
+    BuildAttachments(loaders);
+    TransitionRenderPassAttachmentsToFinalLayout();
+    BuildFrameBuffer();
 }
 
 VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoader)
@@ -186,7 +270,7 @@ void VulkanRenderPass::BuildAttachments(Vector<RenderPassAttachmentLoader>& atta
     }
 }
 
-void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
+void VulkanRenderPass::BuildFrameBuffer()
 {
     for (uint32 f = 0; f < MAX_FRAMES_IN_FLIGHT; ++f)
     {
@@ -220,7 +304,7 @@ void VulkanRenderPass::BuildFrameBuffer(RenderPassLoader& renderPassLoader)
                 .pAttachments = views.data(),
                 .width = width,
                 .height = height,
-                .layers = renderPassLoader.UseVkMultiview ? 1u : (m_renderAsCubemap ? 6u : 1u)
+                .layers = m_useVkMultiview ? 1u : (m_renderAsCubemap ? 6u : 1u)
             };
             VULKAN_THROW_IF_FAIL(vkCreateFramebuffer(vulkan.LogicalDevice(), &info, nullptr, &m_frameBufferList[f][mip]));
         }
@@ -359,20 +443,25 @@ void VulkanRenderPass::EndRenderPass(VkCommandBuffer& commandBuffer)
 
 void VulkanRenderPass::Destroy()
 {
-    //for (auto& frameBuffer : m_frameBufferList)
-    //{
-    //    if (frameBuffer != VK_NULL_HANDLE)
-    //    {
-    //        vkDestroyFramebuffer(vulkan.LogicalDevice(), frameBuffer, nullptr);
-    //        frameBuffer = VK_NULL_HANDLE;
-    //    }
-    //}
-    if (m_renderPass != VK_NULL_HANDLE)
+    for (int x = 0; x < MAX_FRAMES_IN_FLIGHT; x++)
     {
-        vkDestroyRenderPass(vulkan.LogicalDevice(), m_renderPass, nullptr);
-        m_renderPass = VK_NULL_HANDLE;
+        for (auto& frameBuffer : m_frameBufferList[x])
+        {
+            if (frameBuffer != VK_NULL_HANDLE)
+            {
+                vkDestroyFramebuffer(vulkan.LogicalDevice(), frameBuffer, nullptr);
+                frameBuffer = VK_NULL_HANDLE;
+            }
+        }
+        m_frameBufferList[x].clear();
+
+        for (auto& attachment : m_attachmentList[x])
+        {
+           attachment.DestroyTexture();
+        }
     }
-    if (!m_renderPass)
+
+    if (m_renderPass != VK_NULL_HANDLE)
     {
         vkDestroyRenderPass(vulkan.LogicalDevice(), m_renderPass, nullptr);
         m_renderPass = VK_NULL_HANDLE;

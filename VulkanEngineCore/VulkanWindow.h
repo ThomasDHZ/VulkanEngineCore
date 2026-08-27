@@ -37,6 +37,10 @@ public:
     ivec2 GetFramebufferSize() const;
 
     GLFWwindow* m_window = nullptr;
+
+    void TriggerFrameBufferResized() { m_framebufferResized = true; }
+    bool WasFramebufferResized() const { return m_framebufferResized; }
+    void ResetFramebufferResized() { m_framebufferResized = false; }
 };
 extern VulkanWindow& vulkanWindow;
 inline VulkanWindow& VulkanWindow::Get()

@@ -104,18 +104,20 @@ private:
     Vector<VkGuid>                                          m_pipelineList;
     std::array<Vector<VkFramebuffer>, MAX_FRAMES_IN_FLIGHT> m_frameBufferList;
     std::array<Vector<VulkanTexture>, MAX_FRAMES_IN_FLIGHT> m_attachmentList;
+    Vector<RenderPassAttachmentReloader>                    m_renderPassReloaderList;
     Vector<Vector<VulkanSubPass>>                           m_subPassList;
     Vector<VkClearValue>                                    m_clearValueList;
     VkSampleCountFlagBits                                   m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
     VkGuid                                                  m_currentBoundPipeline;
     bool                                                    m_useVkMultiview = false;
     bool                                                    m_renderAsCubemap = false;
+    bool                                                    m_useDefaultRenderResolution = true;
 
     void                                                    BuildRenderPass(RenderPassLoader& renderPassLoader);
     VulkanSubPass                                           BuildSubpasses(VulkanSubPassLoader& subPassLoader);
     Vector<VkAttachmentDescription>                         BuildAttachmentDescriptors(RenderPassLoader& renderPassLoader);
     void                                                    BuildAttachments(Vector<RenderPassAttachmentLoader>& attachmentTextureList);
-    void                                                    BuildFrameBuffer(RenderPassLoader& renderPassLoader);
+    void                                                    BuildFrameBuffer();
     void                                                    TransitionRenderPassAttachmentsToFinalLayout();
     bool                                                    RenderPipelineExists(const VkGuid& pipelineId);
 
@@ -125,6 +127,7 @@ public:
 
     void                                                    LoadRenderPass(RenderPassLoader& renderPassLoader);
     void                                                    AddRenderPipeline(const VkGuid& pipelineId);
+    void                                                    RebuildRenderPass();
     void                                                    BeginRenderPass(VkCommandBuffer& commandBuffer, uint mipLevel = 0);
     void                                                    NextSubpass(VkCommandBuffer& commandBuffer);
     void                                                    BindViewPort(VkCommandBuffer& commandBuffer, uint drawMipLevel = 0);
