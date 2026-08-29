@@ -103,8 +103,8 @@ private:
     VkRenderPass                                            m_renderPass = VK_NULL_HANDLE;
     Vector<VkGuid>                                          m_pipelineList;
     Vector<VkGuid>                                          m_attachmentIdList;
-    std::array<Vector<VkFramebuffer>, MAX_FRAMES_IN_FLIGHT> m_frameBufferList;
-    std::array<Vector<VulkanTexture>, MAX_FRAMES_IN_FLIGHT> m_attachmentList;
+    Vector<VkFramebuffer> m_frameBufferList;
+    Vector<VulkanTexture> m_attachmentList;
     Vector<RenderPassAttachmentReloader>                    m_renderPassReloaderList;
     Vector<Vector<VulkanSubPass>>                           m_subPassList;
     Vector<VkClearValue>                                    m_clearValueList;
@@ -142,7 +142,7 @@ public:
     [[nodiscard]] VkGuid                                    RenderPassId()               const noexcept;
     [[nodiscard]] VkRenderPass                              RenderPassHandle()           const noexcept;
     [[nodiscard]] ivec2                                     RenderPassResolution()       const noexcept;
-    [[nodiscard]] Vector<VulkanTexture>                     AttachmentList()             const noexcept;
+    [[nodiscard]] const Vector<VulkanTexture>&              AttachmentList()             const noexcept;
     [[nodiscard]] Vector<VkGuid>                            PipelineList()               const noexcept;
     [[nodiscard]] Vector<Vector<VulkanSubPass>>             SubPassList()                const noexcept;
     [[nodiscard]] VkSampleCountFlagBits                     SampleCount()                const noexcept;
