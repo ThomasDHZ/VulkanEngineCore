@@ -30,6 +30,10 @@ namespace VulkanEngineCoreCS
             DLLSystem.CallDLLFunc(() => VulkanSystem_EndFrame(ref commandBuffer));
         }
 
+        public static void SetCustomFrameBufferSize(ivec2 size)
+        {
+            DLLSystem.CallDLLFunc(() => VulkanSystem_SetCustomFrameBufferSize(size));
+        }
         public static void Shutdown()
         {
             DLLSystem.CallDLLFunc(() => VulkanSystem_Shutdown());
@@ -40,6 +44,7 @@ namespace VulkanEngineCoreCS
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_VulkanSetUp(void* renderAreaHandle, ivec2 windowSize, ivec2 renderResolutionSize);
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern VkCommandBuffer VulkanSystem_StartFrame();
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_EndFrame(ref VkCommandBuffer commandBuffer);
+        [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_SetCustomFrameBufferSize(ivec2 windowSize);
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_Shutdown();
     }
 }

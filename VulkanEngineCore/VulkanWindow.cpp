@@ -121,7 +121,6 @@ void VulkanWindow::FramebufferResizeCallback(GLFWwindow* window, int width, int 
     VulkanWindow* self = (VulkanWindow*)glfwGetWindowUserPointer(window);
     if (self)
     {
-        self->m_framebufferResized = true;
         self->m_width = width;
         self->m_height = height;
     }

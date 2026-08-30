@@ -72,6 +72,27 @@ void VulkanSystem::Destroy()
     m_device.Destroy();
 }
 
+void VulkanSystem::SetCustomFrameBufferSize(ivec2 size)
+{
+    m_windowResolution = size;
+    m_framebufferResized = true;
+}
+
+void VulkanSystem::TriggerFrameBufferResized()
+{
+    m_framebufferResized = true;
+}
+
+bool VulkanSystem::WasFramebufferResized() const
+{
+    return m_framebufferResized;
+}
+
+void VulkanSystem::ResetFramebufferResized()
+{
+    m_framebufferResized = false;
+}
+
 VulkanInstance			 VulkanSystem::Instance()                     { return m_instance; }
 VulkanDebugger			 VulkanSystem::Debug()                        { return m_debug; }
 VulkanDevice			 VulkanSystem::Device()                       { return m_device; }

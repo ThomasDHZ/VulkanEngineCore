@@ -12,7 +12,6 @@ private:
     VulkanWindow(const VulkanWindow&) = delete;
     VulkanWindow& operator=(const VulkanWindow&) = delete;
 
-     bool m_framebufferResized = false;
      uint32 m_GameControllerConnected = UINT32_MAX;
      uint32 m_width = 0;
      uint32 m_height = 0;
@@ -37,10 +36,6 @@ public:
     ivec2 GetFramebufferSize() const;
 
     GLFWwindow* m_window = nullptr;
-
-    void TriggerFrameBufferResized() { m_framebufferResized = true; }
-    bool WasFramebufferResized() const { return m_framebufferResized; }
-    void ResetFramebufferResized() { m_framebufferResized = false; }
 };
 extern VulkanWindow& vulkanWindow;
 inline VulkanWindow& VulkanWindow::Get()

@@ -27,6 +27,7 @@ private:
 	VulkanDevice						  m_device;
 	VulkanSwapchain						  m_swapChain;
 	VulkanCommandBuffer					  m_commandBuffer;
+	bool								  m_framebufferResized = false;
 	bool								  m_usingCustomSurface = false;
 
 	void								  RendererSetUp(void* windowHandle, ivec2 renderResolution);
@@ -38,6 +39,11 @@ public:
 	VkCommandBuffer						  StartFrame();
 	void								  EndFrame(VkCommandBuffer& commandBuffer);
 	void								  Destroy();
+
+	void SetCustomFrameBufferSize(ivec2 size);
+	void TriggerFrameBufferResized();
+	bool WasFramebufferResized() const;
+	void ResetFramebufferResized();
 
 	VulkanInstance						  Instance();
 	VulkanDebugger						  Debug();
@@ -61,7 +67,6 @@ public:
 	[[nodiscard]] ivec2					  RenderPassResolution()	const;
 	[[nodiscard]] VkCommandPool           CommandPool()				const;
 	[[nodiscard]] Vector<VkCommandBuffer> CommandBufferList()		const;
-
 };
 extern VulkanSystem& vulkan;
 inline VulkanSystem& VulkanSystem::Get()

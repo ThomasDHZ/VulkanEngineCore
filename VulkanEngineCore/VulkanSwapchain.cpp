@@ -79,7 +79,7 @@ void VulkanSwapchain::StartUpSwapChain(VkSwapchainKHR oldSwapChain)
 
 VkCommandBuffer VulkanSwapchain::StartFrame()
 {
-    if (vulkanWindow.WasFramebufferResized()) return VK_NULL_HANDLE;
+    if (vulkan.WasFramebufferResized()) return VK_NULL_HANDLE;
 
     VULKAN_THROW_IF_FAIL(vkWaitForFences(
         vulkan.LogicalDevice(), 1, &m_InFlightFences[m_CommandIndex], VK_TRUE, UINT64_MAX));
@@ -87,7 +87,7 @@ VkCommandBuffer VulkanSwapchain::StartFrame()
     VkResult result = vkAcquireNextImageKHR(vulkan.LogicalDevice(), m_Swapchain, UINT64_MAX, m_AcquireImageSemaphores[m_CommandIndex], VK_NULL_HANDLE, &m_ImageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
-        vulkanWindow.TriggerFrameBufferResized();
+        vulkan.TriggerFrameBufferResized();
         return VK_NULL_HANDLE;
     }
     VULKAN_THROW_IF_FAIL(result);
@@ -140,7 +140,7 @@ void VulkanSwapchain::EndFrame(VkCommandBuffer& cmd)
     if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
     {
         m_RebuildSwapChainFlag = true;
-        vulkanWindow.TriggerFrameBufferResized();
+        vulkan.TriggerFrameBufferResized();
     }
     else VULKAN_THROW_IF_FAIL(result);
 
