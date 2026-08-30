@@ -136,14 +136,11 @@ void VulkanTexture::CreateTextureView()
 
 void VulkanTexture::CreateTextureSampler(VkSamplerCreateInfo& samplerCreateInfo)
 {
+	samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	if (vkCreateSampler(vulkan.LogicalDevice(), &samplerCreateInfo, nullptr, &m_textureSampler) != VK_SUCCESS)
 	{
-		vkDestroySampler(vulkan.LogicalDevice(), m_textureSampler, nullptr);
-		for (auto textureView : m_textureViewList)
-		{
-			vkDestroyImageView(vulkan.LogicalDevice(), textureView, nullptr);
-		}
-		vmaDestroyImage(bufferSystem.VmaAllocatorHandle(), m_textureImage, m_vmaTextureAllocation);
+		m_textureSampler = VK_NULL_HANDLE;
+		DestroyTexture();
 		return;
 	}
 }

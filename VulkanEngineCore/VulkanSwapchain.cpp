@@ -137,7 +137,11 @@ void VulkanSwapchain::EndFrame(VkCommandBuffer& cmd)
         .pImageIndices = &m_ImageIndex
     };
     VkResult result = vkQueuePresentKHR(vulkan.Device().PresentQueue(), &presentInfo);
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) m_RebuildSwapChainFlag = true;
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+    {
+        m_RebuildSwapChainFlag = true;
+        vulkanWindow.TriggerFrameBufferResized();
+    }
     else VULKAN_THROW_IF_FAIL(result);
 
     m_CommandIndex = (m_CommandIndex + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -148,17 +152,21 @@ void VulkanSwapchain::Destroy()
     vkDeviceWaitIdle(vulkan.LogicalDevice());
     DestroySwapChainImageViews();
     DestroySwapChain();
+    for (size_t x = 0; x < m_PresentImageSemaphores.size(); x++)
+    {
+        if (m_PresentImageSemaphores[x] != VK_NULL_HANDLE)
+        {
+            vkDestroySemaphore(vulkan.LogicalDevice(), m_PresentImageSemaphores[x], NULL);
+            m_PresentImageSemaphores[x] = VK_NULL_HANDLE;
+        }
+    }
+    m_PresentImageSemaphores.clear();
     for (size_t x = 0; x < m_AcquireImageSemaphores.size(); x++)
     {
         if (m_AcquireImageSemaphores[x] != VK_NULL_HANDLE)
         {
             vkDestroySemaphore(vulkan.LogicalDevice(), m_AcquireImageSemaphores[x], NULL);
             m_AcquireImageSemaphores[x] = VK_NULL_HANDLE;
-        }
-        if (m_PresentImageSemaphores[x] != VK_NULL_HANDLE)
-        {
-            vkDestroySemaphore(vulkan.LogicalDevice(), m_PresentImageSemaphores[x], NULL);
-            m_PresentImageSemaphores[x] = VK_NULL_HANDLE;
         }
         if (m_InFlightFences[x] != VK_NULL_HANDLE)
         {
@@ -178,18 +186,21 @@ void VulkanSwapchain::RebuildSwapChain(void* windowHandle)
     StartUpSwapChain(oldSwapChain);
     StartUpSwapChainImages();
     StartUpSwapChainImageViews();
+    RebuildPresentSemaphores();
 
     m_ImagesInFlight.assign(m_SwapChainImageCount, VK_NULL_HANDLE);
     m_ImageIndex = 0;
     m_CommandIndex = 0;
+    m_RebuildSwapChainFlag = false;
 }
 
 void VulkanSwapchain::StartUpSwapChainImages()
 {
-    uint32 swapChainImageCount = UINT32_MAX;
+    uint32 swapChainImageCount = 0;
     VULKAN_THROW_IF_FAIL(vkGetSwapchainImagesKHR(vulkan.Device().LogicalDevice(), m_Swapchain, &swapChainImageCount, nullptr));
     m_SwapChainImages.resize(swapChainImageCount);
     VULKAN_THROW_IF_FAIL(vkGetSwapchainImagesKHR(vulkan.Device().LogicalDevice(), m_Swapchain, &swapChainImageCount, m_SwapChainImages.data()));
+    m_SwapChainImageCount = swapChainImageCount;
 }
 
 VkSurfaceKHR VulkanSwapchain::StartUpVulkanSurface(void* windowHandle, VkInstance instance)
@@ -326,6 +337,35 @@ void VulkanSwapchain::StartUpSemaphores()
         VULKAN_THROW_IF_FAIL(vkCreateSemaphore(vulkan.Device().LogicalDevice(), &semaphoreCreateInfo, nullptr, &m_AcquireImageSemaphores[x]));
     }
     for (int x = 0; x < m_SwapChainImageCount; x++)
+    {
+        VULKAN_THROW_IF_FAIL(vkCreateSemaphore(vulkan.Device().LogicalDevice(), &semaphoreCreateInfo, nullptr, &m_PresentImageSemaphores[x]));
+    }
+}
+
+void VulkanSwapchain::RebuildPresentSemaphores()
+{
+    for (VkSemaphore& semaphore : m_PresentImageSemaphores)
+    {
+        if (semaphore != VK_NULL_HANDLE)
+        {
+            vkDestroySemaphore(vulkan.LogicalDevice(), semaphore, nullptr);
+            semaphore = VK_NULL_HANDLE;
+        }
+    }
+
+    VkSemaphoreTypeCreateInfo semaphoreTypeCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
+        .pNext = NULL,
+        .semaphoreType = VK_SEMAPHORE_TYPE_BINARY,
+        .initialValue = 0,
+    };
+    VkSemaphoreCreateInfo semaphoreCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+        .pNext = &semaphoreTypeCreateInfo
+    };
+
+    m_PresentImageSemaphores.assign(m_SwapChainImageCount, VK_NULL_HANDLE);
+    for (uint32 x = 0; x < m_SwapChainImageCount; x++)
     {
         VULKAN_THROW_IF_FAIL(vkCreateSemaphore(vulkan.Device().LogicalDevice(), &semaphoreCreateInfo, nullptr, &m_PresentImageSemaphores[x]));
     }

@@ -39,6 +39,7 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
                .LoadOp = attachment.LoadOp,
                .StoreOp = attachment.StoreOp,
                .FinalLayout = attachment.FinalLayout,
+               .SamplerCreateInfo = attachment.SamplerCreateInfo,
                .SampleCount = attachment.SampleCount,
                .UseMipMaps = attachment.UseMipMaps
             });
@@ -150,7 +151,12 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
 
 void VulkanRenderPass::RebuildRenderPass()
 {
-    if (m_useDefaultRenderResolution) m_renderPassResolution = vulkan.RenderPassResolution();
+    const ivec2 newResolution = m_useDefaultRenderResolution ? vulkan.RenderPassResolution() : m_renderPassResolution;
+    const bool attachmentsExist = !m_attachmentList[0].empty();
+    if (attachmentsExist && newResolution == m_renderPassResolution)
+        return;
+
+    m_renderPassResolution = newResolution;
 
     for (auto& frameBufferList : m_frameBufferList)
     {
@@ -167,28 +173,7 @@ void VulkanRenderPass::RebuildRenderPass()
     for (auto& attList : m_attachmentList)
     {
         for (auto& tex : attList)
-        {
-            for (VkImageView view : tex.m_textureViewList)
-            {
-                if (view != VK_NULL_HANDLE)
-                    vkDestroyImageView(vulkan.LogicalDevice(), view, nullptr);
-            }
-            tex.m_textureViewList.clear();
-
-            if (tex.m_textureImage != VK_NULL_HANDLE)
-            {
-                if (tex.m_vmaTextureAllocation != VK_NULL_HANDLE)
-                {
-                    vmaDestroyImage(bufferSystem.VmaAllocatorHandle(), tex.m_textureImage, tex.m_vmaTextureAllocation);
-                    tex.m_vmaTextureAllocation = VK_NULL_HANDLE;
-                }
-                else
-                {
-                    vkDestroyImage(vulkan.LogicalDevice(), tex.m_textureImage, nullptr);
-                }
-                tex.m_textureImage = VK_NULL_HANDLE;
-            }
-        }
+            tex.DestroyTexture();
         attList.clear();
     }
 
@@ -203,6 +188,7 @@ void VulkanRenderPass::RebuildRenderPass()
                 .TextureByteFormat = src.TextureByteFormat,
                 .LoadOp = src.LoadOp,
                 .StoreOp = src.StoreOp,
+                .SamplerCreateInfo = src.SamplerCreateInfo,
                 .FinalLayout = src.FinalLayout,
                 .SampleCount = src.SampleCount,
                 .UseMipMaps = src.UseMipMaps

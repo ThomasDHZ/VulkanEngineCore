@@ -29,6 +29,7 @@ class VulkanSwapchain
 		void										  StartUpSwapChainImageViews();
 		VkExtent2D									  StartUpSwapChainExtent();
 		void										  StartUpSemaphores();
+		void										  RebuildPresentSemaphores();
 		VkSurfaceFormatKHR							  FindSwapSurfaceFormat(Vector<VkSurfaceFormatKHR>& availableFormats);
 		VkPresentModeKHR							  FindSwapPresentMode(Vector<VkPresentModeKHR>& availablePresentModes);
 		void										  DestroySwapChainImageViews();

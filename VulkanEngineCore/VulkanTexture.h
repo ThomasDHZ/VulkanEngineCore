@@ -72,6 +72,7 @@ struct RenderPassAttachmentReloader
     VkAttachmentLoadOp                   LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     VkAttachmentStoreOp                  StoreOp = VK_ATTACHMENT_STORE_OP_STORE;
     VkImageLayout                        FinalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    VkSamplerCreateInfo                  SamplerCreateInfo = { .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
     VkSampleCountFlagBits                SampleCount = VK_SAMPLE_COUNT_1_BIT;
     bool                                 UseMipMaps = false;
 };
