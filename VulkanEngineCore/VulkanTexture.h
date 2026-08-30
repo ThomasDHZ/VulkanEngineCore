@@ -14,7 +14,7 @@ enum TextureUsageTypeEnum : uint32
     kUsageType_PrefilterTexture,
     kUsageType_CubeMap,
     kUsageType_BRDFTexture,
-    kUsageType_Texture
+    kUsageType_Texture,
 };
 
 enum RenderAttachmentTypeEnum
@@ -47,6 +47,7 @@ enum class TextureTypeEnum : uint32
 
 struct RenderPassAttachmentLoader
 {
+    String                               Name;
     VkGuid                               RenderedTextureId = VkGuid();
     uint32                               MipMapCount = UINT32_MAX;
     TextureTypeEnum                      TextureType = TextureTypeEnum::kTextureType_Undefined;
@@ -106,6 +107,7 @@ private:
     uint32 GetBlockSizeInBytes(VkFormat format);
 
 public:
+
     ivec3                 m_textureSize = ivec3(UINT32_MAX, UINT32_MAX, 1);
     uint32                m_mipMapLevels = UINT32_MAX;
     uint32                m_bytesPerChannel = UINT32_MAX;

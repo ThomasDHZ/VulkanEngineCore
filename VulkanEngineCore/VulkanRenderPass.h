@@ -74,6 +74,7 @@ struct VulkanPipelinePackage
 
 struct RenderPassLoader
 {
+    String                               Name;
     VkGuid                               RenderPassId = VkGuid();
     ivec2                                RenderPassResolution = ivec2(0);
     Vector<RenderPassAttachmentLoader>   AttachmentList;
