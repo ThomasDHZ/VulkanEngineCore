@@ -38,7 +38,11 @@ namespace VulkanEngineCoreCS
         {
             DLLSystem.CallDLLFunc(() => VulkanSystem_Shutdown());
         }
-
+        public static ivec2 GetSwapChainSize()
+        {
+            VulkanSystem_GetSwapChainSize(out int width, out int height);
+            return new ivec2(width, height);
+        }
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)] public delegate void LogVulkanMessageDelegate(string message, int severity);
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.Cdecl)]   public  static extern void VulkanSystem_CreateLogMessageCallback(LogVulkanMessageDelegate callback);
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_VulkanSetUp(void* renderAreaHandle, ivec2 windowSize, ivec2 renderResolutionSize);
@@ -46,5 +50,6 @@ namespace VulkanEngineCoreCS
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_EndFrame(ref VkCommandBuffer commandBuffer);
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_SetCustomFrameBufferSize(ivec2 windowSize);
         [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.StdCall)] private static extern void VulkanSystem_Shutdown();
+        [DllImport("VulkanEngineInterop.dll", CallingConvention = CallingConvention.Cdecl)] private static extern void VulkanSystem_GetSwapChainSize(out int outX, out int outY);
     }
 }

@@ -12,7 +12,6 @@ VulkanRenderPass::~VulkanRenderPass()
 void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
 {
     m_renderPassId = renderPassLoader.RenderPassId;
-    m_renderPassResolution = renderPassLoader.UseDefaultRenderResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
     m_renderPass = VK_NULL_HANDLE;
     //m_frameBufferList = Vector<VkFramebuffer>();
     m_pipelineList = Vector<VkGuid>();
@@ -21,7 +20,9 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
     m_useVkMultiview = renderPassLoader.UseVkMultiview;
     m_renderAsCubemap = renderPassLoader.RenderAsCubemap;
     m_useDefaultRenderResolution = renderPassLoader.UseDefaultRenderResolution;
-   
+    m_useFrameBufferResolution = renderPassLoader.UseFrameBufferResolution;
+    m_renderPassResolution = renderPassLoader.UseDefaultRenderResolution ? vulkan.RenderPassResolution() : renderPassLoader.RenderPassResolution;
+    m_renderPassResolution = renderPassLoader.UseFrameBufferResolution ? ivec2(vulkan.SwapChainResolution().width, vulkan.SwapChainResolution().height) : renderPassLoader.RenderPassResolution;
     for (auto& attachment : renderPassLoader.AttachmentList)
     {
         m_attachmentIdList.emplace_back(attachment.RenderedTextureId);
@@ -151,7 +152,8 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
 
 void VulkanRenderPass::RebuildRenderPass()
 {
-    const ivec2 newResolution = m_useDefaultRenderResolution ? vulkan.RenderPassResolution() : m_renderPassResolution;
+    ivec2 newResolution = m_useDefaultRenderResolution ? vulkan.RenderPassResolution() : m_renderPassResolution;
+    newResolution = m_useFrameBufferResolution ? ivec2(vulkan.SwapChainResolution().width, vulkan.SwapChainResolution().height) : m_renderPassResolution;
     const bool attachmentsExist = !m_attachmentList[0].empty();
     if (attachmentsExist && newResolution == m_renderPassResolution)
         return;

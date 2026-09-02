@@ -90,6 +90,7 @@ struct RenderPassLoader
     bool                                 UseGlobalBindlessSet = false;
     bool                                 UseVkMultiview = false;
     bool                                 RenderAsCubemap = false;
+    bool                                 UseFrameBufferResolution = false;
 };
 
 struct VulkanRenderPass
@@ -114,6 +115,7 @@ private:
     bool                                                    m_useVkMultiview = false;
     bool                                                    m_renderAsCubemap = false;
     bool                                                    m_useDefaultRenderResolution = true;
+    bool                                                    m_useFrameBufferResolution = false;
 
     void                                                    BuildRenderPass(RenderPassLoader& renderPassLoader);
     VulkanSubPass                                           BuildSubpasses(VulkanSubPassLoader& subPassLoader);
