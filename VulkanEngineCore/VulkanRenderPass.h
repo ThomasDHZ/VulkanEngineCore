@@ -124,6 +124,7 @@ private:
     void                                                    BuildFrameBuffer();
     void                                                    TransitionRenderPassAttachmentsToFinalLayout();
     bool                                                    RenderPipelineExists(const VkGuid& pipelineId);
+    ivec2                                                   ResolveResolution(ivec2 requestedRenderPassSize) const;
 
 public:
     VulkanRenderPass();

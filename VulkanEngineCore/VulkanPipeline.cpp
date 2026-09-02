@@ -311,11 +311,10 @@ void VulkanPipeline::CreatePipeline(VulkanPipelineLoader& pipelineLoader)
     };
 
     Vector<VkDynamicState> dynamicStateList;
-    if (pipelineLoader.ViewportList.empty() || pipelineLoader.ScissorList.empty())
-    {
+ 
         dynamicStateList.push_back(VK_DYNAMIC_STATE_VIEWPORT);
         dynamicStateList.push_back(VK_DYNAMIC_STATE_SCISSOR);
-    }
+    
 
     VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
