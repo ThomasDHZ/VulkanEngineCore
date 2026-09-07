@@ -141,6 +141,7 @@ void VulkanSwapchain::EndFrame(VkCommandBuffer& cmd)
     {
         m_RebuildSwapChainFlag = true;
         vulkan.TriggerFrameBufferResized();
+        return;
     }
     else VULKAN_THROW_IF_FAIL(result);
 
