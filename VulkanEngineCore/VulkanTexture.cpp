@@ -478,11 +478,11 @@ VkSampler			VulkanTexture::TextureSampler()			const noexcept { return m_textureS
 ivec3				VulkanTexture::TextureSize()						   { return m_textureSize; }
 VkImageLayout       VulkanTexture::TextureImageLayout()		const noexcept { return m_textureImageLayout; }
 uint32				VulkanTexture::MipMapLevels()			const noexcept { return m_mipMapLevels; }
+uint32				VulkanTexture::TextureArrayLayers()		const noexcept { return m_isCubeMap ? 6u : 1u; };
 bool				VulkanTexture::IsDepthTexture()			const noexcept { return m_isDepthTexture; }
 bool				VulkanTexture::IsStencil()				const noexcept { return m_isStencil; }
 bool				VulkanTexture::IsRenderPassAttachment() const noexcept { return m_isRenderPassAttachment; }
 bool				VulkanTexture::IsCubeMap()				const noexcept { return m_isCubeMap; }
-uint32				VulkanTexture::TextureArrayLayers()		const noexcept { return m_isCubeMap ? 6u : 1u; };
 
 bool VulkanTexture::IsDepthFormat(VkFormat format)
 {

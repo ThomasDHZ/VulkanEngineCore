@@ -147,9 +147,11 @@ public:
     [[nodiscard]] VkSampler           TextureSampler()                      const noexcept;
     [[nodiscard]] VkImageLayout       TextureImageLayout()                  const noexcept;
     [[nodiscard]] uint32              MipMapLevels()                        const noexcept;
+    [[nodiscard]] uint32              TextureArrayLayers()                  const noexcept;
+    ColorChannelEnum ColorChannels() const { return m_colorChannels; }
+    VkFormat TextureByteFormat() const { return m_textureByteFormat; }
     [[nodiscard]] bool                IsDepthTexture()                      const noexcept;
     [[nodiscard]] bool                IsStencil()                           const noexcept;
     [[nodiscard]] bool                IsRenderPassAttachment()              const noexcept;
     [[nodiscard]] bool                IsCubeMap()                           const noexcept;
-    [[nodiscard]] uint32              TextureArrayLayers()                  const noexcept;
 };
