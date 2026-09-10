@@ -71,8 +71,8 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(VulkanPipelineLoader& pipeli
     Vector<VkDescriptorSet>       descriptorSetList;
     Vector<VkDescriptorSetLayout> descriptorSetLayoutList;
 
-    m_descriptorSetList.emplace_back(pipelineLoader.GlobalBindlessDescriptorSet);
-    m_descriptorSetLayoutList.emplace_back(pipelineLoader.GlobalBindlessDescriptorSetLayout);
+    m_descriptorSetList.emplace_back(pipelineLoader.MemoryPoolLoader.value().GlobalBindlessDescriptorSet);
+    m_descriptorSetLayoutList.emplace_back(pipelineLoader.MemoryPoolLoader.value().GlobalBindlessDescriptorSetLayout);
 
     std::unordered_set<uint32> uniqueSets;
     for (const auto& descriptorSet : m_descriptorBindingList)
@@ -122,7 +122,7 @@ void VulkanPipeline::CreateMemoryPoolDescriptorSets(VulkanPipelineLoader& pipeli
             {
                 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
                 .pNext = nullptr,
-                .descriptorPool = pipelineLoader.GlobalBindlessPool,
+                .descriptorPool = pipelineLoader.MemoryPoolLoader.value().GlobalBindlessPool,
                 .descriptorSetCount = 1,
                 .pSetLayouts = &descriptorSetLayout
             };

@@ -11,6 +11,13 @@ enum class PipelineTypeEnum : uint32
     CollisionPipeline
 };
 
+struct MemoryPoolLoader
+{
+    VkDescriptorPool							GlobalBindlessPool = VK_NULL_HANDLE;
+    VkDescriptorSet								GlobalBindlessDescriptorSet = VK_NULL_HANDLE;
+    VkDescriptorSetLayout						GlobalBindlessDescriptorSetLayout = VK_NULL_HANDLE;
+};
+
 struct VulkanPipelineLoader
 {
     VkGuid                                      PipelineId = VkGuid();
@@ -20,9 +27,7 @@ struct VulkanPipelineLoader
     uint32                                      BindlessDescriptorSetIndex = UINT32_MAX;
     ivec2                                       RenderPassResolution = ivec2();
     VkRenderPass                                RenderPass = VK_NULL_HANDLE;
-    VkDescriptorPool							GlobalBindlessPool = VK_NULL_HANDLE;
-    VkDescriptorSet								GlobalBindlessDescriptorSet = VK_NULL_HANDLE;
-    VkDescriptorSetLayout						GlobalBindlessDescriptorSetLayout = VK_NULL_HANDLE;
+    std::optional<MemoryPoolLoader>             MemoryPoolLoader;
     Vector<VkGuid>                              ShaderIdList;
     Vector<VulkanShader>                        VulkanShaderList;
     Vector<VkDescriptorImageInfo>               RenderPassInputTextures;
