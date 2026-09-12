@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include <Platform.h>
 #include <vk_mem_alloc.h>
 
@@ -31,7 +31,7 @@ namespace std
 	};
 }
 
-class VulkanBuffer
+class  VulkanBuffer
 {
 	friend class BufferSystem;
 
@@ -52,13 +52,13 @@ public:
 	static VulkanBuffer CreateStaticBuffer(BufferHandle bufferId, VkBuffer buffer, VmaAllocation allocation, VkDeviceSize size, VkBufferUsageFlags usage);
 	static VulkanBuffer CreateDynamicBuffer(BufferHandle bufferId, VkBuffer buffer, VmaAllocation allocation, VkDeviceSize size, void* mappedData, VkBufferUsageFlags usage);
 
-	[[nodiscard]] BufferHandle        Handle() const noexcept { return m_handle; }
-	[[nodiscard]] VkBuffer            Buffer() const noexcept { return m_buffer; }
-	[[nodiscard]] VmaAllocation       BufferAllocation() const noexcept { return m_allocation; }
-	[[nodiscard]] VkDeviceSize        BufferSize() const noexcept { return m_size; }
-	[[nodiscard]] VkBufferUsageFlags  BufferUsage() const noexcept { return m_usage; }
-	[[nodiscard]] void*				  BufferMappedData() const noexcept { return m_mappedData; }
+	 [[nodiscard]] BufferHandle        Handle() const noexcept { return m_handle; }
+	 [[nodiscard]] VkBuffer            Buffer() const noexcept { return m_buffer; }
+	 [[nodiscard]] VmaAllocation       BufferAllocation() const noexcept { return m_allocation; }
+	 [[nodiscard]] VkDeviceSize        BufferSize() const noexcept { return m_size; }
+	 [[nodiscard]] VkBufferUsageFlags  BufferUsage() const noexcept { return m_usage; }
+	 [[nodiscard]] void*				  BufferMappedData() const noexcept { return m_mappedData; }
 
-	[[nodiscard]] bool                IsValid() const noexcept { return m_buffer != VK_NULL_HANDLE; }
-	[[nodiscard]] bool                IsPersistentlyMapped() const noexcept { return m_mappedData != nullptr; }
+	 [[nodiscard]] bool                IsValid() const noexcept { return m_buffer != VK_NULL_HANDLE; }
+	 [[nodiscard]] bool                IsPersistentlyMapped() const noexcept { return m_mappedData != nullptr; }
 };

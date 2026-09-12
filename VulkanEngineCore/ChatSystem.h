@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include "Platform.h"
 #include "ImGuiSystem.h"
 
@@ -32,7 +32,7 @@ private:
 public:
 	void DrawChatWindow();
 };
-extern ChatSystem& chatSystem;
+CORE_DLL_EXPORT extern ChatSystem& chatSystem;
 inline ChatSystem& ChatSystem::Get()
 {
 	static ChatSystem instance;

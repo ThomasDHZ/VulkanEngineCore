@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include "InputEnum.h"
 #include "VulkanWindow.h"
 
@@ -22,13 +22,13 @@ private:
 
 public:
 
-	bool ButtonPressed(int controllerId, int button);
-	vec2 LeftJoyStickMoved(int controllerId);
-	vec2 RightJoyStickMoved(int controllerId);
-	vec2 R2L2Pressed(int controllerId);
-	GLFWgamepadstate GetGamePadState() { return GamePadState[0]; }
+	CORE_DLL_EXPORT bool ButtonPressed(int controllerId, int button);
+	CORE_DLL_EXPORT vec2 LeftJoyStickMoved(int controllerId);
+	CORE_DLL_EXPORT vec2 RightJoyStickMoved(int controllerId);
+	CORE_DLL_EXPORT vec2 R2L2Pressed(int controllerId);
+	 GLFWgamepadstate GetGamePadState() { return GamePadState[0]; }
 };
-extern GameController& gameController;
+CORE_DLL_EXPORT extern GameController& gameController;
 inline GameController& GameController::Get()
 {
     static GameController instance;

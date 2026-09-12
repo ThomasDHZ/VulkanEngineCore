@@ -168,8 +168,8 @@
     <ClInclude Include="ChatSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\External\VulkanMemoryAllocator\src\VmaUsage.h">
-      <Filter>Header Files\External</Filter>
+    <ClInclude Include="DLL.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -272,8 +272,8 @@
     <ClCompile Include="ChatSystem.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\External\VulkanMemoryAllocator\src\VmaUsage.cpp">
-      <Filter>Header Files\External</Filter>
+    <ClCompile Include="DLL.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

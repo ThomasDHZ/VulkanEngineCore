@@ -83,22 +83,6 @@ void VulkanSystem::TriggerFrameBufferResized()
     m_framebufferResized = true;
 }
 
-bool VulkanSystem::WasFramebufferResized() const
-{
-    return m_framebufferResized;
-}
-
-void VulkanSystem::ResetFramebufferResized()
-{
-    m_framebufferResized = false;
-}
-
-VulkanInstance			 VulkanSystem::Instance()                     { return m_instance; }
-VulkanDebugger			 VulkanSystem::Debug()                        { return m_debug; }
-VulkanDevice			 VulkanSystem::Device()                       { return m_device; }
-VulkanSwapchain&		 VulkanSystem::Swapchain()                    { return m_swapChain; }
-VulkanCommandBuffer		 VulkanSystem::CommandBuffer()                { return m_commandBuffer; }
-
 bool					 VulkanSystem::CustomSurface()		    const { return m_usingCustomSurface; }
 const void*              VulkanSystem::WindowHandle()			const { return m_windowHandle; }
 ivec2					 VulkanSystem::WindowResolution()		const { return m_windowResolution; }

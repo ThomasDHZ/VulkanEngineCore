@@ -54,7 +54,8 @@ VulkanTexture::VulkanTexture(ivec2& attachmentSize, RenderPassAttachmentLoader& 
 	CreateTextureView();
 	CreateTextureSampler(attachment.SamplerCreateInfo);
 }
-
+VulkanTexture::VulkanTexture(const VulkanTexture& other) = default;
+VulkanTexture& VulkanTexture::operator=(const VulkanTexture& other) = default;
 VulkanTexture::~VulkanTexture()
 {
 }

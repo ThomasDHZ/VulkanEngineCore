@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include <Platform.h>
 #include <VulkanSystem.h>
 #include "VulkanBuffer.h"
@@ -97,20 +97,20 @@ public:
         return DataList;
     }
 
-    void                                                    SetUpVmaAllocation();
-    void                                                    CreateStagingBuffer(VkBuffer& outBuffer, VmaAllocation& outAllocation, VkDeviceSize size, const void* data);
-    uint32                                                  CreateStaticVulkanBuffer(const void* srcData, VkDeviceSize size, VkBufferUsageFlags shaderUsageFlags, VkDeviceSize offset = 0);
-    uint32                                                  CreateDynamicBuffer(const void* srcData, VkDeviceSize size, VkBufferUsageFlags usageFlags);
-    void                                                    UpdateDynamicBuffer(uint32 bufferId, const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
-    void                                                    CopyBuffer(VkBuffer* srcBuffer, VkBuffer* dstBuffer, VkDeviceSize size, VkBufferUsageFlags shaderUsageFlags, VkDeviceSize offset = 0);
-    void                                                    DestroyBuffer(VulkanBuffer& vulkanBuffer);
-    VulkanBuffer&                                           FindVulkanBuffer(uint32 id);
-    const Vector<VulkanBuffer>&                             VulkanBufferList();
+    CORE_DLL_EXPORT void                                                    SetUpVmaAllocation();
+    CORE_DLL_EXPORT void                                                    CreateStagingBuffer(VkBuffer& outBuffer, VmaAllocation& outAllocation, VkDeviceSize size, const void* data);
+    CORE_DLL_EXPORT uint32                                                  CreateStaticVulkanBuffer(const void* srcData, VkDeviceSize size, VkBufferUsageFlags shaderUsageFlags, VkDeviceSize offset = 0);
+    CORE_DLL_EXPORT uint32                                                  CreateDynamicBuffer(const void* srcData, VkDeviceSize size, VkBufferUsageFlags usageFlags);
+    CORE_DLL_EXPORT void                                                    UpdateDynamicBuffer(uint32 bufferId, const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
+    CORE_DLL_EXPORT void                                                    CopyBuffer(VkBuffer* srcBuffer, VkBuffer* dstBuffer, VkDeviceSize size, VkBufferUsageFlags shaderUsageFlags, VkDeviceSize offset = 0);
+    CORE_DLL_EXPORT  void                                                    DestroyBuffer(VulkanBuffer& vulkanBuffer);
+    CORE_DLL_EXPORT  VulkanBuffer&                                           FindVulkanBuffer(uint32 id);
+    CORE_DLL_EXPORT  const Vector<VulkanBuffer>&                             VulkanBufferList();
 
-    [[nodiscard]] VmaAllocator			                    VmaAllocatorHandle()	  const;
-    [[nodiscard]] UnorderedMap<uint32, VulkanBuffer>        VulkanBufferMap()         const;
+    CORE_DLL_EXPORT  [[nodiscard]] VmaAllocator			                    VmaAllocatorHandle()	  const;
+    CORE_DLL_EXPORT [[nodiscard]] UnorderedMap<uint32, VulkanBuffer>        VulkanBufferMap()         const;
 };
-extern BufferSystem& bufferSystem;
+CORE_DLL_EXPORT extern BufferSystem& bufferSystem;
 inline BufferSystem& BufferSystem::Get()
 {
     static BufferSystem instance;

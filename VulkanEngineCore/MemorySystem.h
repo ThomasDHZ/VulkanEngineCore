@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include "Platform.h"
 
 struct MemoryLeakPtr {
@@ -116,11 +116,11 @@ class MemorySystem
             DeletePtr(static_cast<void*>(ptr));
         }
 
-        const char* AddStringPtrBuffer(const String& stringInfo, const char* file, int line, const char* func, const char* notes = "");
-        void DeletePtr(void* ptr);
-        void ReportLeaks();
+        CORE_DLL_EXPORT const char* AddStringPtrBuffer(const String& stringInfo, const char* file, int line, const char* func, const char* notes = "");
+        CORE_DLL_EXPORT void DeletePtr(void* ptr);
+        CORE_DLL_EXPORT  void ReportLeaks();
 };
-extern MemorySystem& memorySystem;
+CORE_DLL_EXPORT extern MemorySystem& memorySystem;
 inline MemorySystem& MemorySystem::Get()
 {
 #ifdef _DEBUG

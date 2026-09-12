@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include "InputEnum.h"
 #include "VulkanWindow.h"
 
@@ -35,7 +35,7 @@ public:
 	static void MouseButtonPressedEvent(GLFWwindow* window, int button, int action, int mods);
 	static void MouseWheelEvent(GLFWwindow* window, double xpos, double ypos);
 };
-extern Mouse& mouse;
+CORE_DLL_EXPORT extern Mouse& mouse;
 inline Mouse& Mouse::Get()
 {
 	static Mouse instance;

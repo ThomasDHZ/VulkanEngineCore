@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include "Platform.h"
 #include "BufferSystem.h"
 
@@ -93,7 +93,7 @@ struct VulkanTextureLoader
     bool                  UseMipMaps;
 };
 
-class VulkanTexture
+class CORE_DLL_EXPORT VulkanTexture
 {
 private:
 
@@ -132,6 +132,8 @@ public:
     VulkanTexture();
     VulkanTexture(VulkanTextureLoader& textureLoader);
     VulkanTexture(ivec2& attachmentSize, RenderPassAttachmentLoader& attachment);
+    VulkanTexture(const VulkanTexture& other);
+    VulkanTexture& operator=(const VulkanTexture& other);
     ~VulkanTexture();
 
     void TransitionImageLayout(VkImageLayout newLayout, uint32 baseMipLevel = 0, uint32 levelCount = VK_REMAINING_MIP_LEVELS);

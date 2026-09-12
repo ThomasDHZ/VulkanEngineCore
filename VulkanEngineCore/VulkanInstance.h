@@ -1,8 +1,8 @@
 #pragma once
-
+#include "DLL.h"
 #include <Platform.h>
 
-class VulkanInstance
+class CORE_DLL_EXPORT VulkanInstance
 {
 private:
     uint32				            m_apiVersion = VK_API_VERSION_1_1;

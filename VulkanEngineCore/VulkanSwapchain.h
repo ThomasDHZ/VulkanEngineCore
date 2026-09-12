@@ -1,8 +1,8 @@
 #pragma once
-
+#include "DLL.h"
 #include <Platform.h>
 
-class VulkanSwapchain
+class CORE_DLL_EXPORT VulkanSwapchain
 {
 	public:
 		static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;

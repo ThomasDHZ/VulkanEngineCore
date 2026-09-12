@@ -69,6 +69,11 @@ void VulkanDebugger::CreateLogMessageCallback(LogVulkanMessageCallback callback)
     g_logVulkanMessageCallback = callback;
 }
 
+ VkDebugUtilsMessengerEXT* VulkanDebugger::DebugMessengerHandle()
+{
+     return &m_DebugMessenger; 
+}
+
 void VulkanDebugger::LogVulkanMessage(const char* message, int severity)
 {
     if (g_logVulkanMessageCallback)

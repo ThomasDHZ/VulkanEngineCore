@@ -25,6 +25,9 @@ VulkanPipeline::VulkanPipeline(VulkanPipelineLoader& pipelineLoader)
     CreatePipeline(pipelineLoader);
 }
 
+VulkanPipeline::VulkanPipeline(const VulkanPipeline&) = default;
+VulkanPipeline& VulkanPipeline::operator=(const VulkanPipeline&) = default;
+
 VulkanPipeline::~VulkanPipeline()
 {
 }

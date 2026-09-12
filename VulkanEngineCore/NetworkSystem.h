@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include "platform.h"
 #include "NetConnection.h"
     enum class NetworkMode 
@@ -56,29 +56,29 @@ private:
     void                                    ProcessOutgoing(float deltaTime);
 
 public:
-    bool                                    StartAsServer(uint16 port);
-    bool                                    StartAsClient();
-    bool                                    ConnectToServer(const IpAddress& ip, uint16 port);
-    void                                    Update(float deltaTime);
-    void                                    Stop();
-    void                                    Shutdown();
+    CORE_DLL_EXPORT  bool                                    StartAsServer(uint16 port);
+    CORE_DLL_EXPORT  bool                                    StartAsClient();
+    CORE_DLL_EXPORT bool                                    ConnectToServer(const IpAddress& ip, uint16 port);
+    CORE_DLL_EXPORT void                                    Update(float deltaTime);
+    CORE_DLL_EXPORT  void                                    Stop();
+    CORE_DLL_EXPORT  void                                    Shutdown();
 
-    void                                    SendChatMessage(const String& text);
-    void                                    OnPacketReceived(const PacketHeader& header, const byte* data, uint16 size, IpAddress ip, uint16 port);
+    CORE_DLL_EXPORT  void                                    SendChatMessage(const String& text);
+    CORE_DLL_EXPORT  void                                    OnPacketReceived(const PacketHeader& header, const byte* data, uint16 size, IpAddress ip, uint16 port);
 
-    void                                    SetNetworkMode(NetworkMode networkMode);
-    bool                                    SendUnreliable(uint8 type, const void* data, uint16 size);
-    bool                                    SendReliable(uint8 type, const void* data, uint16 size);
-    bool                                    BroadcastUnreliable(uint8 type, const void* data, uint16 size, const IpAddress* excludeIp = nullptr, uint16 excludePort = 0);
-    bool                                    BroadcastReliable(uint8 type, const void* data, uint16 size);
+    CORE_DLL_EXPORT void                                    SetNetworkMode(NetworkMode networkMode);
+    CORE_DLL_EXPORT bool                                    SendUnreliable(uint8 type, const void* data, uint16 size);
+    CORE_DLL_EXPORT bool                                    SendReliable(uint8 type, const void* data, uint16 size);
+    CORE_DLL_EXPORT  bool                                    BroadcastUnreliable(uint8 type, const void* data, uint16 size, const IpAddress* excludeIp = nullptr, uint16 excludePort = 0);
+    CORE_DLL_EXPORT  bool                                    BroadcastReliable(uint8 type, const void* data, uint16 size);
 
-    [[nodiscard]] bool                      IsServer()       const;
-    [[nodiscard]] bool                      IsClient()       const;
-    [[nodiscard]] bool                      IsConnected()    const;
-    [[nodiscard]] NetworkMode               GetNetworkMode() const;
-    [[nodiscard]] const Vector<ClientInfo>& GetClients()     const;
+    CORE_DLL_EXPORT [[nodiscard]] bool                      IsServer()       const;
+    CORE_DLL_EXPORT [[nodiscard]] bool                      IsClient()       const;
+    CORE_DLL_EXPORT [[nodiscard]] bool                      IsConnected()    const;
+    CORE_DLL_EXPORT [[nodiscard]] NetworkMode               GetNetworkMode() const;
+    CORE_DLL_EXPORT [[nodiscard]] const Vector<ClientInfo>& GetClients()     const;
 };
-extern NetworkSystem& networkSystem;
+CORE_DLL_EXPORT extern NetworkSystem& networkSystem;
 inline NetworkSystem& NetworkSystem::Get()
 {
     static NetworkSystem instance;

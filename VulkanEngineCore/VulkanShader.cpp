@@ -19,6 +19,9 @@ VulkanShader::VulkanShader(VkGuid& shaderId, const Vector<byte>& shaderCode)
     spvReflectDestroyShaderModule(&spvReflectModule);
 }
 
+VulkanShader::VulkanShader(const VulkanShader&) = default;
+VulkanShader& VulkanShader::operator=(const VulkanShader&) = default;
+
 VulkanShader::~VulkanShader()
 {
 }

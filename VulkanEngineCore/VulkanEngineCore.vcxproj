@@ -40,7 +40,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -145,7 +145,6 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\External\VulkanMemoryAllocator\src\VmaUsage.h" />
     <ClInclude Include="..\External\imgui\backends\imgui_impl_vulkan.h" />
     <ClInclude Include="..\External\imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="..\External\imgui\imconfig.h" />
@@ -158,6 +157,7 @@
     <ClInclude Include="..\External\VulkanMemoryAllocator\include\vk_mem_alloc.h" />
     <ClInclude Include="BufferSystem.h" />
     <ClInclude Include="ChatSystem.h" />
+    <ClInclude Include="DLL.h" />
     <ClInclude Include="GameController.h" />
     <ClInclude Include="ImGuiSystem.h" />
     <ClInclude Include="InputEnum.h" />
@@ -188,7 +188,6 @@
     <ClInclude Include="VulkanWindow.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\External\VulkanMemoryAllocator\src\VmaUsage.cpp" />
     <ClCompile Include="..\External\imgui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="..\External\imgui\backends\imgui_impl_vulkan.cpp" />
     <ClCompile Include="..\External\imgui\backends\imgui_impl_win32.cpp" />
@@ -200,6 +199,7 @@
     <ClCompile Include="..\External\SPIRV-Reflect\spirv_reflect.cpp" />
     <ClCompile Include="BufferSystem.cpp" />
     <ClCompile Include="ChatSystem.cpp" />
+    <ClCompile Include="DLL.cpp" />
     <ClCompile Include="GameController.cpp" />
     <ClCompile Include="ImGuiSystem.cpp" />
     <ClCompile Include="Keyboard.cpp" />

@@ -1,11 +1,11 @@
 #pragma once
-
+#include "DLL.h"
 #include "Platform.h"
 #include "VulkanShader.h"
 #include "VulkanTexture.h"
 #include "VulkanPipelineLoader.h"
 
-class VulkanPipeline
+class CORE_DLL_EXPORT VulkanPipeline
 {
 private:
     VkGuid                                      m_pipelineId;
@@ -35,6 +35,8 @@ private:
 public:
     VulkanPipeline();
     VulkanPipeline(VulkanPipelineLoader& pipelineLoader);
+    VulkanPipeline(const VulkanPipeline&);
+    VulkanPipeline& operator=(const VulkanPipeline&);
     ~VulkanPipeline();
 
     void                                        Destroy();

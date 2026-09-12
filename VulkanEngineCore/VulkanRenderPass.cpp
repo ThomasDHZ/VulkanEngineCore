@@ -4,6 +4,8 @@
 VulkanRenderPass::VulkanRenderPass()
 {
 }
+VulkanRenderPass::VulkanRenderPass(const VulkanRenderPass&) = default;
+VulkanRenderPass& VulkanRenderPass::operator=(const VulkanRenderPass&) = default;
 
 VulkanRenderPass::~VulkanRenderPass()
 {

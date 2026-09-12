@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include <Platform.h>
 #include "Typedef.h"
 #include <GLFW/glfw3.h>
@@ -23,21 +23,21 @@ private:
 public:
     static VulkanWindow& Get();
 
-    bool Create(const char* title, uint32 width, uint32 height);
-    void CreateSurface(VkInstance& instance, VkSurfaceKHR& surface);
-    void PollEvents();
-    bool ShouldClose() const;
-    void Close();
+    CORE_DLL_EXPORT  bool Create(const char* title, uint32 width, uint32 height);
+    CORE_DLL_EXPORT  void CreateSurface(VkInstance& instance, VkSurfaceKHR& surface);
+    CORE_DLL_EXPORT  void PollEvents();
+    CORE_DLL_EXPORT   bool ShouldClose() const;
+    CORE_DLL_EXPORT   void Close();
 
-    void* GetWindowHandle() const;
-    HWND  GetHWND() const;
-    HWND  GetHWND(GLFWwindow* window) const;
-    ivec2 GetSize() const;
-    ivec2 GetFramebufferSize() const;
+    CORE_DLL_EXPORT void* GetWindowHandle() const;
+    CORE_DLL_EXPORT  HWND  GetHWND() const;
+    CORE_DLL_EXPORT  HWND  GetHWND(GLFWwindow* window) const;
+    CORE_DLL_EXPORT ivec2 GetSize() const;
+    CORE_DLL_EXPORT  ivec2 GetFramebufferSize() const;
 
-    GLFWwindow* m_window = nullptr;
+     GLFWwindow* m_window = nullptr;
 };
-extern VulkanWindow& vulkanWindow;
+CORE_DLL_EXPORT extern VulkanWindow& vulkanWindow;
 inline VulkanWindow& VulkanWindow::Get()
 {
     static VulkanWindow instance;

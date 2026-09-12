@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include "InputEnum.h"
 #include "VulkanWindow.h"
 
@@ -27,7 +27,7 @@ public:
      bool IsKeyPressed(int key) const;
      bool IsKeyReleased(int key) const;
 };
-extern Keyboard& keyboard;
+CORE_DLL_EXPORT extern Keyboard& keyboard;
 inline Keyboard& Keyboard::Get()
 {
     static Keyboard instance;

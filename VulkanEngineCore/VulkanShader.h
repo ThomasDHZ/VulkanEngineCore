@@ -1,4 +1,5 @@
 #pragma once
+#include "DLL.h"
 #include "Platform.h"
 #include "VulkanSystem.h"
 #include "ShaderStructs.h"
@@ -11,7 +12,7 @@ struct ShaderLoader
     Vector<byte>          ShaderCode;
 };
 
-class VulkanShader
+class CORE_DLL_EXPORT VulkanShader
 {
 private:
     VkGuid                                                     m_shaderId;
@@ -38,6 +39,8 @@ private:
 public:
 	VulkanShader();
 	VulkanShader(VkGuid& shaderId, const Vector<byte>& shadeCode);
+    VulkanShader(const VulkanShader&);
+    VulkanShader& operator=(const VulkanShader&);
 	~VulkanShader();
 
 	VkPipelineShaderStageCreateInfo                            GetShader();

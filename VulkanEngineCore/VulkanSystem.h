@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include <Platform.h>
 #include "VulkanInstance.h"
 #include "VulkanDevice.h"
@@ -33,42 +33,43 @@ private:
 	void								  RendererSetUp(void* windowHandle, ivec2 renderResolution);
 
 public:
-	void								  VulkanSetUp(ivec2 windowResolution, ivec2 renderResolution);
-	void								  VulkanSetUp(void* windowHandle, ivec2 windowResolution, ivec2 renderResolution);
-	uint32								  GetMemoryType(VkPhysicalDevice physicalDevice, uint32 typeFilter, VkMemoryPropertyFlags properties);
-	VkCommandBuffer						  StartFrame();
-	void								  EndFrame(VkCommandBuffer& commandBuffer);
-	void								  Destroy();
 
-	void SetCustomFrameBufferSize(ivec2 size);
-	void TriggerFrameBufferResized();
-	bool WasFramebufferResized() const;
-	void ResetFramebufferResized();
+	CORE_DLL_EXPORT void VulkanSetUp(ivec2 windowResolution, ivec2 renderResolution);
+	CORE_DLL_EXPORT void VulkanSetUp(void* windowHandle, ivec2 windowResolution, ivec2 renderResolution);
+	CORE_DLL_EXPORT uint32 GetMemoryType(VkPhysicalDevice physicalDevice, uint32 typeFilter, VkMemoryPropertyFlags properties);
+	CORE_DLL_EXPORT VkCommandBuffer StartFrame();
+	CORE_DLL_EXPORT void EndFrame(VkCommandBuffer& commandBuffer);
+	CORE_DLL_EXPORT void Destroy();
+	CORE_DLL_EXPORT void SetCustomFrameBufferSize(ivec2 size);
+	CORE_DLL_EXPORT void TriggerFrameBufferResized();
 
-	VulkanInstance						  Instance();
-	VulkanDebugger						  Debug();
-	VulkanDevice						  Device();
-	VulkanSwapchain&					  Swapchain();
-	VulkanCommandBuffer					  CommandBuffer();
+	 bool WasFramebufferResized() const { return m_framebufferResized; }
+	 void ResetFramebufferResized() { m_framebufferResized = false; }
 
-	[[nodiscard]] bool					  CustomSurface()			const;
-	[[nodiscard]] const void*			  WindowHandle()			const;
-	[[nodiscard]] ivec2					  WindowResolution()		const;
-	[[nodiscard]] uint32				  ApiVersion()				const;
-	[[nodiscard]] VkInstance			  InstanceHandle()			const;
-	[[nodiscard]] VkSurfaceKHR			  Surface()					const;
-	[[nodiscard]] VkPhysicalDevice		  PhysicalDevice()			const;
-	[[nodiscard]] VkDevice				  LogicalDevice()			const;
-	[[nodiscard]] VkQueue                 GraphicsQueue()			const;
-	[[nodiscard]] VkQueue                 PresentQueue()			const;
-	[[nodiscard]] VkSampleCountFlagBits   MaxSampleCount()			const;
-	[[nodiscard]] uint32				  SwapChainImageCount()		const;
-	[[nodiscard]] VkExtent2D			  SwapChainResolution()		const;
-	[[nodiscard]] ivec2					  RenderPassResolution()	const;
-	[[nodiscard]] VkCommandPool           CommandPool()				const;
-	[[nodiscard]] Vector<VkCommandBuffer> CommandBufferList()		const;
+    VulkanSwapchain&      Swapchain()      { return m_swapChain; }
+    VulkanCommandBuffer&  CommandBuffer()  { return m_commandBuffer; }
+    VulkanDebugger&       Debug()          { return m_debug; }
+    VulkanInstance&       Instance()       { return m_instance; }
+    VulkanDevice&         Device()         { return m_device; }
+
+	 CORE_DLL_EXPORT [[nodiscard]] bool					  CustomSurface()			const;
+	 CORE_DLL_EXPORT [[nodiscard]] const void*			  WindowHandle()			const;
+	 CORE_DLL_EXPORT [[nodiscard]] ivec2					  WindowResolution()		const;
+	 CORE_DLL_EXPORT [[nodiscard]] uint32				  ApiVersion()				const;
+	 CORE_DLL_EXPORT [[nodiscard]] VkInstance			  InstanceHandle()			const;
+	 CORE_DLL_EXPORT [[nodiscard]] VkSurfaceKHR			  Surface()					const;
+	 CORE_DLL_EXPORT [[nodiscard]] VkPhysicalDevice		  PhysicalDevice()			const;
+	CORE_DLL_EXPORT [[nodiscard]] VkDevice				  LogicalDevice()			const;
+	CORE_DLL_EXPORT [[nodiscard]] VkQueue                 GraphicsQueue()			const;
+	CORE_DLL_EXPORT [[nodiscard]] VkQueue                 PresentQueue()			const;
+	CORE_DLL_EXPORT [[nodiscard]] VkSampleCountFlagBits   MaxSampleCount()			const;
+	CORE_DLL_EXPORT [[nodiscard]] uint32				  SwapChainImageCount()		const;
+	CORE_DLL_EXPORT [[nodiscard]] VkExtent2D			  SwapChainResolution()		const;
+	CORE_DLL_EXPORT [[nodiscard]] ivec2					  RenderPassResolution()	const;
+	CORE_DLL_EXPORT [[nodiscard]] VkCommandPool           CommandPool()				const;
+	CORE_DLL_EXPORT [[nodiscard]] Vector<VkCommandBuffer> CommandBufferList()		const;
 };
-extern VulkanSystem& vulkan;
+CORE_DLL_EXPORT extern VulkanSystem& vulkan;
 inline VulkanSystem& VulkanSystem::Get()
 {
 	static VulkanSystem instance;

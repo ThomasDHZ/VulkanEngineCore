@@ -1,5 +1,5 @@
 #pragma once
-
+#include "DLL.h"
 #include "Platform.h"
 #include "VulkanShader.h"
 #include "VulkanPipeline.h"
@@ -93,7 +93,7 @@ struct RenderPassLoader
     bool                                 UseFrameBufferResolution = false;
 };
 
-struct VulkanRenderPass
+struct CORE_DLL_EXPORT VulkanRenderPass
 {
 public:
     static constexpr uint32                                 MAX_FRAMES_IN_FLIGHT = VulkanSwapchain::MAX_FRAMES_IN_FLIGHT;
@@ -128,6 +128,8 @@ private:
 
 public:
     VulkanRenderPass();
+    VulkanRenderPass(const VulkanRenderPass&);
+    VulkanRenderPass& operator=(const VulkanRenderPass&);
     ~VulkanRenderPass();
 
     void                                                    LoadRenderPass(RenderPassLoader& renderPassLoader);
