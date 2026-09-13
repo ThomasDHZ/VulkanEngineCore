@@ -252,6 +252,7 @@ Vector<VkAttachmentDescription> VulkanRenderPass::BuildAttachmentDescriptors(Ren
             case kUsageType_BRDFTexture:            initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
             case kUsageType_PrefilterTexture:       initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
             case kUsageType_DepthBufferTexture:     initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+            case kUsageType_HdrTexture:             initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         break;
             default: throw std::runtime_error("Unknown TextureUsageType");
         }
 

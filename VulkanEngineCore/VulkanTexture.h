@@ -15,6 +15,7 @@ enum TextureUsageTypeEnum : uint32
     kUsageType_CubeMap,
     kUsageType_BRDFTexture,
     kUsageType_Texture,
+    kUsageType_HdrTexture
 };
 
 enum RenderAttachmentTypeEnum
@@ -150,8 +151,8 @@ public:
     [[nodiscard]] VkImageLayout       TextureImageLayout()                  const noexcept;
     [[nodiscard]] uint32              MipMapLevels()                        const noexcept;
     [[nodiscard]] uint32              TextureArrayLayers()                  const noexcept;
-    ColorChannelEnum ColorChannels() const { return m_colorChannels; }
-    VkFormat TextureByteFormat() const { return m_textureByteFormat; }
+    [[nodiscard]] ColorChannelEnum    ColorChannels()                       const ;
+    [[nodiscard]] VkFormat            TextureByteFormat()                   const ;
     [[nodiscard]] bool                IsDepthTexture()                      const noexcept;
     [[nodiscard]] bool                IsStencil()                           const noexcept;
     [[nodiscard]] bool                IsRenderPassAttachment()              const noexcept;
