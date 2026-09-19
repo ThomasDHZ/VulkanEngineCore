@@ -36,6 +36,8 @@
 #include <objbase.h>
 #include <combaseapi.h>
 
+#include "ImGuiConfig.h"
+
 #pragma comment(lib, "ws2_32.lib")
 
 using SocketHandle = SOCKET;

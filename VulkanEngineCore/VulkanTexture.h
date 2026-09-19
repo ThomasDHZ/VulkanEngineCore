@@ -2,6 +2,8 @@
 #include "DLL.h"
 #include "Platform.h"
 #include "BufferSystem.h"
+#include "VmaConfig.h"
+#include "vk_mem_alloc.h"
 
 enum TextureUsageTypeEnum : uint32
 {

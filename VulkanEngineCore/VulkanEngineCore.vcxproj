@@ -112,7 +112,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;VulkanEngineCore_EXPORTS;VK_USE_PLATFORM_WIN32_KHR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;VulkanEngineCore_EXPORTS;VK_USE_PLATFORM_WIN32_KHR;IMGUI_USER_CONFIG="ImGuiConfig.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -159,6 +159,7 @@
     <ClInclude Include="ChatSystem.h" />
     <ClInclude Include="DLL.h" />
     <ClInclude Include="GameController.h" />
+    <ClInclude Include="ImGuiConfig.h" />
     <ClInclude Include="ImGuiSystem.h" />
     <ClInclude Include="InputEnum.h" />
     <ClInclude Include="Keyboard.h" />
@@ -169,6 +170,7 @@
     <ClInclude Include="Platform.h" />
     <ClInclude Include="ShaderEnums.h" />
     <ClInclude Include="ShaderStructs.h" />
+    <ClInclude Include="VmaConfig.h" />
     <ClInclude Include="VulkanMesh.h" />
     <ClInclude Include="VulkanPipeline.h" />
     <ClInclude Include="VulkanPipelineLoader.h" />
@@ -197,6 +199,7 @@
     <ClCompile Include="..\External\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\External\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\External\SPIRV-Reflect\spirv_reflect.cpp" />
+    <ClCompile Include="..\External\VulkanMemoryAllocator\VmaImplementation.cpp" />
     <ClCompile Include="BufferSystem.cpp" />
     <ClCompile Include="ChatSystem.cpp" />
     <ClCompile Include="DLL.cpp" />

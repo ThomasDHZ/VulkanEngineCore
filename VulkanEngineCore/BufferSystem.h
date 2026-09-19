@@ -3,6 +3,8 @@
 #include <Platform.h>
 #include <VulkanSystem.h>
 #include "VulkanBuffer.h"
+#include "VmaConfig.h"
+#include "vk_mem_alloc.h"
 
 class BufferSystem
 {

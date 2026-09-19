@@ -46,6 +46,9 @@
     <Filter Include="Source Files\Network">
       <UniqueIdentifier>{2bf9212e-5666-44ba-a83b-a4c1d65f528b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Config">
+      <UniqueIdentifier>{b855bd78-f414-46cb-8e38-035dbe1dfdff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VkGuid.h">
@@ -92,9 +95,6 @@
     </ClInclude>
     <ClInclude Include="VulkanBuffer.h">
       <Filter>Header Files\Vulkan</Filter>
-    </ClInclude>
-    <ClInclude Include="..\External\VulkanMemoryAllocator\include\vk_mem_alloc.h">
-      <Filter>Header Files\External</Filter>
     </ClInclude>
     <ClInclude Include="VulkanSystem.h">
       <Filter>Header Files\Systems</Filter>
@@ -170,6 +170,15 @@
     </ClInclude>
     <ClInclude Include="DLL.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGuiConfig.h">
+      <Filter>Header Files\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="VmaConfig.h">
+      <Filter>Header Files\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\VulkanMemoryAllocator\include\vk_mem_alloc.h">
+      <Filter>Header Files\External</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -274,6 +283,9 @@
     </ClCompile>
     <ClCompile Include="DLL.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\VulkanMemoryAllocator\VmaImplementation.cpp">
+      <Filter>Source Files\External</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

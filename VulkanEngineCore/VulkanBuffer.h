@@ -1,7 +1,9 @@
 #pragma once
 #include "DLL.h"
 #include <Platform.h>
-#include <vk_mem_alloc.h>
+#include "VmaConfig.h"
+#include "vk_mem_alloc.h"
+
 
 struct BufferHandle
 {

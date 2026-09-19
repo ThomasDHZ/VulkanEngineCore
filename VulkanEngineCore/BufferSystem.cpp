@@ -1,8 +1,5 @@
-#define VMA_DEBUG_LOG_LEVEL 0   // Reduce spam in RenderDoc
-#define VMA_IMPLEMENTATION
 #include "BufferSystem.h"
 #include <VulkanSystem.h>
-#include <vk_mem_alloc.h>
 #include <iostream>
 
 BufferSystem& bufferSystem = BufferSystem::Get();
