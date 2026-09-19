@@ -1,42 +1,45 @@
 # VulkanEngineCore
 
-Core architecture and systems for a high-performance hybrid engine built with **.NET 8** and native **C++**.
+Core architecture for a hybrid **.NET 8 + native C++** system: explicit DLL boundaries, interop, memory pools, and the C# wrappers the editor and runtime sit on.
 
-This repository focuses on clean managed/native boundaries, high-performance interop, memory management, and modular design. It serves as the foundation for larger engine and tooling projects.
+This repo is the foundation. [VulkanGameEngine](https://github.com/ThomasDHZ/VulkanGameEngine) is the runtime built on it. [VulkanGameEngineLevelEditor](https://github.com/ThomasDHZ/VulkanGameEngineLevelEditor) is the WinForms tool that hosts it.
 
-## Key Features
+## Call path
 
-- **Hybrid .NET 8 + Native Architecture**  
-  Clear separation between managed C# systems and native C++ performance-critical code.
+```text
+C# tool or script
+  → C# wrapper (VulkanEngineCoreCS)
+    → P/Invoke / explicit DLL export
+      → native C++ (pools, renderer hooks, baker)
+```
 
-- **High-Performance Interop**  
-  Custom C#/C++ interop layer designed for low overhead and efficient data exchange.
+C# owns orchestration, config, and tooling. Native code owns tight loops and memory that should not live on the managed heap.
 
-- **Memory Management**  
-  Memory pooling system aimed at reducing garbage collection pressure and improving runtime performance (estimated ~200 MB reduction in related projects).
+## What it provides
 
-- **Modular Design**  
-  Emphasis on clean architecture, modular components, and maintainable system boundaries.
+- Hybrid .NET 8 + native layout with a hard managed/native line
+- Custom interop (P/Invoke, unsafe, Marshal, explicit exports)
+- Memory pooling aimed at cutting GC pressure on hot buffers (on the order of ~200 MB in related projects)
+- Modular systems the editor and runtime can load without copying the whole engine
+- Cross-platform target: Windows, Linux (CMake/Ninja), Android NDK
 
-- **Cross-Platform Foundation**  
-  Built with support for Windows, Linux, and Android in mind.
+## Tech stack
 
-## Tech Stack
+| Side | Tech |
+|---|---|
+| Managed | C# / .NET 8 |
+| Native | C++ |
+| Interop | Custom DLLs, unsafe, Marshal |
+| Build | Visual Studio, CMake / Ninja |
 
-- **Managed**: C# / .NET 8
-- **Native**: C++
-- **Interop**: Custom DLLs, unsafe code, Marshal
-- **Focus Areas**: Performance, memory management, modular architecture
+## Related repos
 
-## Related Projects
-
-- [Vulkan Game Engine](https://github.com/ThomasDHZ/VulkanGameEngine) – Higher-level engine built on top of these core systems
-- [EclipseEngine](https://github.com/ThomasDHZ/EclipseEngine) – Earlier graphics engine that informed this architecture
-
-## Purpose
-
-This project explores practical techniques for combining the productivity of .NET with the performance of native code. It demonstrates real-world patterns for interop, memory control, and clean system design in performance-sensitive applications.
+- [VulkanGameEngine](https://github.com/ThomasDHZ/VulkanGameEngine) — runtime on top of this core
+- [VulkanGameEngineLevelEditor](https://github.com/ThomasDHZ/VulkanGameEngineLevelEditor) — C# WinForms host
+- [ListPtr](https://github.com/ThomasDHZ/ListPtr) — dense C# ↔ native transfer
+- [MemoryLeakReporterDemo](https://github.com/ThomasDHZ/MemoryLeakReporterDemo) — native leak reporting from managed code
+- [EclipseEngine](https://github.com/ThomasDHZ/EclipseEngine) — earlier C++ graphics work that informed the split
 
 ## Status
 
-Active development.
+Active. Used by the editor and runtime repos above.
