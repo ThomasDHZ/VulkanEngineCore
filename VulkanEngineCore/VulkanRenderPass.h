@@ -49,10 +49,8 @@ struct VulkanSubPass
 struct PushConstantUpdateRule
 {
     String                               Variable;
-    String                               SourceId;
-    String                               Value;
-    bool                                 ConstValue;
-    bool                                 DirtyFlag = true;
+    ShaderMemberTypeEnum                 VariableType;
+    Vector<String>                       Value;
 };
 
 struct VulkanSubPassLoader
