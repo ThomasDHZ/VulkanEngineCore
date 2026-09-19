@@ -229,6 +229,7 @@ VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoade
         .PipelinePackageId = subPassLoader.PipelinePackageId,
         .MeshType = subPassLoader.MeshType,
         .ShaderPushConstant = subPassLoader.ShaderPushConstant,
+        .PushConstantUpdates = subPassLoader.PushConstantUpdates,
         .InputTextureList = subPassLoader.InputTextureList,
         .OutputTextureList = subPassLoader.OutputTextureList,
         .OffScreenFrameBuffer = subPassLoader.OffScreenRenderPass,

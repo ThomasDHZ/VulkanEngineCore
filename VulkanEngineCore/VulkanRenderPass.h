@@ -35,22 +35,23 @@ struct MeshDrawMessage
     VkBuffer       InstanceBuffer = VK_NULL_HANDLE;
 };
 
+struct PushConstantUpdateRule
+{
+    String                               Variable;
+    ShaderMemberTypeEnum                 VariableType;
+    Vector<String>                       Value;
+};
+
 struct VulkanSubPass
 {
     VkGuid                               RenderPassGuid;
     VkGuid                               PipelinePackageId;
     MeshTypeEnum                         MeshType;
     std::optional<String>                ShaderPushConstant;
+    Vector<PushConstantUpdateRule>       PushConstantUpdates;
     Vector<VkGuid>                       InputTextureList;
     Vector<VkGuid>                       OutputTextureList;
     bool                                 OffScreenFrameBuffer = false;
-};
-
-struct PushConstantUpdateRule
-{
-    String                               Variable;
-    ShaderMemberTypeEnum                 VariableType;
-    Vector<String>                       Value;
 };
 
 struct VulkanSubPassLoader
