@@ -11,6 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp> 
+#include <glm/gtc/vec1.hpp>
 #include <nlohmann/json.hpp>
 #include <vector>
 
