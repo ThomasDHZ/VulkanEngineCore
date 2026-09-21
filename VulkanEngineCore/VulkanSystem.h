@@ -52,13 +52,13 @@ public:
     VulkanInstance&       Instance()       { return m_instance; }
     VulkanDevice&         Device()         { return m_device; }
 
-	 CORE_DLL_EXPORT [[nodiscard]] bool					  CustomSurface()			const;
-	 CORE_DLL_EXPORT [[nodiscard]] const void*			  WindowHandle()			const;
-	 CORE_DLL_EXPORT [[nodiscard]] ivec2					  WindowResolution()		const;
-	 CORE_DLL_EXPORT [[nodiscard]] uint32				  ApiVersion()				const;
-	 CORE_DLL_EXPORT [[nodiscard]] VkInstance			  InstanceHandle()			const;
-	 CORE_DLL_EXPORT [[nodiscard]] VkSurfaceKHR			  Surface()					const;
-	 CORE_DLL_EXPORT [[nodiscard]] VkPhysicalDevice		  PhysicalDevice()			const;
+	CORE_DLL_EXPORT [[nodiscard]] bool					  CustomSurface()			const;
+	CORE_DLL_EXPORT [[nodiscard]] const void*			  WindowHandle()			const;
+	CORE_DLL_EXPORT [[nodiscard]] ivec2					  WindowResolution()		const;
+	CORE_DLL_EXPORT [[nodiscard]] uint32				  ApiVersion()				const;
+	CORE_DLL_EXPORT [[nodiscard]] VkInstance			  InstanceHandle()			const;
+	CORE_DLL_EXPORT [[nodiscard]] VkSurfaceKHR			  Surface()					const;
+	CORE_DLL_EXPORT [[nodiscard]] VkPhysicalDevice		  PhysicalDevice()			const;
 	CORE_DLL_EXPORT [[nodiscard]] VkDevice				  LogicalDevice()			const;
 	CORE_DLL_EXPORT [[nodiscard]] VkQueue                 GraphicsQueue()			const;
 	CORE_DLL_EXPORT [[nodiscard]] VkQueue                 PresentQueue()			const;

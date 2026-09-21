@@ -5,6 +5,7 @@
 #include "VulkanPipeline.h"
 #include "VulkanPipelineLoader.h"
 #include "VulkanTexture.h"
+#include <variant>
 
 enum MeshTypeEnum
 {
@@ -37,6 +38,8 @@ struct MeshDrawMessage
 
 struct PushConstantUpdateRule
 {
+    //using PushConstantValue = std::variant<int, uint32_t, float, bool, glm::ivec2, glm::ivec3, glm::ivec4, glm::vec2, glm::vec3, glm::vec4, glm::mat2, glm::mat3, glm::mat4>;
+
     String                               Variable;
     ShaderMemberTypeEnum                 VariableType;
     Vector<String>                       Value;
