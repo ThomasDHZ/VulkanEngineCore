@@ -94,32 +94,37 @@ struct VkGuid
 
     static VkGuid Generate()
     {
-#ifdef _WIN32
-        GUID g;
-        if (FAILED(CoCreateGuid(&g))) throw std::runtime_error("CoCreateGuid failed");
-        return VkGuid(g);
-#elif defined(__APPLE__)
-        CFUUIDRef u = CFUUIDCreate(nullptr);
-        CFUUIDBytes b = CFUUIDGetUUIDBytes(u);
-        CFRelease(u);
-        VkGuid g;
-        g.Data1 = OSSwapBigToHostInt32(*(uint32_t*)&b.byte0);
-        g.Data2 = OSSwapBigToHostInt16(*(uint16_t*)&b.byte4);
-        g.Data3 = OSSwapBigToHostInt16(*(uint16_t*)&b.byte6);
-        std::memcpy(g.Data4, &b.byte8, 8);
-        return g;
-#else
-        VkGuid g;
-        uint64_t r1 = (static_cast<uint64_t>(std::rand()) << 32) | std::rand();
-        uint64_t r2 = (static_cast<uint64_t>(std::rand()) << 32) | std::rand();
-        std::memcpy(&g.Data1, &r1, 4);
-        std::memcpy(&g.Data2, &r2, 2);
-        std::memcpy(&g.Data3, ((uint8_t*)&r2) + 2, 2);
-        std::memcpy(g.Data4, ((uint8_t*)&r1) + 4, 8);
-        g.Data4[0] = (g.Data4[0] & 0x0F) | 0x40;
-        g.Data4[2] = (g.Data4[2] & 0x3F) | 0x80;
-        return g;
-#endif
+        VkGuid g{};
+        #ifdef _WIN32
+            GUID guid;
+            if (FAILED(CoCreateGuid(&guid))) throw std::runtime_error("CoCreateGuid failed");
+            std::string guidStr = VkGuid(guid).ToString();
+            guidStr.replace(guidStr.find('{'), 1, "");
+            guidStr.replace(guidStr.find('}'), 1, "");
+            return VkGuid(guid);
+        #else
+                // 16 random bytes
+                uint8_t b[16];
+        #if defined(__linux__) || defined(__ANDROID__)
+                FILE* f = std::fopen("/dev/urandom", "rb");
+                if (!f || std::fread(b, 1, 16, f) != 16)
+                    throw std::runtime_error("urandom failed");
+                if (f) std::fclose(f);
+        #elif defined(__APPLE__)
+                arc4random_buf(b, 16);
+        #else
+        #error "VkGuid::Generate: no CSPRNG"
+        #endif
+                // UUID v4
+                b[6] = static_cast<uint8_t>((b[6] & 0x0F) | 0x40);
+                b[8] = static_cast<uint8_t>((b[8] & 0x3F) | 0x80);
+
+                g.Data1 = (uint32_t(b[0]) << 24) | (uint32_t(b[1]) << 16) | (uint32_t(b[2]) << 8) | uint32_t(b[3]);
+                g.Data2 = uint16_t((uint16_t(b[4]) << 8) | b[5]);
+                g.Data3 = uint16_t((uint16_t(b[6]) << 8) | b[7]);
+                std::memcpy(g.Data4, b + 8, 8);
+                return g;
+        #endif
     }
 
     static VkGuid Empty() {
