@@ -16,6 +16,7 @@ void VulkanDevice::Initialize()
     SetUpLogicalDevice();
     SetUpDeviceQueue();
     m_MaxSampleCount = GetMaxSampleCount(m_physicalDevice);
+    m_PhysicalDeviceLimits = GetPhysicalDeviceLimits(m_physicalDevice);
 }
 
 void VulkanDevice::SetUpLogicalDevice()
@@ -289,6 +290,13 @@ Vector<VkPhysicalDevice> VulkanDevice::GetPhysicalDeviceList(VkInstance instance
     return physicalDeviceList;
 }
 
+VkPhysicalDeviceLimits VulkanDevice::GetPhysicalDeviceLimits(VkPhysicalDevice physicalDevice)
+{
+    VkPhysicalDeviceProperties properties{};
+    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+    return properties.limits;
+}
+
 Vector<VkSurfaceFormatKHR> VulkanDevice::GetPhysicalDeviceFormats(VkPhysicalDevice physicalDevice)
 {
     uint32 surfaceFormatCount = 0;
@@ -350,10 +358,10 @@ void VulkanDevice::Destroy()
     }
 }
 
-VkPhysicalDevice          VulkanDevice::PhysicalDevice() const { return m_physicalDevice; }
-VkDevice                  VulkanDevice::LogicalDevice()  const { return m_logicalDevice; }
-VkQueue                   VulkanDevice::GraphicsQueue()  const { return m_graphicsQueue; }
-VkQueue                   VulkanDevice::PresentQueue()   const { return m_presentQueue; }
-uint32                    VulkanDevice::GraphicsFamily() const { return m_graphicsFamily; }
-uint32                    VulkanDevice::PresentFamily()  const { return m_presentFamily; }
-VkSampleCountFlagBits     VulkanDevice::MaxSampleCount() const { return m_MaxSampleCount; }
+VkPhysicalDevice          VulkanDevice::PhysicalDevice()       const { return m_physicalDevice; }
+VkDevice                  VulkanDevice::LogicalDevice()        const { return m_logicalDevice; }
+VkQueue                   VulkanDevice::GraphicsQueue()        const { return m_graphicsQueue; }
+VkQueue                   VulkanDevice::PresentQueue()         const { return m_presentQueue; }
+uint32                    VulkanDevice::GraphicsFamily()       const { return m_graphicsFamily; }
+uint32                    VulkanDevice::PresentFamily()        const { return m_presentFamily; }
+VkSampleCountFlagBits     VulkanDevice::MaxSampleCount()       const { return m_MaxSampleCount; }

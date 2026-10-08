@@ -175,8 +175,7 @@ void VulkanRenderPass::RebuildRenderPass()
 
     for (auto& attList : m_attachmentList)
     {
-        for (auto& tex : attList)
-            tex.DestroyTexture();
+        for (auto& tex : attList) tex.DestroyTexture();
         attList.clear();
     }
 
@@ -233,6 +232,7 @@ VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoade
         .InputTextureList = subPassLoader.InputTextureList,
         .OutputTextureList = subPassLoader.OutputTextureList,
         .OffScreenFrameBuffer = subPassLoader.OffScreenRenderPass,
+        .AlphaRenderPass = subPassLoader.AlphaRenderPass
     };
 }
 

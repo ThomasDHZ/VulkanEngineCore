@@ -52,9 +52,11 @@ struct VulkanSubPass
     MeshTypeEnum                         MeshType;
     std::optional<String>                ShaderPushConstant;
     Vector<PushConstantUpdateRule>       PushConstantUpdates;
+    Vector<VkGuid>                       InputAttachmentList;
     Vector<VkGuid>                       InputTextureList;
     Vector<VkGuid>                       OutputTextureList;
     bool                                 OffScreenFrameBuffer = false;
+    bool                                 AlphaRenderPass = false;
 };
 
 struct VulkanSubPassLoader
@@ -63,9 +65,11 @@ struct VulkanSubPassLoader
     MeshTypeEnum                         MeshType;
     std::optional<String>                ShaderPushConstant;
     Vector<PushConstantUpdateRule>       PushConstantUpdates;
+    Vector<VkGuid>                       InputAttachmentList;
     Vector<VkGuid>                       InputTextureList;
     Vector<VkGuid>                       OutputTextureList;
     bool                                 OffScreenRenderPass = false;
+    bool                                 AlphaRenderPass = false;
 };
 
 struct VulkanPipelinePackage

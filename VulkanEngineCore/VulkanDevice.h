@@ -13,6 +13,7 @@ class CORE_DLL_EXPORT VulkanDevice
         uint32                                 m_graphicsFamily = UINT32_MAX;
         uint32                                 m_presentFamily  = UINT32_MAX;
         VkSampleCountFlagBits				   m_MaxSampleCount = VK_SAMPLE_COUNT_1_BIT;
+        VkPhysicalDeviceLimits				   m_PhysicalDeviceLimits;
 
         void                                   SetUpPhysicalDevice();
         void                                   SetUpLogicalDevice();
@@ -29,6 +30,7 @@ class CORE_DLL_EXPORT VulkanDevice
 
         void                                    Initialize();
         Vector<VkPhysicalDevice>                GetPhysicalDeviceList(VkInstance instance);
+        VkPhysicalDeviceLimits                  GetPhysicalDeviceLimits(VkPhysicalDevice physicalDevice);
         VkPhysicalDeviceProperties              GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice);
         VkPhysicalDeviceFeatures                GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice);
         VkPhysicalDeviceFeatures2               GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice);
@@ -36,11 +38,11 @@ class CORE_DLL_EXPORT VulkanDevice
         Vector<VkPresentModeKHR>                GetPhysicalDevicePresentModes(VkPhysicalDevice physicalDevice);
         void                                    Destroy();
 
-        [[nodiscard]] VkPhysicalDevice          PhysicalDevice() const;
-        [[nodiscard]] VkDevice                  LogicalDevice()  const;
-        [[nodiscard]] VkQueue                   GraphicsQueue()  const;
-        [[nodiscard]] VkQueue                   PresentQueue()   const;
-        [[nodiscard]] uint32                    GraphicsFamily() const;
-        [[nodiscard]] uint32                    PresentFamily()  const;
-        [[nodiscard]] VkSampleCountFlagBits     MaxSampleCount() const;
+        [[nodiscard]] VkPhysicalDevice          PhysicalDevice()       const;
+        [[nodiscard]] VkDevice                  LogicalDevice()        const;
+        [[nodiscard]] VkQueue                   GraphicsQueue()        const;
+        [[nodiscard]] VkQueue                   PresentQueue()         const;
+        [[nodiscard]] uint32                    GraphicsFamily()       const;
+        [[nodiscard]] uint32                    PresentFamily()        const;
+        [[nodiscard]] VkSampleCountFlagBits     MaxSampleCount()       const;
 };
