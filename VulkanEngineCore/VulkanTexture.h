@@ -17,7 +17,9 @@ enum TextureUsageTypeEnum : uint32
     kUsageType_CubeMap,
     kUsageType_BRDFTexture,
     kUsageType_Texture,
-    kUsageType_HdrTexture
+    kUsageType_HdrTexture,
+    kUsageType_DirectionalLightShadowMap,
+    kUsageType_PointLightShadowMap,
 };
 
 enum RenderAttachmentTypeEnum

@@ -411,6 +411,11 @@ void ImGuiSystem::TextWrapped(const char* fmt, ...)
     va_end(args);
 }
 
+void ImGuiSystem::Image(ImTextureRef tex_ref, const ImVec2& image_size, const ImVec2& uv0, const ImVec2& uv1)
+{
+    ImGui::Image(tex_ref, image_size, uv0, uv1);
+}
+
 float ImGuiSystem::GetScrollY()
 {
     return ImGui::GetScrollY();

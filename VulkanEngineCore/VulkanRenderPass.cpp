@@ -83,39 +83,77 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
     {
         bool useDepthForThisSubpass = false;
         VkAttachmentReference depthRefForThisSubpass = {};
+
         for (int y = 0; y < renderPassAttachmentTextureInfoMap.size(); y++)
         {
             RenderPassAttachmentLoader renderAttachment = renderPassAttachmentTextureInfoMap[y];
             switch (renderAttachment.RenderAttachmentTypes[x])
             {
-            case RenderAttachmentTypeEnum::ColorRenderedTexture: colorAttachmentReferenceList[x].emplace_back(VkAttachmentReference{ .attachment = static_cast<uint32>(y), .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL }); break;
+            case RenderAttachmentTypeEnum::ColorRenderedTexture:
+                colorAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
+                    .attachment = static_cast<uint32>(y),
+                    .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                    });
+                break;
+
             case RenderAttachmentTypeEnum::InputAttachmentTexture:
             {
-                bool is_depth = (renderAttachment.TextureByteFormat >= VK_FORMAT_D16_UNORM && renderAttachment.TextureByteFormat <= VK_FORMAT_D32_SFLOAT_S8_UINT);
-                VkImageLayout input_layout = is_depth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                inputAttachmentReferenceList[x].emplace_back(VkAttachmentReference{ .attachment = static_cast<uint32>(y), .layout = input_layout });
+                bool is_depth = (renderAttachment.TextureByteFormat >= VK_FORMAT_D16_UNORM &&
+                    renderAttachment.TextureByteFormat <= VK_FORMAT_D32_SFLOAT_S8_UINT);
+                VkImageLayout input_layout = is_depth
+                    ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+                    : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                inputAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
+                    .attachment = static_cast<uint32>(y),
+                    .layout = input_layout
+                    });
                 break;
             }
-            case RenderAttachmentTypeEnum::ResolveAttachmentTexture: resolveAttachmentReferenceList[x].emplace_back(VkAttachmentReference{ .attachment = static_cast<uint32>(y), .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL }); break;
-            case RenderAttachmentTypeEnum::DepthRenderedTexture:  depthRefForThisSubpass = VkAttachmentReference{ .attachment = (uint)(y), .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL }; useDepthForThisSubpass = true; break;
-            case RenderAttachmentTypeEnum::SkipSubPass: break;
-            default: throw std::runtime_error("Case doesn't exist: RenderedTextureType");
+
+            case RenderAttachmentTypeEnum::ResolveAttachmentTexture:
+                resolveAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
+                    .attachment = static_cast<uint32>(y),
+                    .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                    });
+                break;
+
+            case RenderAttachmentTypeEnum::DepthRenderedTexture:
+            {
+                // Subpass 0 writes depth, later subpasses only read it
+                VkImageLayout depthLayout = (x == 0)
+                    ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                    : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+                depthRefForThisSubpass = VkAttachmentReference{
+                    .attachment = static_cast<uint32>(y),
+                    .layout = depthLayout
+                };
+                useDepthForThisSubpass = true;
+                break;
+            }
+
+            case RenderAttachmentTypeEnum::SkipSubPass:
+                break;
+
+            default:
+                throw std::runtime_error("Case doesn't exist: RenderedTextureType");
             }
         }
 
         depthReferences[x] = depthRefForThisSubpass;
         useDepthReferences[x] = useDepthForThisSubpass;
+
         subPassDescriptionList.emplace_back(VkSubpassDescription{
-                .flags = 0,
-                .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-                .inputAttachmentCount = static_cast<uint32>(inputAttachmentReferenceList[x].size()),
-                .pInputAttachments = inputAttachmentReferenceList[x].empty() ? nullptr : inputAttachmentReferenceList[x].data(),
-                .colorAttachmentCount = static_cast<uint32>(colorAttachmentReferenceList[x].size()),
-                .pColorAttachments = colorAttachmentReferenceList[x].empty() ? nullptr : colorAttachmentReferenceList[x].data(),
-                .pResolveAttachments = resolveAttachmentReferenceList[x].empty() ? nullptr : resolveAttachmentReferenceList[x].data(),
-                .pDepthStencilAttachment = useDepthReferences[x] ? &depthReferences[x] : nullptr,
-                .preserveAttachmentCount = 0,
-                .pPreserveAttachments = nullptr
+            .flags = 0,
+            .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+            .inputAttachmentCount = static_cast<uint32>(inputAttachmentReferenceList[x].size()),
+            .pInputAttachments = inputAttachmentReferenceList[x].empty() ? nullptr : inputAttachmentReferenceList[x].data(),
+            .colorAttachmentCount = static_cast<uint32>(colorAttachmentReferenceList[x].size()),
+            .pColorAttachments = colorAttachmentReferenceList[x].empty() ? nullptr : colorAttachmentReferenceList[x].data(),
+            .pResolveAttachments = resolveAttachmentReferenceList[x].empty() ? nullptr : resolveAttachmentReferenceList[x].data(),
+            .pDepthStencilAttachment = useDepthReferences[x] ? &depthReferences[x] : nullptr,
+            .preserveAttachmentCount = 0,
+            .pPreserveAttachments = nullptr
             });
     }
 
@@ -245,15 +283,17 @@ Vector<VkAttachmentDescription> VulkanRenderPass::BuildAttachmentDescriptors(Ren
         VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         switch (attachment.TextureUsageType)
         {
-            case kUsageType_SwapChainTexture:       initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;   finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
-            case kUsageType_GBufferTexture:         initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         break;
-            case kUsageType_OffscreenColorTexture:  initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_CubeMap:                initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_IrradianceTexture:      initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_BRDFTexture:            initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_PrefilterTexture:       initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_DepthBufferTexture:     initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
-            case kUsageType_HdrTexture:             initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         break;
+            case kUsageType_SwapChainTexture:           initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;   finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
+            case kUsageType_GBufferTexture:             initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         break;
+            case kUsageType_OffscreenColorTexture:      initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_CubeMap:                    initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_IrradianceTexture:          initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_BRDFTexture:                initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_PrefilterTexture:           initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_DepthBufferTexture:         initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+            case kUsageType_HdrTexture:                 initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         break;
+            case kUsageType_DirectionalLightShadowMap:  initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+            case kUsageType_PointLightShadowMap:        initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
             default: throw std::runtime_error("Unknown TextureUsageType");
         }
 
@@ -421,7 +461,7 @@ void VulkanRenderPass::BindRenderPassPipeline(VkCommandBuffer& commandBuffer, co
 {
     if (!RenderPipelineExists(pipeline.PipelineId()))
     {
-        std::cerr << "[VulkanRenderPass] Pipeline not registered with this render pass.\n";
+        //std::cerr << "[VulkanRenderPass] Pipeline not registered with this render pass.\n";
         return;
     }
 
