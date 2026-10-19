@@ -90,11 +90,13 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
             switch (renderAttachment.RenderAttachmentTypes[x])
             {
             case RenderAttachmentTypeEnum::ColorRenderedTexture:
+            {
                 colorAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
                     .attachment = static_cast<uint32>(y),
                     .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
                     });
                 break;
+            }
 
             case RenderAttachmentTypeEnum::InputAttachmentTexture:
             {
@@ -111,19 +113,16 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
             }
 
             case RenderAttachmentTypeEnum::ResolveAttachmentTexture:
+            {
                 resolveAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
                     .attachment = static_cast<uint32>(y),
                     .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
                     });
                 break;
-
+            }
             case RenderAttachmentTypeEnum::DepthRenderedTexture:
             {
-                // Subpass 0 writes depth, later subpasses only read it
-                VkImageLayout depthLayout = (x == 0)
-                    ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-                    : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-
+                VkImageLayout depthLayout = (x == 0) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
                 depthRefForThisSubpass = VkAttachmentReference{
                     .attachment = static_cast<uint32>(y),
                     .layout = depthLayout
@@ -283,17 +282,19 @@ Vector<VkAttachmentDescription> VulkanRenderPass::BuildAttachmentDescriptors(Ren
         VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         switch (attachment.TextureUsageType)
         {
-            case kUsageType_SwapChainTexture:           initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;   finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
-            case kUsageType_GBufferTexture:             initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         break;
-            case kUsageType_OffscreenColorTexture:      initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_CubeMap:                    initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_IrradianceTexture:          initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_BRDFTexture:                initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_PrefilterTexture:           initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
-            case kUsageType_DepthBufferTexture:         initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
-            case kUsageType_HdrTexture:                 initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         break;
-            case kUsageType_DirectionalLightShadowMap:  initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
-            case kUsageType_PointLightShadowMap:        initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+            case kUsageType_SwapChainTexture:              initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;   finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                  break;
+            case kUsageType_GBufferTexture:                initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         break;
+            case kUsageType_OffscreenColorTexture:         initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_CubeMap:                       initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_IrradianceTexture:             initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_BRDFTexture:                   initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_PrefilterTexture:              initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_DepthBufferTexture:            initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+            case kUsageType_HdrTexture:                    initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;         break;
+            case kUsageType_DirectionalLightShadowMap:     initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+            case kUsageType_DirectionalLightShadowTintMap: initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
+            case kUsageType_PointLightShadowMap:           initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;  break;
+            case kUsageType_PointLightShadowTintMap:       initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                  finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;         break;
             default: throw std::runtime_error("Unknown TextureUsageType");
         }
 

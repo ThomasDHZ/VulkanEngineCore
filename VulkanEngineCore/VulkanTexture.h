@@ -20,6 +20,8 @@ enum TextureUsageTypeEnum : uint32
     kUsageType_HdrTexture,
     kUsageType_DirectionalLightShadowMap,
     kUsageType_PointLightShadowMap,
+    kUsageType_DirectionalLightShadowTintMap,
+    kUsageType_PointLightShadowTintMap,
 };
 
 enum RenderAttachmentTypeEnum
