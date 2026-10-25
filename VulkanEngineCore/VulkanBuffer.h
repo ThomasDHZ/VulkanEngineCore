@@ -59,7 +59,7 @@ public:
 	 [[nodiscard]] VmaAllocation       BufferAllocation() const noexcept { return m_allocation; }
 	 [[nodiscard]] VkDeviceSize        BufferSize() const noexcept { return m_size; }
 	 [[nodiscard]] VkBufferUsageFlags  BufferUsage() const noexcept { return m_usage; }
-	 [[nodiscard]] void*				  BufferMappedData() const noexcept { return m_mappedData; }
+	 [[nodiscard]] void*			   BufferMappedData() const noexcept { return m_mappedData; }
 
 	 [[nodiscard]] bool                IsValid() const noexcept { return m_buffer != VK_NULL_HANDLE; }
 	 [[nodiscard]] bool                IsPersistentlyMapped() const noexcept { return m_mappedData != nullptr; }

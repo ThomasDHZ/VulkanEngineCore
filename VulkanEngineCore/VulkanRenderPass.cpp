@@ -89,53 +89,44 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
             RenderPassAttachmentLoader renderAttachment = renderPassAttachmentTextureInfoMap[y];
             switch (renderAttachment.RenderAttachmentTypes[x])
             {
-            case RenderAttachmentTypeEnum::ColorRenderedTexture:
-            {
-                colorAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
-                    .attachment = static_cast<uint32>(y),
-                    .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-                    });
-                break;
-            }
-
-            case RenderAttachmentTypeEnum::InputAttachmentTexture:
-            {
-                bool is_depth = (renderAttachment.TextureByteFormat >= VK_FORMAT_D16_UNORM &&
-                    renderAttachment.TextureByteFormat <= VK_FORMAT_D32_SFLOAT_S8_UINT);
-                VkImageLayout input_layout = is_depth
-                    ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-                    : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                inputAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
-                    .attachment = static_cast<uint32>(y),
-                    .layout = input_layout
-                    });
-                break;
-            }
-
-            case RenderAttachmentTypeEnum::ResolveAttachmentTexture:
-            {
-                resolveAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
-                    .attachment = static_cast<uint32>(y),
-                    .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-                    });
-                break;
-            }
-            case RenderAttachmentTypeEnum::DepthRenderedTexture:
-            {
-                VkImageLayout depthLayout = (x == 0) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-                depthRefForThisSubpass = VkAttachmentReference{
-                    .attachment = static_cast<uint32>(y),
-                    .layout = depthLayout
-                };
-                useDepthForThisSubpass = true;
-                break;
-            }
-
-            case RenderAttachmentTypeEnum::SkipSubPass:
-                break;
-
-            default:
-                throw std::runtime_error("Case doesn't exist: RenderedTextureType");
+                case RenderAttachmentTypeEnum::ColorRenderedTexture:
+                {
+                    colorAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
+                        .attachment = static_cast<uint32>(y),
+                        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                        });
+                    break;
+                }
+                case RenderAttachmentTypeEnum::InputAttachmentTexture:
+                {
+                    bool is_depth = (renderAttachment.TextureByteFormat >= VK_FORMAT_D16_UNORM && renderAttachment.TextureByteFormat <= VK_FORMAT_D32_SFLOAT_S8_UINT);
+                    VkImageLayout input_layout = is_depth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    inputAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
+                        .attachment = static_cast<uint32>(y),
+                        .layout = input_layout
+                        });
+                    break;
+                }
+                case RenderAttachmentTypeEnum::ResolveAttachmentTexture:
+                {
+                    resolveAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
+                        .attachment = static_cast<uint32>(y),
+                        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+                        });
+                    break;
+                }
+                case RenderAttachmentTypeEnum::DepthRenderedTexture:
+                {
+                    VkImageLayout depthLayout = (x == 0) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                    depthRefForThisSubpass = VkAttachmentReference{
+                        .attachment = static_cast<uint32>(y),
+                        .layout = depthLayout
+                    };
+                    useDepthForThisSubpass = true;
+                    break;
+                }
+                case RenderAttachmentTypeEnum::SkipSubPass: break;
+                default: throw std::runtime_error("Case doesn't exist: RenderedTextureType");
             }
         }
 
@@ -264,6 +255,7 @@ VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoade
         .RenderPassGuid = m_renderPassId,
         .PipelinePackageId = subPassLoader.PipelinePackageId,
         .MeshType = subPassLoader.MeshType,
+        .RenderPassDrawFlags = subPassLoader.RenderPassDrawFlags,
         .ShaderPushConstant = subPassLoader.ShaderPushConstant,
         .PushConstantUpdates = subPassLoader.PushConstantUpdates,
         .InputTextureList = subPassLoader.InputTextureList,

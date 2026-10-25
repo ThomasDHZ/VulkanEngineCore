@@ -180,6 +180,9 @@
     <ClInclude Include="..\External\VulkanMemoryAllocator\include\vk_mem_alloc.h">
       <Filter>Header Files\External</Filter>
     </ClInclude>
+    <ClInclude Include="MemoryPool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanCommandBuffer.cpp">
@@ -286,6 +289,9 @@
     </ClCompile>
     <ClCompile Include="..\External\VulkanMemoryAllocator\VmaImplementation.cpp">
       <Filter>Source Files\External</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryPool.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

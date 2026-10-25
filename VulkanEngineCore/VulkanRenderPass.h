@@ -5,7 +5,6 @@
 #include "VulkanPipeline.h"
 #include "VulkanPipelineLoader.h"
 #include "VulkanTexture.h"
-#include <variant>
 
 enum MeshTypeEnum
 {
@@ -16,6 +15,29 @@ enum MeshTypeEnum
     kMesh_Procedural,
     kMesh_FrameBuffer,
     kMesh_Undefined
+};
+
+enum DrawFlagBits : uint64
+{
+    kDrawFlag_DrawDefault = 1 << 0,
+    kDrawFlag_DrawMesh = 1 << 1,
+    kDrawFlag_DrawInstance = 1 << 2,
+    kDrawFlag_DrawLine = 1 << 3,
+    kDrawFlag_DrawCubeMap = 1 << 4,
+    kDrawFlag_DrawDebugObjects = 1 << 5,
+    kDrawFlag_DrawShadow = 1 << 6,
+    kDrawFlag_DrawRenderAttachment = 1 << 7 
+};
+
+enum TextureVarnameEnum
+{
+    kVar_TextureSize,
+};
+
+enum PushConstantVarTypeEnum
+{
+    kVar_PushConstant,
+    kVar_TextureRefrence,
 };
 
 struct MeshDrawMessage
@@ -36,13 +58,32 @@ struct MeshDrawMessage
     VkBuffer       InstanceBuffer = VK_NULL_HANDLE;
 };
 
-struct PushConstantUpdateRule
-{
-    //using PushConstantValue = std::variant<int, uint32_t, float, bool, glm::ivec2, glm::ivec3, glm::ivec4, glm::vec2, glm::vec3, glm::vec4, glm::mat2, glm::mat3, glm::mat4>;
 
+struct PushConstantConstVariable
+{
     String                               Variable;
     ShaderMemberTypeEnum                 VariableType;
-    Vector<String>                       Value;
+    PushConstantVariable                 Value;
+};
+
+struct PushConstantRef
+{
+    String                               Variable;
+    VkGuid                               AssetId;
+    TextureVarnameEnum                   VarType;
+};
+
+//struct PushConstantUpdateRule
+//{
+//    PushConstantVarTypeEnum                PushConstantVarType;
+//    std::optional<PushConstantVariable>    PushConstantVar;
+//    std::optional<PushConstantRef>         PushConstantRef;
+//};
+struct PushConstantUpdateRule
+{
+    String                               Variable;
+    ShaderMemberTypeEnum                 VariableType;
+    PushConstantVariable                 Value;
 };
 
 struct VulkanSubPass
@@ -50,6 +91,7 @@ struct VulkanSubPass
     VkGuid                               RenderPassGuid;
     VkGuid                               PipelinePackageId;
     MeshTypeEnum                         MeshType;
+    DrawFlagBits                         RenderPassDrawFlags;
     std::optional<String>                ShaderPushConstant;
     Vector<PushConstantUpdateRule>       PushConstantUpdates;
     Vector<VkGuid>                       InputAttachmentList;
@@ -63,6 +105,7 @@ struct VulkanSubPassLoader
 {
     VkGuid                               PipelinePackageId;
     MeshTypeEnum                         MeshType;
+    DrawFlagBits                         RenderPassDrawFlags;
     std::optional<String>                ShaderPushConstant;
     Vector<PushConstantUpdateRule>       PushConstantUpdates;
     Vector<VkGuid>                       InputAttachmentList;

@@ -163,6 +163,7 @@
     <ClInclude Include="ImGuiSystem.h" />
     <ClInclude Include="InputEnum.h" />
     <ClInclude Include="Keyboard.h" />
+    <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="MemorySystem.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="NetConnection.h" />
@@ -206,6 +207,7 @@
     <ClCompile Include="GameController.cpp" />
     <ClCompile Include="ImGuiSystem.cpp" />
     <ClCompile Include="Keyboard.cpp" />
+    <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="MemorySystem.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="NetConnection.cpp" />

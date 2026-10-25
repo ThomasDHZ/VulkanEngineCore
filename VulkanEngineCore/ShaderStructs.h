@@ -1,6 +1,9 @@
 #pragma once
 #include "Platform.h"
 #include "ShaderEnums.h"
+#include <variant>
+
+using PushConstantVariable = std::variant<int, uint32, float, bool, ivec2, ivec3, ivec4, vec2, vec3, vec4, mat2, mat3, mat4>;
 
 struct ShaderVariable
 {

@@ -428,7 +428,7 @@ Vector<SpvReflectSpecializationConstant> VulkanShader::SearchShaderSpecialConsta
     return results;
 }
 
-VkGuid         VulkanShader::ShaderId()                                         const { return m_shaderId; }
+VkGuid         VulkanShader::ShaderId()                                             const { return m_shaderId; }
 VkShaderModule VulkanShader::ShaderModule()                                         const { return m_shaderModule; }
 VkShaderStageFlagBits VulkanShader::ShaderStages()                                  const { return m_shaderStages; }
 ShaderPushConstant VulkanShader::PushConstant()                                     const { return m_pushConstant; }
