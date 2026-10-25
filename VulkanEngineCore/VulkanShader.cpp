@@ -135,10 +135,6 @@ void VulkanShader::LoadShaderConstantBufferData(const SpvReflectShaderModule& sp
     size_t bufferSize = 0;
     String pushConstantName(pushConstants.front().name);
     Vector<ShaderVariable> shaderStructVariableList = LoadShaderStructVariables(*pushConstants.front().type_description, bufferSize);
-    for (auto& shaderVariable : shaderStructVariableList)
-    {
-        shaderVariable.Value = Vector<byte>(shaderVariable.Size, 0x00);
-    }
 
     m_pushConstant = ShaderPushConstant
     {
@@ -195,113 +191,59 @@ Vector<ShaderVariable> VulkanShader::LoadShaderStructVariables(const SpvReflectT
     Vector<SpvReflectTypeDescription> shaderVariableList = Vector<SpvReflectTypeDescription>(shaderInfo.members, shaderInfo.members + shaderInfo.member_count);
     for (auto& variable : shaderVariableList)
     {
-        uint memberSize = 0;
-        size_t byteAlignment = 0;
+        PushConstantVariable shaderVar;
         size_t arraySize = variable.traits.array.dims[0];
-        ShaderMemberTypeEnum memberType;
         switch (variable.op)
         {
-        case SpvOpTypeInt:
-        {
-            memberSize = variable.traits.numeric.scalar.width / 8;
-            memberType = variable.traits.numeric.scalar.signedness ? kShaderMember_Uint : kShaderMember_Int;
-            byteAlignment = 4;
-            break;
-        }
-        case SpvOpTypeFloat:
-        {
-            memberSize = variable.traits.numeric.scalar.width / 8;
-            memberType = kShaderMember_Float;
-            byteAlignment = 4;
-            break;
-        }
-        case SpvOpTypeVector:
-        {
-            memberSize = (variable.traits.numeric.scalar.width / 8) * variable.traits.numeric.vector.component_count;
-            switch (variable.traits.numeric.vector.component_count)
+            case SpvOpTypeInt:  shaderVar = variable.traits.numeric.scalar.signedness ? uint32(0) : int(0);
+            case SpvOpTypeFloat: shaderVar = float(0);
+            case SpvOpTypeVector:
             {
-            case 2:
-                memberType = kShaderMember_Vec2;
-                byteAlignment = 8;
-                break;
-            case 3:
-                memberType = kShaderMember_Vec3;
-                byteAlignment = 16;
-                break;
-            case 4:
-                memberType = kShaderMember_Vec4;
-                byteAlignment = 16;
+                switch (variable.traits.numeric.vector.component_count)
+                {
+                    case 2: shaderVar = vec2(0.0f); break;
+                    case 3: shaderVar = vec3(0.0f); break;
+                    case 4: shaderVar = vec4(0.0f); break;
+                } 
                 break;
             }
-            break;
-        }
-        case SpvOpTypeMatrix:
-        {
-            uint32 rowCount = variable.traits.numeric.matrix.row_count;
-            uint32 colCount = variable.traits.numeric.matrix.column_count;
-            memberSize = (variable.traits.numeric.scalar.width / 8) * rowCount * colCount;
-            if (rowCount == 2 && colCount == 2)
+            case SpvOpTypeMatrix:
             {
-                memberType = kShaderMember_Mat2;
-                byteAlignment = 8;
+                const uint32 rowCount = variable.traits.numeric.matrix.row_count;
+                const uint32 colCount = variable.traits.numeric.matrix.column_count;
+
+                if      (rowCount == 2 && colCount == 2) shaderVar = mat2(1.0f);
+                else if (rowCount == 3 && colCount == 3) shaderVar = mat3(1.0f);
+                else if (rowCount == 4 && colCount == 4) shaderVar = mat4(1.0f);
+                else    std::cerr << "Unsupported matrix size: " << rowCount << "x" << colCount << std::endl;
+                break;
             }
-            else if (rowCount == 3 && colCount == 3)
+            case SpvOpTypeArray:
             {
-                memberType = kShaderMember_Mat3;
-                byteAlignment = 16;
+                if (variable.member_count == 0) break;
+                //const SpvReflectTypeDescription& elem = variable.members[0];
+                //PushConstantVariable elemVar;
+                //// run the same switch on elem.op to fill elemVar
+                //uint32 count = variable.traits.array.dims[0];
+                //shaderVar = elemVar; // store the element type
+                //// keep count in ShaderVariable
+                break;
             }
-            else if (rowCount == 4 && colCount == 4)
-            {
-                memberType = kShaderMember_Mat4;
-                byteAlignment = 16;
-            }
-            else
-            {
-                std::cerr << "Unsupported matrix size: " << rowCount << "x" << colCount << std::endl;
-                byteAlignment = -1;
-            }
-            break;
-        }
-        case SpvOpTypeArray:
-        {
-            uint32 rowCount = variable.traits.numeric.matrix.row_count;
-            uint32 colCount = variable.traits.numeric.matrix.column_count;
-            memberSize = (variable.traits.numeric.scalar.width / 8) * rowCount * colCount;
-            if (rowCount == 2 && colCount == 2)
-            {
-                memberType = kShaderMember_Mat2;
-                byteAlignment = 8;
-            }
-            else if (rowCount == 3 && colCount == 3)
-            {
-                memberType = kShaderMember_Mat3;
-                byteAlignment = 16;
-            }
-            else if (rowCount == 4 && colCount == 4)
-            {
-                memberType = kShaderMember_Mat4;
-                byteAlignment = 16;
-            }
-            else
-            {
-                std::cerr << "Unsupported matrix size: " << rowCount << "x" << colCount << std::endl;
-                byteAlignment = -1;
-            }
-            break;
-        }
         }
 
         shaderVariables.emplace_back(ShaderVariable
             {
                 .Name = String(variable.struct_member_name),
-                .Size = arraySize == 0 ? memberSize : memberSize * arraySize,
-                .ByteAlignment = byteAlignment,
-                .Value = Vector<byte>(),
-                .MemberTypeEnum = memberType,
+                .Value = shaderVar
             });
-        size_t alignment = byteAlignment;
+
+        size_t alignment = GetSpivByteAlignment(shaderVariables.back().Value);
+        size_t size = std::visit([](auto&& arg) -> size_t 
+            {
+                return sizeof(std::decay_t<decltype(arg)>);
+            }, shaderVariables.back().Value);
         returnBufferSize = (returnBufferSize + alignment - 1) & ~(alignment - 1);
-        returnBufferSize += memberSize;
+        returnBufferSize += size;
     }
     return shaderVariables;
 }
@@ -426,6 +368,27 @@ Vector<SpvReflectSpecializationConstant> VulkanShader::SearchShaderSpecialConsta
         }
     }
     return results;
+}
+
+size_t VulkanShader::GetSpivByteAlignment(const PushConstantVariable& pushConstantVariable)
+{
+    return std::visit([](auto&& arg) -> size_t {
+        using T = std::decay_t<decltype(arg)>;
+        if      constexpr (std::is_same_v<T, int>)    return 4;
+        else if constexpr (std::is_same_v<T, uint32>) return 4;
+        else if constexpr (std::is_same_v<T, float>)  return 4;
+        else if constexpr (std::is_same_v<T, bool>)   return 4;
+        else if constexpr (std::is_same_v<T, ivec2>)  return 8;
+        else if constexpr (std::is_same_v<T, ivec3>)  return 16;
+        else if constexpr (std::is_same_v<T, ivec4>)  return 16;
+        else if constexpr (std::is_same_v<T, vec2>)   return 8;
+        else if constexpr (std::is_same_v<T, vec3>)   return 16;
+        else if constexpr (std::is_same_v<T, vec4>)   return 16;
+        else if constexpr (std::is_same_v<T, mat2>)   return 8;
+        else if constexpr (std::is_same_v<T, mat3>)   return 16;
+        else if constexpr (std::is_same_v<T, mat4>)   return 16;
+        else static_assert(false, "Unknown ShaderVariable type");
+        }, pushConstantVariable);
 }
 
 VkGuid         VulkanShader::ShaderId()                                             const { return m_shaderId; }

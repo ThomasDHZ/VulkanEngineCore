@@ -52,6 +52,7 @@ public:
     void                                                       Destroy();
 
     Vector<SpvReflectSpecializationConstant>                   SearchShaderSpecialConstants(const String& searchString);
+    size_t                                                     GetSpivByteAlignment(const PushConstantVariable& pushConstantVariable);
 
     [[nodiscard]] VkGuid                                       ShaderId()                   const;
     [[nodiscard]] VkShaderModule                               ShaderModule()               const;
