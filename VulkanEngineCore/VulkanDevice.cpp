@@ -73,6 +73,7 @@ void VulkanDevice::SetUpLogicalDevice()
         .pNext = &colorWriteFeatures,
         .features =
         {
+            .independentBlend = VK_TRUE,
             .geometryShader = VK_FALSE,
             .vertexPipelineStoresAndAtomics = VK_TRUE,
             .fragmentStoresAndAtomics = VK_TRUE,
@@ -121,6 +122,7 @@ void VulkanDevice::SetUpLogicalDevice()
     VkPhysicalDeviceVulkan11Features physicalDeviceVulkan11Features = {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES,
         .pNext = &divisorFeatures,
+        .storageBuffer16BitAccess = VK_TRUE,
         .multiview = VK_TRUE
     };
 

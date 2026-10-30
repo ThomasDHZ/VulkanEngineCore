@@ -1,9 +1,29 @@
 #pragma once
 #include "Platform.h"
-#include "ShaderEnums.h"
 #include <variant>
 
-using PushConstantVariable = std::variant<int, uint32, float, bool, ivec2, ivec3, ivec4, vec2, vec3, vec4, mat2, mat3, mat4>;
+using PushConstantVariable = std::variant<int, int64, uint32, uint64, float, double, bool, ivec2, ivec3, ivec4, vec2, vec3, vec4, mat2, mat3, mat4>;
+enum ShaderMemberTypeEnum
+{
+    kShaderMember_Int,
+    kShaderMember_Int64,
+    kShaderMember_Uint,
+    kShaderMember_Uint64,   
+    kShaderMember_Float,
+    kShaderMember_Double,
+    kShaderMember_bool,
+    kShaderMember_Ivec2,
+    kShaderMember_Ivec3,
+    kShaderMember_Ivec4,
+    kShaderMember_Vec2,
+    kShaderMember_Vec3,
+    kShaderMember_Vec4,
+    kShaderMember_Mat2,
+    kShaderMember_Mat3,
+    kShaderMember_Mat4,
+    kShaderMember_Undefined
+};
+
 struct ShaderVariable
 {
     String                          Name;

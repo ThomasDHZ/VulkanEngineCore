@@ -169,7 +169,6 @@
     <ClInclude Include="NetConnection.h" />
     <ClInclude Include="NetworkSystem.h" />
     <ClInclude Include="Platform.h" />
-    <ClInclude Include="ShaderEnums.h" />
     <ClInclude Include="ShaderStructs.h" />
     <ClInclude Include="VmaConfig.h" />
     <ClInclude Include="VulkanMesh.h" />

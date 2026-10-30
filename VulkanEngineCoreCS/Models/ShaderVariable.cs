@@ -29,13 +29,8 @@ namespace VulkanEngineCoreCS.Models
     {
 
         public String Name { get; set; } = "ShaderVar";
-        [ReadOnlyAttribute(true)]
-        public size_t Size { get; set; } = 0;
-        [ReadOnlyAttribute(true)]
-        public size_t ByteAlignment { get; set; } = 0;
-        public object Value { get; set; }
         public ShaderMemberTypeEnum MemberTypeEnum { get; set; } = ShaderMemberTypeEnum.kShaderMember_Undefined;
-        public bool ConstVariable = false;
+        public object Value { get; set; }
 
         public ShaderVariable()
         {

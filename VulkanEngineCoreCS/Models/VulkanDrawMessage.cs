@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using VulkanEngineCoreCS.Models.VulkanEngineCS;
 using VulkanEngineCoreCS.Vulkan;
 
 namespace VulkanEngineCoreCS.Models
@@ -17,9 +18,12 @@ namespace VulkanEngineCoreCS.Models
         public byte* PushConstant { get; set; }
         public ListPtr<PushConstantUpdateRule> PushConstantUpdateRules { get; set; } = new ListPtr<PushConstantUpdateRule>();
         public ListPtr<MeshDrawMessage> DrawMeshList { get; set; } = new ListPtr<MeshDrawMessage>();
+        public byte* CustomDrawCommand { get; set; }
+        public CustomDrawInitContext CustomDrawCommandContext { get; set; }
         public ListPtr<Guid> RenderPassInputs { get; set; } = new ListPtr<Guid>();
         public ListPtr<Guid> RenderPassOutputs { get; set; } = new ListPtr<Guid>();
         public bool OffScreenRenderPass { get; set; } = false;
+        public bool UseCustomDrawCommand { get; set; } = false;
         public IntPtr PushConstantsCmd { get; set; }
         public IntPtr PreDrawCmd { get; set; }
         public IntPtr CustomDrawCmd { get; set; }
@@ -35,11 +39,14 @@ namespace VulkanEngineCoreCS.Models
                 RenderPassGuid = src.RenderPassGuid,
                 PipelinePackageGuid = src.PipelinePackageGuid,
                 PushConstant = src.PushConstant,
+                CustomDrawCommand = src.CustomDrawCommand,
+                CustomDrawCommandContext = src.CustomDrawCommandContext,
                 PushConstantUpdateRules = new ListPtr<PushConstantUpdateRule>(src.PushConstantUpdateRules, src.PushConstantUpdateRulesCount),
                 DrawMeshList = new ListPtr<MeshDrawMessage>(src.DrawMeshList, src.DrawMeshListCount),
                 RenderPassInputs = new ListPtr<Guid>(src.RenderPassInputs, src.RenderPassInputsCount),
                 RenderPassOutputs = new ListPtr<Guid>(src.RenderPassOutputs, src.RenderPassOutputsCount),
                 OffScreenRenderPass = src.OffScreenRenderPass,
+                UseCustomDrawCommand = src.UseCustomDrawCommand,
                 PushConstantsCmd = src.PushConstantsCmd,
                 PreDrawCmd = src.PreDrawCmd,
                 CustomDrawCmd = src.CustomDrawCmd,

@@ -117,10 +117,9 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
                 }
                 case RenderAttachmentTypeEnum::DepthRenderedTexture:
                 {
-                    VkImageLayout depthLayout = (x == 0) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
                     depthRefForThisSubpass = VkAttachmentReference{
                         .attachment = static_cast<uint32>(y),
-                        .layout = depthLayout
+                        .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
                     };
                     useDepthForThisSubpass = true;
                     break;
@@ -260,7 +259,10 @@ VulkanSubPass VulkanRenderPass::BuildSubpasses(VulkanSubPassLoader& subPassLoade
         .PushConstantUpdates = subPassLoader.PushConstantUpdates,
         .InputTextureList = subPassLoader.InputTextureList,
         .OutputTextureList = subPassLoader.OutputTextureList,
-        .OffScreenFrameBuffer = subPassLoader.OffScreenRenderPass,
+        .CustomDrawCommand = subPassLoader.CustomDrawCommand,
+        .CustomDrawCommandContext = subPassLoader.CustomDrawCommandContext,
+        .OffScreenRenderPass = subPassLoader.OffScreenRenderPass,
+        .UseCustomDrawCommand = subPassLoader.UseCustomDrawCommand,
         .AlphaRenderPass = subPassLoader.AlphaRenderPass
     };
 }

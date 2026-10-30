@@ -29,15 +29,15 @@ enum DrawFlagBits : uint64
     kDrawFlag_DrawRenderAttachment = 1 << 7 
 };
 
-enum TextureVarnameEnum
+enum TextureVarTypeEnum
 {
     kVar_TextureSize,
 };
 
 enum PushConstantVarTypeEnum
 {
-    kVar_PushConstant,
-    kVar_TextureRefrence,
+    kPushConstantVarType_PushConstant,
+    kPushConstantVarType_TextureRefrence,
 };
 
 struct MeshDrawMessage
@@ -58,32 +58,30 @@ struct MeshDrawMessage
     VkBuffer       InstanceBuffer = VK_NULL_HANDLE;
 };
 
-
 struct PushConstantConstVariable
 {
-    String                               Variable;
-    ShaderMemberTypeEnum                 VariableType;
     PushConstantVariable                 Value;
 };
 
 struct PushConstantRef
 {
-    String                               Variable;
     VkGuid                               AssetId;
-    TextureVarnameEnum                   VarType;
+    TextureVarTypeEnum                   TextureVar;
+    PushConstantVariable                 Value;
 };
 
-//struct PushConstantUpdateRule
-//{
-//    PushConstantVarTypeEnum                PushConstantVarType;
-//    std::optional<PushConstantVariable>    PushConstantVar;
-//    std::optional<PushConstantRef>         PushConstantRef;
-//};
+using PushConstantType = std::variant<PushConstantConstVariable, PushConstantRef>;
 struct PushConstantUpdateRule
 {
     String                               Variable;
-    ShaderMemberTypeEnum                 VariableType;
-    PushConstantVariable                 Value;
+    PushConstantType                     PushConstant;
+};
+
+struct CustomDrawInitContext
+{
+    VkGuid                RenderPassId;
+    VkGuid                TextureAttachmentId;
+    float                 TileSize;
 };
 
 struct VulkanSubPass
@@ -97,7 +95,10 @@ struct VulkanSubPass
     Vector<VkGuid>                       InputAttachmentList;
     Vector<VkGuid>                       InputTextureList;
     Vector<VkGuid>                       OutputTextureList;
-    bool                                 OffScreenFrameBuffer = false;
+    String                               CustomDrawCommand;
+    CustomDrawInitContext                CustomDrawCommandContext;
+    bool                                 OffScreenRenderPass = false;
+    bool                                 UseCustomDrawCommand = false;
     bool                                 AlphaRenderPass = false;
 };
 
@@ -111,7 +112,10 @@ struct VulkanSubPassLoader
     Vector<VkGuid>                       InputAttachmentList;
     Vector<VkGuid>                       InputTextureList;
     Vector<VkGuid>                       OutputTextureList;
+    String                               CustomDrawCommand;
+    CustomDrawInitContext                CustomDrawCommandContext;
     bool                                 OffScreenRenderPass = false;
+    bool                                 UseCustomDrawCommand = false;
     bool                                 AlphaRenderPass = false;
 };
 

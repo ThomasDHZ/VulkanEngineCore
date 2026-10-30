@@ -108,9 +108,6 @@
     <ClInclude Include="ShaderStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ShaderEnums.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\External\SPIRV-Reflect\spirv_reflect.h">
       <Filter>Header Files\External</Filter>
     </ClInclude>

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-
+using VulkanEngineCoreCS.Models.VulkanEngineCS;
 namespace VulkanEngineCoreCS.Models
 {
     [StructLayout(LayoutKind.Sequential)]
@@ -17,15 +17,22 @@ namespace VulkanEngineCoreCS.Models
         public MeshDrawMessage* DrawMeshList { get; set; }
         public Guid* RenderPassInputs { get; set; }
         public Guid* RenderPassOutputs { get; set; }
-        public nuint PushConstantUpdateRulesCount { get; set; }
-        public nuint DrawMeshListCount { get; set; }
-        public nuint RenderPassInputsCount { get; set; }
-        public nuint RenderPassOutputsCount { get; set; }
-        public bool OffScreenRenderPass { get; set; }
+        public byte* CustomDrawCommand { get; set; }
+        public CustomDrawInitContext CustomDrawCommandContext { get; set; }
+        public nuint PushConstantUpdateRulesCount { get; set; } = 0;
+        public nuint DrawMeshListCount { get; set; } = 0;
+        public nuint RenderPassInputsCount { get; set; } = 0;
+        public nuint RenderPassOutputsCount { get; set; } = 0;
+        public bool OffScreenRenderPass { get; set; } = false;
+        public bool UseCustomDrawCommand { get; set; } = false;
         public IntPtr PushConstantsCmd { get; set; }
         public IntPtr PreDrawCmd { get; set; }
         public IntPtr CustomDrawCmd { get; set; }
         public IntPtr PostDrawCmd { get; set; }
+
+        public VulkanDrawMessageDLL()
+        {
+        }
 
         public static VulkanDrawMessageDLL ToDLL(in VulkanDrawMessage vulkanDrawMessage)
         {
@@ -36,6 +43,8 @@ namespace VulkanEngineCoreCS.Models
                 PushConstant = vulkanDrawMessage.PushConstant,
                 PushConstantUpdateRules = vulkanDrawMessage.PushConstantUpdateRules.Ptr,
                 DrawMeshList = vulkanDrawMessage.DrawMeshList.Ptr,
+                CustomDrawCommand = vulkanDrawMessage.CustomDrawCommand,
+                CustomDrawCommandContext = vulkanDrawMessage.CustomDrawCommandContext,
                 RenderPassInputs = vulkanDrawMessage.RenderPassInputs.Ptr,
                 RenderPassOutputs = vulkanDrawMessage.RenderPassOutputs.Ptr,
                 PushConstantUpdateRulesCount = vulkanDrawMessage.PushConstantUpdateRules.Count,
@@ -43,6 +52,7 @@ namespace VulkanEngineCoreCS.Models
                 RenderPassInputsCount = vulkanDrawMessage.RenderPassInputs.Count,
                 RenderPassOutputsCount = vulkanDrawMessage.RenderPassOutputs.Count,
                 OffScreenRenderPass = vulkanDrawMessage.OffScreenRenderPass,
+                UseCustomDrawCommand = vulkanDrawMessage.UseCustomDrawCommand,
                 PushConstantsCmd = vulkanDrawMessage.PushConstantsCmd,
                 PreDrawCmd = vulkanDrawMessage.PreDrawCmd,
                 CustomDrawCmd = vulkanDrawMessage.CustomDrawCmd,
