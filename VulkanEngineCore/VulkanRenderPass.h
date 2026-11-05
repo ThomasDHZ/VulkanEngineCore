@@ -144,6 +144,7 @@ struct RenderPassLoader
     bool                                 UseVkMultiview = false;
     bool                                 RenderAsCubemap = false;
     bool                                 UseFrameBufferResolution = false;
+    bool                                 OneTimeDraw = false;
 };
 
 struct CORE_DLL_EXPORT VulkanRenderPass
