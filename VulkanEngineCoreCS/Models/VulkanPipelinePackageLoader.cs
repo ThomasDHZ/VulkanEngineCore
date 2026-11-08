@@ -10,11 +10,17 @@ using VulkanEngineCoreCS.Enum;
 
 namespace VulkanEngineCoreCS.Models
 {
+    public struct VulkanPipelinePackage
+    {
+        public PipelineTypeEnum PipelineType { get; set; }
+        public Guid PipelineId { get; set; }
+    };
+
     public struct VulkanPipelinePackageLoader
     {
         public string PipelinePackageName { get; set; } = string.Empty;
-        public Guid PipelinePackageId { get; set; }
-        public Dictionary<PipelineTypeEnum, Guid> PipelineMap { get; set; }
+        public Guid PipelinePackageId { get; set; } = Guid.Empty;
+        public List<VulkanPipelinePackage> PipelineList { get; set; }= new List<VulkanPipelinePackage>();
 
         public VulkanPipelinePackageLoader()
         {
