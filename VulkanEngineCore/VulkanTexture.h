@@ -54,7 +54,7 @@ enum class TextureTypeEnum : uint32
 
 struct RenderPassAttachmentLoader
 {
-    String                               Name;
+    String                               AttachmentName;
     VkGuid                               RenderedTextureId = VkGuid();
     uint32                               MipMapCount = UINT32_MAX;
     TextureTypeEnum                      TextureType = TextureTypeEnum::kTextureType_Undefined;

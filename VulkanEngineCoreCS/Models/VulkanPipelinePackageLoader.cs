@@ -12,18 +12,9 @@ namespace VulkanEngineCoreCS.Models
 {
     public struct VulkanPipelinePackageLoader
     {
-        public string Name { get; set; } = string.Empty;
-        public Guid PipelinePackageId { get; set; } = new Guid();
-        public Guid RenderPassId { get; set; } = new Guid();
-        public ivec2 RenderPassResolution { get; set; } = new ivec2();
-        public VkRenderPass RenderPass { get; set; } = VulkanCSConst.VK_NULL_HANDLE;
-        public VkDescriptorPool GlobalBindlessPool { get; set; } = VulkanCSConst.VK_NULL_HANDLE;
-        public VkDescriptorSet GlobalBindlessDescriptorSet { get; set; } = VulkanCSConst.VK_NULL_HANDLE;
-        public VkDescriptorSetLayout GlobalBindlessDescriptorSetLayout { get; set; } = VulkanCSConst.VK_NULL_HANDLE;
-        public Vector<VkDescriptorImageInfo> RenderPassInputTextures { get; set; } = new Vector<VkDescriptorImageInfo>();
-        public Dictionary<PipelineTypeEnum, VulkanPipelineLoader> PipelineMap { get; set; } = new Dictionary<PipelineTypeEnum, VulkanPipelineLoader>();
-        public bool UseGlobalBindlessSet { get; set; } = false;
-        public bool UseCubeMapMultiview { get; set; } = false;
+        public string PipelinePackageName { get; set; } = string.Empty;
+        public Guid PipelinePackageId { get; set; }
+        public Dictionary<PipelineTypeEnum, Guid> PipelineMap { get; set; }
 
         public VulkanPipelinePackageLoader()
         {
