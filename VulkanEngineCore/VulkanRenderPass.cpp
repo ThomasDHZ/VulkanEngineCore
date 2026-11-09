@@ -38,7 +38,7 @@ void VulkanRenderPass::LoadRenderPass(RenderPassLoader& renderPassLoader)
                .MipMapCount = attachment.MipMapCount,
                .TextureType = attachment.TextureType,
                .TextureUsageType = attachment.TextureUsageType,
-               .TextureByteFormat = attachment.TextureByteFormat,
+               .TextureByteLayout = attachment.TextureByteLayout,
                .LoadOp = attachment.LoadOp,
                .StoreOp = attachment.StoreOp,
                .FinalLayout = attachment.FinalLayout,
@@ -99,7 +99,7 @@ void VulkanRenderPass::BuildRenderPass(RenderPassLoader& renderPassLoader)
                 }
                 case RenderAttachmentTypeEnum::InputAttachmentTexture:
                 {
-                    bool is_depth = (renderAttachment.TextureByteFormat >= VK_FORMAT_D16_UNORM && renderAttachment.TextureByteFormat <= VK_FORMAT_D32_SFLOAT_S8_UINT);
+                    bool is_depth = (renderAttachment.TextureByteLayout >= VK_FORMAT_D16_UNORM && renderAttachment.TextureByteLayout <= VK_FORMAT_D32_SFLOAT_S8_UINT);
                     VkImageLayout input_layout = is_depth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                     inputAttachmentReferenceList[x].emplace_back(VkAttachmentReference{
                         .attachment = static_cast<uint32>(y),
@@ -214,7 +214,7 @@ void VulkanRenderPass::RebuildRenderPass()
                 .MipMapCount = src.MipMapCount,
                 .TextureType = src.TextureType,
                 .TextureUsageType = src.TextureUsageType,
-                .TextureByteFormat = src.TextureByteFormat,
+                .TextureByteLayout = src.TextureByteLayout,
                 .LoadOp = src.LoadOp,
                 .StoreOp = src.StoreOp,
                 .SamplerCreateInfo = src.SamplerCreateInfo,
@@ -294,7 +294,7 @@ Vector<VkAttachmentDescription> VulkanRenderPass::BuildAttachmentDescriptors(Ren
 
         attachmentDescriptionList.emplace_back(VkAttachmentDescription
             {
-                .format = attachment.TextureByteFormat,
+                .format = attachment.TextureByteLayout,
                 .samples = m_sampleCount >= vulkan.MaxSampleCount() ? vulkan.MaxSampleCount() : m_sampleCount,
                 .loadOp = attachment.LoadOp,
                 .storeOp = attachment.StoreOp,

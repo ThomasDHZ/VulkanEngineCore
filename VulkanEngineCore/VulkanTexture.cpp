@@ -9,14 +9,14 @@ VulkanTexture::VulkanTexture(VulkanTextureLoader& textureLoader)
 {
 	m_textureSize = textureLoader.TextureDimensions;
 	m_mipMapLevels = MaxMipLevels(textureLoader.MipMapCount, textureLoader.UseMipMaps);
-	m_textureByteFormat = textureLoader.TextureByteFormat;
+	m_TextureByteLayout = textureLoader.TextureByteLayout;
 	m_textureImageLayout = textureLoader.TextureImageLayout;
 	m_sampleCount = textureLoader.SampleCount;
 	m_colorChannels = textureLoader.ColorChannels;
 	m_textureType = textureLoader.TextureType;
 	m_isCubeMap = textureLoader.IsCubeMap;
-	m_isDepthTexture = IsDepthFormat(textureLoader.TextureByteFormat);
-	m_isStencil = IsStencilFormat(textureLoader.TextureByteFormat);
+	m_isDepthTexture = IsDepthFormat(textureLoader.TextureByteLayout);
+	m_isStencil = IsStencilFormat(textureLoader.TextureByteLayout);
 	m_isRenderPassAttachment = false;
 
 	CreateTextureImage(textureLoader.TextureData);
@@ -28,13 +28,13 @@ VulkanTexture::VulkanTexture(ivec2& attachmentSize, RenderPassAttachmentLoader& 
 {
 	m_textureSize = ivec3(attachmentSize.x, attachmentSize.y, 1);
 	m_mipMapLevels = MaxMipLevels(attachment.MipMapCount, attachment.UseMipMaps);
-	m_textureByteFormat = attachment.TextureByteFormat;
+	m_TextureByteLayout = attachment.TextureByteLayout;
 	m_textureImageLayout = attachment.FinalLayout;
 	m_sampleCount = attachment.SampleCount;
 	m_textureType = attachment.TextureType;
 	m_isCubeMap = attachment.TextureType == TextureTypeEnum::kTextureType_CubeMap ? true : false;
-	m_isDepthTexture = IsDepthFormat(attachment.TextureByteFormat);
-	m_isStencil = IsStencilFormat(attachment.TextureByteFormat);
+	m_isDepthTexture = IsDepthFormat(attachment.TextureByteLayout);
+	m_isStencil = IsStencilFormat(attachment.TextureByteLayout);
 	m_isRenderPassAttachment = true;
 
 	switch (attachment.TextureUsageType)
@@ -67,7 +67,7 @@ void VulkanTexture::CreateTextureImage(const Vector<byte>& textureData)
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.flags = m_isCubeMap ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0u,
 		.imageType = VK_IMAGE_TYPE_2D,
-		.format = m_textureByteFormat,
+		.format = m_TextureByteLayout,
 		.extent =
 		{
 			.width = static_cast<uint32>(m_textureSize.x),
@@ -84,9 +84,9 @@ void VulkanTexture::CreateTextureImage(const Vector<byte>& textureData)
 	};
 	if (m_isCubeMap) imageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 	if (m_isRenderPassAttachment) imageInfo.usage |= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
-	if (m_isRenderPassAttachment && !IsDepthFormat(m_textureByteFormat)) imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	if (m_isRenderPassAttachment && !IsDepthFormat(m_TextureByteLayout)) imageInfo.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	if (m_mipMapLevels > 1 || m_isRenderPassAttachment) imageInfo.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-	if (IsDepthFormat(m_textureByteFormat)) imageInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	if (IsDepthFormat(m_TextureByteLayout)) imageInfo.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
 	VmaAllocationCreateInfo vmaAllocationCreateInfo =
 	{
@@ -100,8 +100,8 @@ void VulkanTexture::CreateTextureImage(const Vector<byte>& textureData)
 
 void VulkanTexture::CreateTextureView()
 {
-	VkImageAspectFlags aspectMask = IsDepthFormat(m_textureByteFormat) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
-	if (IsStencilFormat(m_textureByteFormat)) aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+	VkImageAspectFlags aspectMask = IsDepthFormat(m_TextureByteLayout) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+	if (IsStencilFormat(m_TextureByteLayout)) aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
 
 	for (uint32 mip = 0; mip < m_mipMapLevels; mip++)
@@ -112,7 +112,7 @@ void VulkanTexture::CreateTextureView()
 			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 			.image = m_textureImage,
 			.viewType = m_isCubeMap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D,
-			.format = m_textureByteFormat,
+			.format = m_TextureByteLayout,
 			.subresourceRange
 			{
 				.aspectMask = aspectMask,
@@ -226,18 +226,18 @@ void VulkanTexture::GenerateMipmaps(VkCommandBuffer& cmd)
 	if (m_mipMapLevels <= 1) return;
 
 	VkFormatProperties props{};
-	vkGetPhysicalDeviceFormatProperties(vulkan.PhysicalDevice(), m_textureByteFormat, &props);
+	vkGetPhysicalDeviceFormatProperties(vulkan.PhysicalDevice(), m_TextureByteLayout, &props);
 	bool supportsLinear = (props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT);
 	if (!supportsLinear)
 	{
-		std::cout << "[WARNING] Format " << m_textureByteFormat << " does not support linear filtering → mipmaps will use nearest or be incorrect\n";
+		std::cout << "[WARNING] Format " << m_TextureByteLayout << " does not support linear filtering → mipmaps will use nearest or be incorrect\n";
 	}
 
 	VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-	if (IsDepthFormat(m_textureByteFormat))
+	if (IsDepthFormat(m_TextureByteLayout))
 	{
 		aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-		if (IsStencilFormat(m_textureByteFormat))
+		if (IsStencilFormat(m_TextureByteLayout))
 		{
 			aspect |= VK_IMAGE_ASPECT_STENCIL_BIT;
 		}
@@ -369,10 +369,10 @@ void VulkanTexture::TransitionImageLayout(VkCommandBuffer cmd, VkImageLayout new
 	if (m_textureImage == VK_NULL_HANDLE) return;
 
 	VkImageAspectFlags aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-	if (IsDepthFormat(m_textureByteFormat))
+	if (IsDepthFormat(m_TextureByteLayout))
 	{
 		aspect = VK_IMAGE_ASPECT_DEPTH_BIT;
-		if (IsStencilFormat(m_textureByteFormat))
+		if (IsStencilFormat(m_TextureByteLayout))
 		{
 			aspect |= VK_IMAGE_ASPECT_STENCIL_BIT;
 		}
@@ -481,7 +481,7 @@ VkImageLayout       VulkanTexture::TextureImageLayout()		const noexcept { return
 uint32				VulkanTexture::MipMapLevels()			const noexcept { return m_mipMapLevels; }
 uint32				VulkanTexture::TextureArrayLayers()		const noexcept { return m_isCubeMap ? 6u : 1u; }
 ColorChannelEnum	VulkanTexture::ColorChannels()			const  { return m_colorChannels; }
-VkFormat			VulkanTexture::TextureByteFormat()		const  { return m_textureByteFormat; }
+VkFormat			VulkanTexture::TextureByteLayout()		const  { return m_TextureByteLayout; }
 bool				VulkanTexture::IsDepthTexture()			const noexcept { return m_isDepthTexture; }
 bool				VulkanTexture::IsStencil()				const noexcept { return m_isStencil; }
 bool				VulkanTexture::IsRenderPassAttachment() const noexcept { return m_isRenderPassAttachment; }

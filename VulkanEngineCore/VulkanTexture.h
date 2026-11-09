@@ -60,7 +60,7 @@ struct RenderPassAttachmentLoader
     TextureTypeEnum                      TextureType = TextureTypeEnum::kTextureType_Undefined;
     TextureUsageTypeEnum                 TextureUsageType = kUsageType_Undefined;
     Vector<RenderAttachmentTypeEnum>     RenderAttachmentTypes = Vector<RenderAttachmentTypeEnum>();
-    VkFormat                             TextureByteFormat = VK_FORMAT_R8G8B8A8_UNORM;
+    VkFormat                             TextureByteLayout = VK_FORMAT_R8G8B8A8_UNORM;
     VkAttachmentLoadOp                   LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     VkAttachmentStoreOp                  StoreOp = VK_ATTACHMENT_STORE_OP_STORE;
     VkSamplerCreateInfo                  SamplerCreateInfo = VkSamplerCreateInfo();
@@ -75,7 +75,7 @@ struct RenderPassAttachmentReloader
     uint32                               MipMapCount = UINT32_MAX;
     TextureTypeEnum                      TextureType = TextureTypeEnum::kTextureType_Undefined;
     TextureUsageTypeEnum                 TextureUsageType = kUsageType_Undefined;
-    VkFormat                             TextureByteFormat = VK_FORMAT_R8G8B8A8_UNORM;
+    VkFormat                             TextureByteLayout = VK_FORMAT_R8G8B8A8_UNORM;
     VkAttachmentLoadOp                   LoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     VkAttachmentStoreOp                  StoreOp = VK_ATTACHMENT_STORE_OP_STORE;
     VkImageLayout                        FinalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -93,7 +93,7 @@ struct VulkanTextureLoader
     ColorChannelEnum      ColorChannels = ColorChannelEnum::ChannelRGBA;
     VkImageLayout         TextureImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     VkSampleCountFlagBits SampleCount = VK_SAMPLE_COUNT_1_BIT;
-    VkFormat              TextureByteFormat = VK_FORMAT_UNDEFINED;
+    VkFormat              TextureByteLayout = VK_FORMAT_UNDEFINED;
     TextureTypeEnum       TextureType;
     bool                  IsRenderPassAttachment;
     bool                  IsCubeMap;
@@ -124,7 +124,7 @@ public:
     VkSampler             m_textureSampler = VK_NULL_HANDLE;
     VmaAllocation         m_vmaTextureAllocation = VK_NULL_HANDLE;
 
-    VkFormat              m_textureByteFormat = VK_FORMAT_UNDEFINED;
+    VkFormat              m_TextureByteLayout = VK_FORMAT_UNDEFINED;
     VkImageLayout         m_textureImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     VkSampleCountFlagBits m_sampleCount = VK_SAMPLE_COUNT_1_BIT;
     ColorChannelEnum      m_colorChannels = ColorChannelEnum::ChannelRGBA;
@@ -157,7 +157,7 @@ public:
     [[nodiscard]] uint32              MipMapLevels()                        const noexcept;
     [[nodiscard]] uint32              TextureArrayLayers()                  const noexcept;
     [[nodiscard]] ColorChannelEnum    ColorChannels()                       const ;
-    [[nodiscard]] VkFormat            TextureByteFormat()                   const ;
+    [[nodiscard]] VkFormat            TextureByteLayout()                   const ;
     [[nodiscard]] bool                IsDepthTexture()                      const noexcept;
     [[nodiscard]] bool                IsStencil()                           const noexcept;
     [[nodiscard]] bool                IsRenderPassAttachment()              const noexcept;
