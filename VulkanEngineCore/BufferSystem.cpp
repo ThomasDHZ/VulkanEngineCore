@@ -23,22 +23,22 @@ BufferHandle BufferSystem::AllocateBufferId()
     return handle;
 }
 
-void BufferSystem::FreeBufferId(int id)
+void BufferSystem::FreeBufferId(int bufferId)
 {
-    if (id > 0 &&
-        id < m_generations.size())
+    if (bufferId > 0 &&
+        bufferId < m_generations.size())
     {
-        m_freeList.push_back(id);
-        m_generations[id]++;
+        m_freeList.push_back(bufferId);
+        m_generations[bufferId]++;
     }
 }
 
-VulkanBuffer& BufferSystem::FindVulkanBuffer(uint32 id)
+VulkanBuffer& BufferSystem::FindVulkanBuffer(uint32 bufferId)
 {
-    auto it = m_vulkanBufferMap.find(id);
+    auto it = m_vulkanBufferMap.find(bufferId);
     if (it == m_vulkanBufferMap.end())
     {
-        std::cerr << "Error: Buffer ID " << id << " not found!" << std::endl;
+        std::cerr << "Error: Buffer ID " << bufferId << " not found!" << std::endl;
         static VulkanBuffer empty{};
         return empty;
     }
@@ -298,6 +298,12 @@ void BufferSystem::CopyBuffer(VkBuffer* srcBuffer, VkBuffer* dstBuffer, VkDevice
     };
     vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr);
     vulkan.CommandBuffer().EndSingleUseCommand(cmd);
+}
+
+void BufferSystem::DestroyBuffer(uint32 bufferId)
+{
+    VulkanBuffer& vulkanBuffer = FindVulkanBuffer(bufferId);
+    DestroyBuffer(vulkanBuffer);
 }
 
 void BufferSystem::DestroyBuffer(VulkanBuffer& vulkanBuffer)

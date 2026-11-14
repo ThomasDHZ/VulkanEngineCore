@@ -105,11 +105,12 @@ public:
     CORE_DLL_EXPORT uint32                                                  CreateDynamicBuffer(const void* srcData, VkDeviceSize size, VkBufferUsageFlags usageFlags);
     CORE_DLL_EXPORT void                                                    UpdateDynamicBuffer(uint32 bufferId, const void* data, VkDeviceSize size, VkDeviceSize offset = 0);
     CORE_DLL_EXPORT void                                                    CopyBuffer(VkBuffer* srcBuffer, VkBuffer* dstBuffer, VkDeviceSize size, VkBufferUsageFlags shaderUsageFlags, VkDeviceSize offset = 0);
-    CORE_DLL_EXPORT  void                                                    DestroyBuffer(VulkanBuffer& vulkanBuffer);
-    CORE_DLL_EXPORT  VulkanBuffer&                                           FindVulkanBuffer(uint32 id);
-    CORE_DLL_EXPORT  const Vector<VulkanBuffer>&                             VulkanBufferList();
+    CORE_DLL_EXPORT void                                                    DestroyBuffer(uint32 bufferId);
+    CORE_DLL_EXPORT void                                                    DestroyBuffer(VulkanBuffer& vulkanBuffer);
+    CORE_DLL_EXPORT VulkanBuffer&                                           FindVulkanBuffer(uint32 bufferId);
+    CORE_DLL_EXPORT const Vector<VulkanBuffer>&                             VulkanBufferList();
 
-    CORE_DLL_EXPORT  [[nodiscard]] VmaAllocator			                    VmaAllocatorHandle()	  const;
+    CORE_DLL_EXPORT [[nodiscard]] VmaAllocator			                    VmaAllocatorHandle()	  const;
     CORE_DLL_EXPORT [[nodiscard]] UnorderedMap<uint32, VulkanBuffer>        VulkanBufferMap()         const;
 };
 CORE_DLL_EXPORT extern BufferSystem& bufferSystem;

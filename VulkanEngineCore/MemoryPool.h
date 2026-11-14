@@ -1,74 +1,63 @@
-//#pragma once
-//#include "DLL.h"
-//#include "Platform.h"
+#pragma once
+#include "DLL.h"
+#include "Platform.h"
+#include <VulkanPipelineLoader.h>
 //
-//struct MemoryPoolHeader
+//struct GpuMemoryPoolHeader
 //{
-//	uint32					ActiveCount = UINT32_MAX;
-//	size_t					Offset = UINT32_MAX;
-//	uint32					Capacity = UINT32_MAX;
-//	uint32					Size = UINT32_MAX;
-//	Vector<byte>			IsSlotActive;         // 0 = inactive, 1 = active
-//	Vector<uint32>			FreeIndices;
-//	bool					IsDirty = true;
+//	//CPU side: in bytes
+//	//GPU side: by index (bytes/4)
+//	//GPU data array: by index (bytes/4)
+//	uint64 FirstObjectOffset = UINT64_MAX;
+//	uint32 ObjectCount		 = UINT32_MAX;
+//	uint32 ObjectSize		 = UINT32_MAX;
 //};
 //
-//class MemoryPool
+struct MemoryPoolHeader
+{
+	uint32					ActiveCount   = UINT32_MAX;
+	uint32					Capacity	  = UINT32_MAX;
+	uint32					SizeOfObject  = UINT32_MAX;
+	Vector<byte>			IsSlotActive;         // 0 = inactive, 1 = active
+	Vector<uint32>			FreeIndices;
+	bool					IsDirty		  = true;
+};
+
+//class CORE_DLL_EXPORT MemoryPool
 //{
 //	private:
-//		static constexpr size_t m_memoryPoolHeaderSize = sizeof(MemoryPoolHeader);
-//
 //		void*					m_mappedMemoryPoolBufferPtr = nullptr;
-//		uint					m_memoryPoolBufferIndex = UINT32_MAX;
-//		size_t					m_memoryPoolCapacity = SIZE_MAX;
-//		size_t					m_memoryPoolTotalSize = SIZE_MAX;
+//		GpuMemoryPoolHeader		m_memoryPoolGpuHeader;
 //		MemoryPoolHeader		m_memoryPoolHeader;
+//		size_t					m_memoryPoolTotalSize = SIZE_MAX;
+//		uint32					m_memoryPoolBufferIndex = UINT32_MAX;
+//		uint32					m_memoryPoolDescriptorSetBinding = UINT32_MAX;
+//		VkDescriptorPool		m_memoryPoolBindlessPool = VK_NULL_HANDLE;
+//		VkDescriptorSet			m_memoryPoolBindlessDescriptorSet = VK_NULL_HANDLE;
+//		VkDescriptorSetLayout	m_memoryPoolBindlessDescriptorSetLayout = VK_NULL_HANDLE;
+//		bool					m_isHeaderDirty = true;
 //		bool					m_isMemoryPoolDirty = true;
+//		bool					m_isDescriptorSetDirty = true;
 //
-//		void CreateMemoryPool(void* memoryPoolObjectData, size_t memoryPoolObjectSizePerObject, size_t memoryPoolObjectCount);
+//		void CreateMemoryPool(void* memoryPoolObjectData, size_t memoryPoolObjectCount, uint32 descriptorSetBinding);
+//		void CreateBindlessDescriptorSet();
 //		void ResizeMemoryPool(uint32 resizeCount);
+//		void RefreshGpuHeaderCounts();
+//
 //	public:
 //		MemoryPool();
-//		MemoryPool(uint32 memoryPoolObjectSizePerObject, uint32 memoryPoolObjectCount);
-//		MemoryPool(void* memoryPoolObjectData, uint32 memoryPoolObjectSizePerObject, uint32 memoryPoolObjectCount);
+//		MemoryPool(uint32 memoryPoolObjectSizePerObject, uint32 memoryPoolObjectCount, uint32 initialCapacity, uint32 descriptorSetBinding);
+//		MemoryPool(void* memoryPoolObjectData, uint32 memoryPoolObjectSizePerObject, uint32 memoryPoolObjectCount, uint32 initialCapacity, uint32 descriptorSetBinding);
 //
-//		template <typename T>
-//		MemoryPool(uint32 initialCapacity)
-//		{
-//			m_memoryPoolHeader = MemoryPoolHeader
-//			{
-//				.ActiveCount = 0,
-//				.Capacity = initialCapacity,
-//				.Size = sizeof(T),
-//				.IsSlotActive = Vector<byte>(initialCapacity, 0x00),
-//				.FreeIndices = Vector<uint32>(),
-//				.IsDirty = true
-//			};
-//			CreateMemoryPool(memoryPoolObjectData, memoryPoolObjectSizePerObject, initialCapacity);
-//		}
-//
-//		template <typename T>
-//		MemoryPool(Vector<T>& objectList, uint32 initialCapacity)
-//		{
-//			m_memoryPoolHeader = MemoryPoolHeader
-//			{
-//				.ActiveCount = 0,
-//				.Capacity = initialCapacity,
-//				.Size = sizeof(T),
-//				.IsSlotActive = Vector<byte>(initialCapacity, 0x00),
-//				.FreeIndices = Vector<uint32>(),
-//				.IsDirty = true
-//			};
-//			CreateMemoryPool(memoryPoolObjectData, memoryPoolObjectSizePerObject, initialCapacity);
-//		}
-//
-//		template <typename T>
-//		T& UpdateMemoryPool(uint32 index)
-//		{
-//
-//		}
-//
-//		uint32 AllocateObject();
-//		void UpdateMemoryPool(void* memoryPoolObjectPtr, uint32 sizeOfMemoryPoolObject, uint32 index);
+//		uint32								 AllocateObject();
+//		void								 UpdateMemoryPool(size_t baseMemoryPoolSize);
+//		void								 UpdateMemoryPoolHeader(uint32 newPoolSize);
+//		void*								 UpdateMemoryPoolObject(uint32 index);
+//		void								 UpdateDataBufferDescriptorSet(uint32 vulkanGpuBufferIndex, uint binding);
+//		void								 SwapMemoryPoolElement(uint32 oldSlotIndex, uint32 newSlotIndex);
+//		void								 FreeObject(uint32 index);
+//		void								 Destroy();
+//		const Vector<VkDescriptorBufferInfo> GetBindlessDataBufferDescriptor() const;
+//		const MemoryPoolLoader				 GetMemoryPoolInfo();
 //};
 //
