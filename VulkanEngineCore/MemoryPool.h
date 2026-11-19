@@ -27,9 +27,9 @@ struct TextureMetadataHeader
     uint32 Height = 0;
     uint32 Depth = 0;
     uint32 MipLevels = 1;
-    uint32 LayerCount = 1; // 1 = 2D, 6 = Cubemap
+    uint32 LayerCount = 1;  // 1 = 2D, 6 = Cubemap
     uint32 Format = 1;
-    uint32 Type = 0; // 0 = 2D, 1 = Cube
+    uint32 Type = 0;       // 0 = 2D, 1 = Cube
     uint32 ArrayIndex = 0; // Index into the correct sampler array
 };
 
@@ -62,6 +62,7 @@ public:
     MemoryPool();
     MemoryPool(uint32 objectSize, uint32 initialCapacity, uint32 descriptorSetBinding);
     MemoryPool(void* initialData, uint32 objectSize, uint32 objectCount, uint32 initialCapacity, uint32 descriptorSetBinding);
+    ~MemoryPool();
 
     template<typename T>
     MemoryPool(Vector<T>& objectList, uint32 initialCapacity, uint32 descriptorSetBinding)
@@ -94,6 +95,14 @@ public:
     }
 
     template<typename T>
+    void UpdateMemoryPoolObject(uint32 index, T& updateObject)
+    {
+        static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
+        assert(sizeof(T) == m_memoryPoolHeader.SizeOfObject && "Size mismatch");
+        *static_cast<T*>(UpdateMemoryPoolObject(index)) = updateObject;
+    }
+
+    template<typename T>
     Vector<T> ObjectList() const
     {
         static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
@@ -117,6 +126,6 @@ public:
     const MemoryPoolLoader               GetMemoryPoolInfo() const;
     void                                 Destroy();
 
-    uint32                               ActiveCount() const { return m_memoryPoolHeader.ActiveCount; }
-    uint32                               Capacity()    const { return m_memoryPoolHeader.Capacity; }
+    uint32                               ActiveCount() const;
+    uint32                               Capacity()    const;
 };

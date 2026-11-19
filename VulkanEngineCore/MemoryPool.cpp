@@ -9,7 +9,8 @@ MemoryPool::MemoryPool()
 
 MemoryPool::MemoryPool(uint32 objectSize, uint32 initialCapacity, uint32 descriptorSetBinding)
 {
-    m_memoryPoolHeader = MemoryPoolHeader{
+    m_memoryPoolHeader = MemoryPoolHeader
+    {
         .ActiveCount = 0,
         .Capacity = initialCapacity,
         .SizeOfObject = objectSize,
@@ -22,15 +23,20 @@ MemoryPool::MemoryPool(uint32 objectSize, uint32 initialCapacity, uint32 descrip
 
 MemoryPool::MemoryPool(void* initialData, uint32 objectSize, uint32 objectCount, uint32 initialCapacity, uint32 descriptorSetBinding)
 {
-    m_memoryPoolHeader = MemoryPoolHeader{
-    .ActiveCount = 0,
-    .Capacity = initialCapacity,
-    .SizeOfObject = objectSize,
-    .IsSlotActive = Vector<byte>(initialCapacity, 0x00),
-    .FreeIndices = {},
-    .IsDirty = true
+    m_memoryPoolHeader = MemoryPoolHeader
+    {
+        .ActiveCount = 0,
+        .Capacity = initialCapacity,
+        .SizeOfObject = objectSize,
+        .IsSlotActive = Vector<byte>(initialCapacity, 0x00),
+        .FreeIndices = {},
+        .IsDirty = true
     };
     CreateMemoryPool(initialData, objectCount, descriptorSetBinding);
+}
+
+MemoryPool::~MemoryPool()
+{
 }
 
 void MemoryPool::CreateMemoryPool(void* data, size_t count, uint32 binding)
@@ -373,6 +379,7 @@ void MemoryPool::Destroy()
     if (m_memoryPoolBindlessDescriptorSetLayout) vkDestroyDescriptorSetLayout(vulkan.LogicalDevice(), m_memoryPoolBindlessDescriptorSetLayout, nullptr);
 }
 
+
 const Vector<VkDescriptorBufferInfo> MemoryPool::GetBindlessDataBufferDescriptor() const
 {
     return Vector<VkDescriptorBufferInfo>
@@ -396,3 +403,12 @@ const MemoryPoolLoader MemoryPool::GetMemoryPoolInfo() const
     };
 }
 
+uint32 MemoryPool::ActiveCount() const
+{
+    return m_memoryPoolHeader.ActiveCount;
+}
+
+uint32 MemoryPool::Capacity() const
+{
+    return m_memoryPoolHeader.Capacity;
+}

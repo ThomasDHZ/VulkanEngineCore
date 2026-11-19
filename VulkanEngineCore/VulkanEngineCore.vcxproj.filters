@@ -183,6 +183,9 @@
     <ClInclude Include="VulkanRenderPassBuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="VulkanBoundDescriptorSet.h">
+      <Filter>Header Files\Vulkan</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="VulkanCommandBuffer.cpp">
@@ -295,6 +298,9 @@
     </ClCompile>
     <ClCompile Include="VulkanRenderPassBuilder.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanBoundDescriptorSet.cpp">
+      <Filter>Source Files\Vulkan</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

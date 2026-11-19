@@ -114,7 +114,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;VulkanEngineCore_EXPORTS;VK_USE_PLATFORM_WIN32_KHR;IMGUI_USER_CONFIG="ImGuiConfig.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp23</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -132,7 +132,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;VulkanEngineCore_EXPORTS;VK_USE_PLATFORM_WIN32_KHR;IMGUI_USER_CONFIG="ImGuiConfig.h";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -171,6 +171,7 @@
     <ClInclude Include="Platform.h" />
     <ClInclude Include="ShaderStructs.h" />
     <ClInclude Include="VmaConfig.h" />
+    <ClInclude Include="VulkanBoundDescriptorSet.h" />
     <ClInclude Include="VulkanMesh.h" />
     <ClInclude Include="VulkanPipeline.h" />
     <ClInclude Include="VulkanPipelineLoader.h" />
@@ -213,6 +214,7 @@
     <ClCompile Include="NetConnection.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
     <ClCompile Include="Platform.cpp" />
+    <ClCompile Include="VulkanBoundDescriptorSet.cpp" />
     <ClCompile Include="VulkanMesh.cpp" />
     <ClCompile Include="VulkanPipeline.cpp" />
     <ClCompile Include="VulkanPipelineLoader.cpp" />
