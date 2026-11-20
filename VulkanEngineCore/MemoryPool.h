@@ -3,6 +3,7 @@
 #include "Platform.h"
 #include <VulkanPipelineLoader.h>
 #include <VulkanTexture.h>
+#include "VulkanBoundDescriptorSet.h"
 
 struct GpuMemoryPoolHeader
 {
@@ -37,21 +38,16 @@ class CORE_DLL_EXPORT MemoryPool
 {
 private:
     void*                                m_mappedMemoryPoolBufferPtr = nullptr;
+    VulkanDescriptorSet                  m_memoryPoolDescriptorSet;
     GpuMemoryPoolHeader                  m_memoryPoolGpuHeader{};
     MemoryPoolHeader                     m_memoryPoolHeader{};
     size_t                               m_memoryPoolTotalSize = 0;
     uint32                               m_memoryPoolBufferIndex = UINT32_MAX;
-    uint32                               m_memoryPoolDescriptorSetBinding = UINT32_MAX;
-    VkDescriptorPool                     m_memoryPoolBindlessPool = VK_NULL_HANDLE;
-    VkDescriptorSet                      m_memoryPoolBindlessDescriptorSet = VK_NULL_HANDLE;
-    VkDescriptorSetLayout                m_memoryPoolBindlessDescriptorSetLayout = VK_NULL_HANDLE;
+    uint32                               m_memoryPoolDescriptorSetBinding;
     bool                                 m_isHeaderDirty = true;
     bool                                 m_isDescriptorSetDirty = true;
 
-    void                                 CreateMemoryPool(void* data, size_t count, uint32 binding);
-    void                                 CreateBindlessDescriptorSet();
-    void                                 UpdateDataBufferDescriptorSet(uint32 vulkanGpuBufferIndex, uint binding);
-    void								 UpdateTextureDescriptorSet(uint32 textureGpuBufferIndex, VulkanTexture& texture);
+    void                                 CreateMemoryPool(void* data, size_t count, uint32 binding, VkDescriptorType memoryPoolType);
     void                                 UpdateMemoryPoolHeader(uint32 newCapacity);
     void                                 ResizeMemoryPool(uint32 newCapacity);
     void                                 RefreshGpuHeaderCounts();
@@ -60,8 +56,8 @@ private:
 public:
 
     MemoryPool();
-    MemoryPool(uint32 objectSize, uint32 initialCapacity, uint32 descriptorSetBinding);
-    MemoryPool(void* initialData, uint32 objectSize, uint32 objectCount, uint32 initialCapacity, uint32 descriptorSetBinding);
+    MemoryPool(uint32 objectSize, uint32 initialCapacity, uint32 descriptorSetBinding, VkDescriptorType memoryPoolType);
+    MemoryPool(void* initialData, uint32 objectSize, uint32 objectCount, uint32 initialCapacity, uint32 descriptorSetBinding, VkDescriptorType memoryPoolType);
     ~MemoryPool();
 
     template<typename T>
@@ -117,15 +113,14 @@ public:
     }
 
     uint32                               AllocateObject();
-    uint32                               AddTextureToMemoryPool(VulkanTexture& texture);
-    void                                 UpdateMemoryPool();
+    uint32                               AddTextureToMemoryPool(VulkanBoundDescriptorSet& descriptorSet, VulkanTexture& texture);
+    void                                 UpdateMemoryPool(VulkanBoundDescriptorSet& descriptorSet);
     void*                                UpdateMemoryPoolObject(uint32 index);
     void                                 SwapMemoryPoolElement(uint32 a, uint32 b);
     void                                 FreeObject(uint32 index);
-    const Vector<VkDescriptorBufferInfo> GetBindlessDataBufferDescriptor() const;
-    const MemoryPoolLoader               GetMemoryPoolInfo() const;
     void                                 Destroy();
 
-    uint32                               ActiveCount() const;
-    uint32                               Capacity()    const;
+    [[nodiscard]] VulkanDescriptorSet    MemoryPoolDescriptorSet()   const;
+    uint32                               ActiveCount()               const;
+    uint32                               Capacity()                  const;
 };

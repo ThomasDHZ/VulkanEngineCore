@@ -7,7 +7,7 @@ MemoryPool::MemoryPool()
 {
 }
 
-MemoryPool::MemoryPool(uint32 objectSize, uint32 initialCapacity, uint32 descriptorSetBinding)
+MemoryPool::MemoryPool(uint32 objectSize, uint32 initialCapacity, uint32 descriptorSetBinding, VkDescriptorType memoryPoolType)
 {
     m_memoryPoolHeader = MemoryPoolHeader
     {
@@ -18,10 +18,10 @@ MemoryPool::MemoryPool(uint32 objectSize, uint32 initialCapacity, uint32 descrip
         .FreeIndices = {},
         .IsDirty = true
     };
-    CreateMemoryPool(nullptr, 0, descriptorSetBinding);
+    CreateMemoryPool(nullptr, 0, descriptorSetBinding, memoryPoolType);
 }
 
-MemoryPool::MemoryPool(void* initialData, uint32 objectSize, uint32 objectCount, uint32 initialCapacity, uint32 descriptorSetBinding)
+MemoryPool::MemoryPool(void* initialData, uint32 objectSize, uint32 objectCount, uint32 initialCapacity, uint32 descriptorSetBinding, VkDescriptorType memoryPoolType)
 {
     m_memoryPoolHeader = MemoryPoolHeader
     {
@@ -32,14 +32,14 @@ MemoryPool::MemoryPool(void* initialData, uint32 objectSize, uint32 objectCount,
         .FreeIndices = {},
         .IsDirty = true
     };
-    CreateMemoryPool(initialData, objectCount, descriptorSetBinding);
+    CreateMemoryPool(initialData, objectCount, descriptorSetBinding, memoryPoolType);
 }
 
 MemoryPool::~MemoryPool()
 {
 }
 
-void MemoryPool::CreateMemoryPool(void* data, size_t count, uint32 binding)
+void MemoryPool::CreateMemoryPool(void* data, size_t count, uint32 binding, VkDescriptorType memoryPoolType)
 
 {
     m_memoryPoolTotalSize = sizeof(GpuMemoryPoolHeader) + static_cast<size_t>(m_memoryPoolHeader.Capacity) * m_memoryPoolHeader.SizeOfObject;
@@ -70,93 +70,18 @@ void MemoryPool::CreateMemoryPool(void* data, size_t count, uint32 binding)
         memcpy(m_mappedMemoryPoolBufferPtr, &m_memoryPoolGpuHeader, sizeof(GpuMemoryPoolHeader));
     }
     vmaFlushAllocation(bufferSystem.VmaAllocatorHandle(), buffer.BufferAllocation(), 0, m_memoryPoolTotalSize);
-    CreateBindlessDescriptorSet();
-}
 
-void MemoryPool::CreateBindlessDescriptorSet()
-{
-    VkDescriptorBufferInfo  bindlessDataBuffer = VkDescriptorBufferInfo
+    m_memoryPoolDescriptorSet = VulkanDescriptorSet
     {
-        .buffer = bufferSystem.FindVulkanBuffer(m_memoryPoolBufferIndex).Buffer(),
-        .offset = 0,
-        .range = VK_WHOLE_SIZE
+        .Binding = binding,
+        .DescriptorType = memoryPoolType,
+        .DescriptorCount = 1,
+        .DescriptorPoolCount = m_memoryPoolHeader.Capacity,
+        .StageFlags = VK_SHADER_STAGE_ALL,
+        .DescriptorBindingFlags = VkDescriptorBindingFlags{ VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT },
+        .pBindings = nullptr,
+        .pImmutableSamplers = nullptr
     };
-
-    Vector<VkDescriptorPoolSize> poolSizes = { VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 512 } };
-    Vector<VkDescriptorSetLayoutBinding> bindings = { VkDescriptorSetLayoutBinding{ m_memoryPoolDescriptorSetBinding , VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,  1, VK_SHADER_STAGE_ALL}, };
-    Vector<VkDescriptorBindingFlags> flags = { VkDescriptorBindingFlags { VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT } };
-
-    VkDescriptorSetLayoutBindingFlagsCreateInfo flagsInfo
-    {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO,
-        .bindingCount = static_cast<uint32>(flags.size()),
-        .pBindingFlags = flags.data()
-    };
-
-    VkDescriptorPoolCreateInfo poolInfo =
-    {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-        .flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
-        .maxSets = 64,
-        .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
-        .pPoolSizes = poolSizes.data()
-    };
-    VULKAN_THROW_IF_FAIL(vkCreateDescriptorPool(vulkan.LogicalDevice(), &poolInfo, nullptr, &m_memoryPoolBindlessPool));
-
-    VkDescriptorSetLayoutCreateInfo layoutInfo =
-    {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-        .pNext = &flagsInfo,
-        .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT,
-        .bindingCount = static_cast<uint32_t>(bindings.size()),
-        .pBindings = bindings.data()
-    };
-    VULKAN_THROW_IF_FAIL(vkCreateDescriptorSetLayout(vulkan.LogicalDevice(), &layoutInfo, nullptr, &m_memoryPoolBindlessDescriptorSetLayout));
-
-    VkDescriptorSetAllocateInfo allocInfo =
-    {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-        .descriptorPool = m_memoryPoolBindlessPool,
-        .descriptorSetCount = 1,
-        .pSetLayouts = &m_memoryPoolBindlessDescriptorSetLayout
-    };
-    VULKAN_THROW_IF_FAIL(vkAllocateDescriptorSets(vulkan.LogicalDevice(), &allocInfo, &m_memoryPoolBindlessDescriptorSet));
-
-    Vector<VkWriteDescriptorSet> writeDescriptorSetList = Vector<VkWriteDescriptorSet>
-    {
-        VkWriteDescriptorSet
-            {
-                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                .dstSet = m_memoryPoolBindlessDescriptorSet,
-                .dstBinding = m_memoryPoolDescriptorSetBinding,
-                .dstArrayElement = 0,
-                .descriptorCount = 1,
-                .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                .pBufferInfo = &bindlessDataBuffer,
-            }
-    };
-    vkUpdateDescriptorSets(vulkan.LogicalDevice(), static_cast<uint32>(writeDescriptorSetList.size()), writeDescriptorSetList.data(), 0, nullptr);
-}
-
-void MemoryPool::UpdateTextureDescriptorSet(uint32 textureGpuBufferIndex, VulkanTexture& texture)
-{
-    VkDescriptorImageInfo textureUpdate = {
-      .sampler = texture.TextureSampler(),
-      .imageView = texture.TextureViews().front(),
-      .imageLayout = texture.m_colorChannels == ColorChannelEnum::ChannelR ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-    };
-
-    VkWriteDescriptorSet descriptorUpdate = VkWriteDescriptorSet
-    {
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .dstSet = m_memoryPoolBindlessDescriptorSet,
-        .dstBinding = m_memoryPoolDescriptorSetBinding,
-        .dstArrayElement = textureGpuBufferIndex,
-        .descriptorCount = 1,
-        .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-        .pImageInfo = &textureUpdate,
-    };
-    vkUpdateDescriptorSets(vulkan.LogicalDevice(), 1, &descriptorUpdate, 0, nullptr);
 }
 
 void MemoryPool::ResizeMemoryPool(uint32 newCapacity)
@@ -225,7 +150,7 @@ uint32 MemoryPool::AllocateObject()
     return index;
 }
 
-uint32 MemoryPool::AddTextureToMemoryPool(VulkanTexture& texture)
+uint32 MemoryPool::AddTextureToMemoryPool(VulkanBoundDescriptorSet& descriptorSet, VulkanTexture& texture)
 {
     TextureMetadataHeader textureMetaDataHeader = TextureMetadataHeader
     {
@@ -243,11 +168,11 @@ uint32 MemoryPool::AddTextureToMemoryPool(VulkanTexture& texture)
 
     uint32 offset = sizeof(GpuMemoryPoolHeader) + (gpuTextureIndex * sizeof(TextureMetadataHeader));
     memcpy(static_cast<byte*>(m_mappedMemoryPoolBufferPtr) + offset, static_cast<void*>(&textureMetaDataHeader), sizeof(TextureMetadataHeader));
-    UpdateTextureDescriptorSet(gpuTextureIndex, texture);
+    descriptorSet.UpdateTextureDescriptorSet(gpuTextureIndex, texture, m_memoryPoolDescriptorSet.Binding);
     return gpuTextureIndex;
 }
 
-void MemoryPool::UpdateMemoryPool()
+void MemoryPool::UpdateMemoryPool(VulkanBoundDescriptorSet& descriptorSet)
 {
     if (!m_mappedMemoryPoolBufferPtr) return;
 
@@ -280,7 +205,7 @@ void MemoryPool::UpdateMemoryPool()
 
     if (m_isDescriptorSetDirty)
     {
-        UpdateDataBufferDescriptorSet(m_memoryPoolBufferIndex, m_memoryPoolDescriptorSetBinding);
+        descriptorSet.UpdateDataBufferDescriptorSet(m_memoryPoolBufferIndex, m_memoryPoolDescriptorSet.Binding);
         m_isDescriptorSetDirty = false;
     }
 }
@@ -314,28 +239,6 @@ void* MemoryPool::UpdateMemoryPoolObject(uint32 index)
 
     m_memoryPoolHeader.IsDirty = true;
     return static_cast<byte*>(m_mappedMemoryPoolBufferPtr) + sizeof(GpuMemoryPoolHeader) + index * m_memoryPoolHeader.SizeOfObject;
-}
-
-void MemoryPool::UpdateDataBufferDescriptorSet(uint32 vulkanGpuBufferIndex, uint binding)
-{
-    VkDescriptorBufferInfo bufferUpdate = VkDescriptorBufferInfo
-    {
-        .buffer = bufferSystem.FindVulkanBuffer(vulkanGpuBufferIndex).Buffer(),
-        .offset = 0,
-        .range = VK_WHOLE_SIZE
-    };
-
-    VkWriteDescriptorSet descriptorUpdate = VkWriteDescriptorSet
-    {
-        .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-        .dstSet = m_memoryPoolBindlessDescriptorSet,
-        .dstBinding = binding,
-        .dstArrayElement = 0,
-        .descriptorCount = 1,
-        .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-        .pBufferInfo = &bufferUpdate,
-    };
-    vkUpdateDescriptorSets(vulkan.LogicalDevice(), 1, &descriptorUpdate, 0, nullptr);
 }
 
 void MemoryPool::SwapMemoryPoolElement(uint32 a, uint32 b)
@@ -375,32 +278,11 @@ void MemoryPool::FreeObject(uint32 index)
 void MemoryPool::Destroy()
 {
     bufferSystem.DestroyBuffer(m_memoryPoolBufferIndex);
-    if (m_memoryPoolBindlessPool) vkDestroyDescriptorPool(vulkan.LogicalDevice(), m_memoryPoolBindlessPool, nullptr);
-    if (m_memoryPoolBindlessDescriptorSetLayout) vkDestroyDescriptorSetLayout(vulkan.LogicalDevice(), m_memoryPoolBindlessDescriptorSetLayout, nullptr);
 }
 
-
-const Vector<VkDescriptorBufferInfo> MemoryPool::GetBindlessDataBufferDescriptor() const
+VulkanDescriptorSet MemoryPool::MemoryPoolDescriptorSet() const
 {
-    return Vector<VkDescriptorBufferInfo>
-    {
-        VkDescriptorBufferInfo
-        {
-            .buffer = bufferSystem.FindVulkanBuffer(m_memoryPoolBufferIndex).Buffer(),
-            .offset = 0,
-            .range = VK_WHOLE_SIZE
-        }
-    };
-}
-
-const MemoryPoolLoader MemoryPool::GetMemoryPoolInfo() const
-{
-    return MemoryPoolLoader
-    {
-        .GlobalBindlessPool = m_memoryPoolBindlessPool,
-        .GlobalBindlessDescriptorSet = m_memoryPoolBindlessDescriptorSet,
-        .GlobalBindlessDescriptorSetLayout = m_memoryPoolBindlessDescriptorSetLayout
-    };
+    return m_memoryPoolDescriptorSet;
 }
 
 uint32 MemoryPool::ActiveCount() const
